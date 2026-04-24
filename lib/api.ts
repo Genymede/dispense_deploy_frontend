@@ -272,7 +272,7 @@ export const dispenseApi = {
   }) => api.post<Prescription>('/dispense', data),
 
   dispense: (id: number, dispensed_by?: string, overdue_items?: Array<{ item_id: number; overdue_qty: number }>) =>
-    api.post<Prescription>(`/dispense/${id}/dispense`, { dispensed_by, overdue_items }),
+    api.post<Prescription & { queue_number?: string | number }>(`/dispense/${id}/dispense`, { dispensed_by, overdue_items }),
 
   returnPrescription: (id: number, data: {
     items: { med_sid: number; quantity: number }[];
