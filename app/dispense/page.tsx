@@ -559,7 +559,7 @@ export default function DispensePage() {
   };
   const handleQueueReceive = async (q: any) => {
     try {
-      await queueApi.receive(q.queue_id, user?.uid);
+      await queueApi.receive(q.queue_id, user?.id);
       toast.success(`✅ ยืนยันแล้ว — คิว ${q.queue_number} รับยาเรียบร้อย`);
       setQueueRefreshKey(k => k + 1);
     }
