@@ -47,7 +47,7 @@ const COLS: ColDef[] = [
   { key: 'dispensed_by_name', label: 'ผู้จ่ายยา', className: 'text-xs text-slate-600' },
   {
     key: 'status', label: 'สถานะ',
-    render: r => <Badge variant={STATUS_COLOR[r.status] ?? 'gray'} dot>{STATUS_TH[r.status] ?? r.status}</Badge>,
+    render: r => <Badge variant={(STATUS_COLOR[r.status] ?? 'gray') as any} dot>{STATUS_TH[r.status] ?? r.status}</Badge>,
     exportValue: r => STATUS_TH[r.status] ?? r.status,
   },
   {

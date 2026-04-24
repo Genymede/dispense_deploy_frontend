@@ -79,7 +79,7 @@ export default function AdrPage() {
     try {
       const payload = {
         patient_id: form.patient_id, med_id: form.med_id,
-        reporter_id: form.reporter_id || user?.uid || null,
+        reporter_id: form.reporter_id || user?.id || null,
         description: form.description, reported_at: form.reported_at,
         severity: form.severity, outcome: form.outcome,
         symptoms: form.symptoms, notes: form.notes,
