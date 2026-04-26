@@ -46,7 +46,6 @@ const registryGroup: NavGroup = {
 const reportsGroup: NavGroup = {
   label: "รายงาน", icon: BarChart3, basePath: "/reports",
   items: [
-    { href: "/reports", label: "ภาพรวมรายงาน", icon: BarChart3 },
     { href: "/reports/expiry", label: "ยาหมดอายุ / สต็อกต่ำ", icon: AlertTriangle },
     { href: "/reports/med-table", label: "ทะเบียนยา", icon: BookOpen },
     { href: "/reports/med-subwarehouse", label: "คลังยาย่อย", icon: Database },
