@@ -168,10 +168,6 @@ export default function TransactionsPage() {
       )
     : txs;
 
-  const typeCounts = Object.keys(TX_CONFIG).reduce<Record<string, number>>((acc, k) => {
-    acc[k] = txs.filter(t => t.tx_type === k).length;
-    return acc;
-  }, {});
 
   return (
     <MainLayout
@@ -188,7 +184,6 @@ export default function TransactionsPage() {
           <button key={type} onClick={() => { setFilterType(filterType === type ? '' : type); setPage(1); }}
             className={`card px-4 py-2.5 transition-all ${filterType === type ? 'ring-2 ring-primary-400 border-primary-200' : 'hover:border-primary-200'}`}>
             <Badge variant={variant}>{label}</Badge>
-            <span className="ml-2 text-xs text-slate-400">({typeCounts[type] ?? 0})</span>
           </button>
         ))}
       </div>
