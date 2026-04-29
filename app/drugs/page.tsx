@@ -25,7 +25,6 @@ const emptyForm = {
   unit_price: '',
   mfg_date: '',
   exp_date: '',
-  units_per_pack: '',
 };
 
 export default function DrugsPage() {
@@ -64,8 +63,6 @@ export default function DrugsPage() {
   const [receiveForm, setReceiveForm] = useState(emptyReceiveForm);
   const [receiveResetKey, setReceiveResetKey] = useState(0);
   const [receiveSaving, setReceiveSaving] = useState(false);
-  const [calcBottles, setCalcBottles] = useState('');
-  const [calcPerBottle, setCalcPerBottle] = useState('');
   const rf = (k: string, v: any) => setReceiveForm(p => ({ ...p, [k]: v }));
 
   const handleReceive = async () => {
@@ -174,7 +171,6 @@ export default function DrugsPage() {
       unit_price: String(d.unit_price ?? ''),
       mfg_date: d.mfg_date ? d.mfg_date.slice(0, 10) : '',
       exp_date: d.exp_date ? d.exp_date.slice(0, 10) : '',
-      units_per_pack: String(d.units_per_pack ?? ''),
     });
     setEditingSid(d.med_sid);
     setEditingDrugName(d.med_showname || d.med_name);
@@ -195,7 +191,6 @@ export default function DrugsPage() {
         unit_price: form.unit_price ? Number(form.unit_price) : null,
         mfg_date: form.mfg_date || null,
         exp_date: form.exp_date || null,
-        units_per_pack: form.units_per_pack ? Number(form.units_per_pack) : null,
       };
       if (editingSid) {
         await drugApi.update(editingSid, payload);
@@ -322,11 +317,6 @@ export default function DrugsPage() {
                           <span className={`font-semibold tabular-nums ${isLow || isExp ? 'text-red-600' : 'text-slate-800'}`}>
                             {d.current_stock.toLocaleString()}
                           </span>
-                          {d.units_per_pack && (
-                            <span className="ml-1 text-[10px] text-slate-400">
-                              (~{Math.floor(d.current_stock / d.units_per_pack).toLocaleString()} ซอง)
-                            </span>
-                          )}
                           {d.lot_count != null && d.lot_count > 0 && (
                             <span className="ml-1.5 text-[10px] font-semibold bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">
                               {d.lot_count} lot
@@ -418,8 +408,6 @@ export default function DrugsPage() {
           <Input label="ราคาขาย (บาท)" type="number" step="0.01" value={form.unit_price} onChange={(e) => f('unit_price', e.target.value)} />
           <Input label="วันผลิต" type="date" value={form.mfg_date} onChange={(e) => f('mfg_date', e.target.value)} />
           <Input label="วันหมดอายุ" type="date" value={form.exp_date} onChange={(e) => f('exp_date', e.target.value)} />
-          <Input label="เม็ดต่อซอง" type="number" min="1" placeholder="เช่น 10 (เม็ดต่อ 1 ซอง)"
-            value={form.units_per_pack} onChange={(e) => f('units_per_pack', e.target.value)} />
         </div>
         <div className="mt-3 flex items-center gap-2">
           <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
@@ -502,9 +490,6 @@ export default function DrugsPage() {
                 { label: 'วันหมดอายุ', value: fmtDate(viewDrug.exp_date) },
                 { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
                 { label: 'ขั้นต่ำ / สูงสุด', value: `${viewDrug.min_quantity ?? '—'} / ${viewDrug.max_quantity ?? '—'}` },
-                { label: 'เม็ดต่อซอง', value: viewDrug.units_per_pack
-                    ? `${viewDrug.units_per_pack} เม็ด/ซอง (~${Math.floor(viewDrug.current_stock / viewDrug.units_per_pack)} ซอง)`
-                    : '—' },
                 { label: 'ที่เก็บ', value: viewDrug.location || '—' },
               ]} />
             </DrawerSection>
@@ -567,27 +552,8 @@ export default function DrugsPage() {
           <SearchSelect type="subwarehouse" label="ยาในคลัง" required
             initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
             onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); }} />
-          {/* calculator */}
-          <div className="rounded-lg bg-slate-50 border border-slate-100 p-3 space-y-2">
-            <p className="text-xs font-medium text-slate-500">คำนวณจากกระปุก (ไม่บังคับ)</p>
-            <div className="flex items-center gap-2">
-              <Input placeholder="จำนวนกระปุก" type="number" min="1"
-                value={calcBottles} onChange={e => setCalcBottles(e.target.value)} />
-              <span className="text-slate-400 shrink-0">×</span>
-              <Input placeholder="เม็ด/กระปุก" type="number" min="1"
-                value={calcPerBottle} onChange={e => setCalcPerBottle(e.target.value)} />
-              <span className="text-slate-400 shrink-0">=</span>
-              <span className="text-sm font-semibold text-slate-700 shrink-0 w-16 tabular-nums">
-                {calcBottles && calcPerBottle ? (Number(calcBottles) * Number(calcPerBottle)).toLocaleString() : '—'}
-              </span>
-              <Button size="xs" variant="secondary" disabled={!calcBottles || !calcPerBottle}
-                onClick={() => rf('quantity', String(Number(calcBottles) * Number(calcPerBottle)))}>
-                ใช้
-              </Button>
-            </div>
-          </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input label="จำนวนที่รับ (เม็ด)" type="number" min="1" required
+            <Input label="จำนวนที่รับ" type="number" min="1" required
               value={receiveForm.quantity} onChange={e => rf('quantity', e.target.value)} />
             <Input label="เลข Lot" value={receiveForm.lot_number}
               onChange={e => rf('lot_number', e.target.value)} />
