@@ -117,7 +117,7 @@ export default function DrugsPage() {
   useEffect(() => { loadDrugs(); }, [loadDrugs]);
 
   useEffect(() => {
-    drugApi.getCategories().then((r) => setCategories(r.data)).catch(() => {});
+    drugApi.getCategories().then((r) => setCategories(r.data)).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function DrugsPage() {
     clearTimeout(medSearchTimer.current);
     medSearchTimer.current = setTimeout(() => {
       if (showMedPicker) {
-        drugApi.getMedTable(medSearch).then((r) => setMedTableItems(r.data)).catch(() => {});
+        drugApi.getMedTable(medSearch).then((r) => setMedTableItems(r.data)).catch(() => { });
       }
     }, 300);
   }, [medSearch, showMedPicker]);
@@ -423,17 +423,17 @@ export default function DrugsPage() {
             {/* คำเตือน: ข้อมูลไม่ครบ */}
             {(() => {
               const missing: string[] = [];
-              if (!viewDrug.med_showname)   missing.push('ชื่อแสดง (ไทย)');
+              if (!viewDrug.med_showname) missing.push('ชื่อแสดง (ไทย)');
               if (!viewDrug.med_showname_eng) missing.push('ชื่อแสดง (อังกฤษ)');
-              if (!viewDrug.location)       missing.push('ที่เก็บ');
+              if (!viewDrug.location) missing.push('ที่เก็บ');
               if (viewDrug.min_quantity == null) missing.push('สต็อกขั้นต่ำ');
               if (viewDrug.max_quantity == null) missing.push('สต็อกสูงสุด');
-              if (viewDrug.cost_price == null)   missing.push('ราคาต้นทุน');
-              if (viewDrug.unit_price == null)   missing.push('ราคาขาย');
-              if (!viewDrug.mfg_date)       missing.push('วันผลิต');
+              if (viewDrug.cost_price == null) missing.push('ราคาต้นทุน');
+              if (viewDrug.unit_price == null) missing.push('ราคาขาย');
+              if (!viewDrug.mfg_date) missing.push('วันผลิต');
               if (!missing.length) return null;
               return (
-                <div className="mx-4 mt-3 mb-1 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 flex items-center gap-2">
+                <div className="mx-4 mt-1 mb-1 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 flex items-center gap-2">
                   <span className="text-amber-500 text-sm shrink-0">⚠️</span>
                   <p className="text-xs text-amber-700">ข้อมูลไม่ครบ: <span className="font-medium">{missing.join(', ')}</span></p>
                 </div>
@@ -449,14 +449,14 @@ export default function DrugsPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50">
                       <tr>
-                        {['Lot Number','จำนวน','วันหมดอายุ','วันผลิต'].map(h => (
+                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'วันผลิต'].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {viewLots.map(lot => {
-                        const isExpired    = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
+                        const isExpired = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
                         const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false;
                         return (
                           <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
@@ -475,8 +475,8 @@ export default function DrugsPage() {
                     <tfoot className="bg-slate-50 border-t border-slate-100">
                       <tr>
                         <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
-                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s,l) => s+l.quantity, 0).toLocaleString()}</td>
-                        <td colSpan={2}/>
+                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
+                        <td colSpan={2} />
                       </tr>
                     </tfoot>
                   </table>
@@ -487,39 +487,43 @@ export default function DrugsPage() {
             {/* 2. สต็อก & อายุ */}
             <DrawerSection title="สต็อก & อายุ">
               <DrawerGrid items={[
-                { label: 'สต็อกปัจจุบัน',
+                {
+                  label: 'สต็อกปัจจุบัน',
                   value: <span className={`font-bold text-base ${viewDrug.current_stock < (viewDrug.min_quantity ?? Infinity) ? 'text-red-600' : 'text-green-600'}`}>
                     {viewDrug.current_stock.toLocaleString()} {viewDrug.unit}
-                  </span> },
-                { label: 'สถานะ',           value: viewDrug.is_expired
+                  </span>
+                },
+                {
+                  label: 'สถานะ', value: viewDrug.is_expired
                     ? <Badge variant="danger" dot>หมดอายุ</Badge>
                     : viewDrug.med_out_of_stock
                       ? <Badge variant="warning" dot>หมดสต็อก</Badge>
                       : viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity
                         ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
-                        : <Badge variant="success" dot>ปกติ</Badge> },
-                { label: 'วันหมดอายุ',       value: fmtDate(viewDrug.exp_date) },
-                { label: 'วันผลิต',          value: fmtDate(viewDrug.mfg_date) },
+                        : <Badge variant="success" dot>ปกติ</Badge>
+                },
+                { label: 'วันหมดอายุ', value: fmtDate(viewDrug.exp_date) },
+                { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
                 { label: 'ขั้นต่ำ / สูงสุด', value: `${viewDrug.min_quantity ?? '—'} / ${viewDrug.max_quantity ?? '—'}` },
-                { label: 'ที่เก็บ',           value: viewDrug.location || '—' },
+                { label: 'ที่เก็บ', value: viewDrug.location || '—' },
               ]} />
             </DrawerSection>
 
             {/* 3. ข้อมูลยา — identity & clinical */}
             <DrawerSection title="ข้อมูลยา">
               <DrawerGrid items={[
-                { label: 'ชื่อแสดง (ไทย)',   value: viewDrug.med_showname || '—', span: true },
+                { label: 'ชื่อแสดง (ไทย)', value: viewDrug.med_showname || '—', span: true },
                 { label: 'ชื่อแสดง (อังกฤษ)', value: viewDrug.med_showname_eng || '—', span: true },
-                { label: 'ชื่อสามัญ',        value: viewDrug.med_generic_name || '—', span: true },
-                { label: 'ชื่อทะเบียน',      value: viewDrug.med_name, span: true },
+                { label: 'ชื่อสามัญ', value: viewDrug.med_generic_name || '—', span: true },
+                { label: 'ชื่อทะเบียน', value: viewDrug.med_name, span: true },
                 { label: 'ชื่อไทย (med_table)', value: viewDrug.med_thai_name || '—', span: true },
-                { label: 'ชื่อการค้า',       value: viewDrug.med_marketing_name || '—', span: true },
-                { label: 'หมวดหมู่',         value: viewDrug.category || '—' },
-                { label: 'รูปแบบยา',         value: viewDrug.med_dosage_form || '—' },
-                { label: 'ระดับ',            value: viewDrug.med_severity || '—' },
-                { label: 'รูปแบบบรรจุ',     value: viewDrug.packaging_type },
-                { label: 'หน่วย',            value: viewDrug.unit },
-                { label: 'แบ่งได้',          value: viewDrug.is_divisible ? 'ใช่' : 'ไม่ใช่' },
+                { label: 'ชื่อการค้า', value: viewDrug.med_marketing_name || '—', span: true },
+                { label: 'หมวดหมู่', value: viewDrug.category || '—' },
+                { label: 'รูปแบบยา', value: viewDrug.med_dosage_form || '—' },
+                { label: 'ระดับ', value: viewDrug.med_severity || '—' },
+                { label: 'รูปแบบบรรจุ', value: viewDrug.packaging_type },
+                { label: 'หน่วย', value: viewDrug.unit },
+                { label: 'แบ่งได้', value: viewDrug.is_divisible ? 'ใช่' : 'ไม่ใช่' },
               ]} />
             </DrawerSection>
 
@@ -527,7 +531,7 @@ export default function DrugsPage() {
             <DrawerSection title="ราคา">
               <DrawerGrid items={[
                 { label: 'ราคาต้นทุน', value: viewDrug.cost_price != null ? `฿${Number(viewDrug.cost_price).toFixed(2)}` : '—' },
-                { label: 'ราคาขาย',   value: viewDrug.unit_price  != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}`  : '—' },
+                { label: 'ราคาขาย', value: viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : '—' },
               ]} />
             </DrawerSection>
 
@@ -535,7 +539,7 @@ export default function DrugsPage() {
             <DrawerSection title="บันทึก">
               <DrawerGrid items={[
                 { label: 'เพิ่มเข้าคลัง', value: fmtDate(viewDrug.created_at, true) },
-                { label: 'อัปเดตล่าสุด',  value: fmtDate(viewDrug.updated_at, true) },
+                { label: 'อัปเดตล่าสุด', value: fmtDate(viewDrug.updated_at, true) },
               ]} />
             </DrawerSection>
 

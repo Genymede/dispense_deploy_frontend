@@ -281,7 +281,7 @@ export default function DispensePage() {
   // ── Save (create or edit) ──────────────────────────────────────────────────
   const handleSave = async () => {
     if (!items.length) { toast.error('กรุณาเพิ่มยาอย่างน้อย 1 รายการ'); return; }
-    if (!ward) { toast.error('กรุณาระบุวอร์ด'); return; }
+    if (!ward) { toast.error('กรุณาระบุแผนก'); return; }
     // Block on allergy or interaction alerts (ทุกระดับความรุนแรง)
     const blockingAlerts = Object.values(liveAlerts).flat().filter(a => a.type === 'allergy' || a.type === 'interaction');
     if (blockingAlerts.length > 0) {
@@ -444,7 +444,7 @@ export default function DispensePage() {
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
         `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
         `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}`,
-        `วอร์ด: ${rx.ward || '-'}`,
+        `แผนก: ${rx.ward || '-'}`,
       ].filter(Boolean).join('\n');
 
       try {
@@ -676,7 +676,7 @@ export default function DispensePage() {
             <Select placeholder="ทุกสถานะ" value={fStatus}
               onChange={e => { setFStatus(e.target.value); setPage(1); }}
               options={Object.entries(STATUS_TH).map(([v, l]) => ({ value: v, label: l }))} />
-            <Input placeholder="วอร์ด..." value={fWard}
+            <Input placeholder="แผนก..." value={fWard}
               onChange={e => { setFWard(e.target.value); setPage(1); }} className="w-28" />
             <div className="flex items-center gap-1.5">
               <label className="text-xs text-slate-500 whitespace-nowrap">คิววันที่</label>
@@ -941,7 +941,7 @@ export default function DispensePage() {
                 onSelect={u => { setDoctorId(u?.uid ?? 0); setDoctorLabel(u?.full_name ?? ''); }} />
               <div>
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                  วอร์ด <span className="text-red-400">*</span>
+                  แผนก <span className="text-red-400">*</span>
                 </label>
                 <input value={ward} onChange={e => setWard(e.target.value)}
                   placeholder="OPD, IPD, ER, ICU..."
@@ -1162,7 +1162,7 @@ export default function DispensePage() {
 
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">
-                    วอร์ด <span className="text-red-400">*</span>
+                    แผนก <span className="text-red-400">*</span>
                   </label>
                   <input value={dispenseWard} onChange={e => { setDispenseWard(e.target.value); setDispenseMetaChanged(true); }}
                     placeholder="OPD, IPD, ER, ICU..."
@@ -1403,7 +1403,7 @@ export default function DispensePage() {
               </button>
               <DrawerGrid items={[
                 { label: 'แพทย์', value: drawerFull.doctor_name || '—' },
-                { label: 'วอร์ด', value: drawerFull.ward ?? '—' },
+                { label: 'แผนก', value: drawerFull.ward ?? '—' },
                 { label: 'กรุ๊ปเลือด', value: drawerFull.blood_group ?? '—' },
                 { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(drawerFull.treatment_right, drawerFull.treatment_right_note) ?? '—' },
                 { label: 'วินิจฉัย', value: drawerFull.diagnosis ?? '—', span: true },
