@@ -3,8 +3,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
-import { drugApi, type Drug, type MedTableItem, type StockLot } from '@/lib/api';
-import { Plus, Search, Filter, Edit2, Trash2, Eye, Package } from 'lucide-react';
+import { drugApi, stockApi, type Drug, type MedTableItem, type StockLot } from '@/lib/api';
+import { Plus, Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine } from 'lucide-react';
 import SearchSelect from '@/components/SearchSelect';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -54,6 +54,35 @@ export default function DrugsPage() {
 
   const [selectedMed, setSelectedMed] = useState<MedTableItem | null>(null);
   const medSearchTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const emptyReceiveForm = { med_sid: 0, med_label: '', quantity: '', lot_number: '', expiry_date: '', mfg_date: '', reference_no: '', note: '' };
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [receiveForm, setReceiveForm] = useState(emptyReceiveForm);
+  const [receiveResetKey, setReceiveResetKey] = useState(0);
+  const [receiveSaving, setReceiveSaving] = useState(false);
+  const rf = (k: string, v: any) => setReceiveForm(p => ({ ...p, [k]: v }));
+
+  const handleReceive = async () => {
+    if (!receiveForm.med_sid) { toast.error('กรุณาเลือกยา'); return; }
+    if (!receiveForm.quantity || Number(receiveForm.quantity) <= 0) { toast.error('กรุณาระบุจำนวน'); return; }
+    setReceiveSaving(true);
+    try {
+      await stockApi.receiveFromMain({
+        med_sid: receiveForm.med_sid,
+        quantity: Number(receiveForm.quantity),
+        lot_number: receiveForm.lot_number || undefined,
+        expiry_date: receiveForm.expiry_date || undefined,
+        mfg_date: receiveForm.mfg_date || undefined,
+        reference_no: receiveForm.reference_no || undefined,
+        note: receiveForm.note || undefined,
+      });
+      toast.success('บันทึกการรับยาจากคลังหลักแล้ว');
+      setShowReceiveModal(false);
+      setReceiveForm(emptyReceiveForm);
+      loadDrugs();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setReceiveSaving(false); }
+  };
 
   const loadDrugs = useCallback(async () => {
     setLoading(true);
@@ -178,7 +207,10 @@ export default function DrugsPage() {
     <MainLayout
       title="รายการยาในคลังย่อย"
       subtitle={`ทั้งหมด ${total} รายการ`}
-      actions={<Button icon={<Plus size={15} />} onClick={openCreate}>เพิ่มยาในคลัง</Button>}
+      actions={<div className="flex gap-2">
+        <Button variant="secondary" icon={<ArrowDownToLine size={15} />} onClick={() => { setReceiveForm(emptyReceiveForm); setReceiveResetKey(k => k + 1); setShowReceiveModal(true); }}>รับยาจากคลังหลัก</Button>
+        <Button icon={<Plus size={15} />} onClick={openCreate}>เพิ่มยาในคลัง</Button>
+      </div>}
     >
       {/* Filters */}
       <Card className="mb-5">
@@ -465,6 +497,36 @@ export default function DrugsPage() {
       <ConfirmDialog open={!!deleteId} title="ลบรายการยา"
         message="คุณแน่ใจหรือไม่ที่จะลบรายการยานี้ออกจากคลัง?"
         confirmLabel="ลบ" onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+
+      <Modal open={showReceiveModal} onClose={() => setShowReceiveModal(false)}
+        title="รับยาจากคลังหลัก" size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowReceiveModal(false)}>ยกเลิก</Button>
+            <Button onClick={handleReceive} loading={receiveSaving}>บันทึกการรับยา</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+            initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
+            onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); }} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="จำนวนที่รับ" type="number" min="1" required
+              value={receiveForm.quantity} onChange={e => rf('quantity', e.target.value)} />
+            <Input label="เลข Lot" value={receiveForm.lot_number}
+              onChange={e => rf('lot_number', e.target.value)} />
+            <Input label="วันหมดอายุ" type="date"
+              value={receiveForm.expiry_date} onChange={e => rf('expiry_date', e.target.value)} />
+            <Input label="วันผลิต" type="date"
+              value={receiveForm.mfg_date} onChange={e => rf('mfg_date', e.target.value)} />
+          </div>
+          <Input label="เลขอ้างอิงใบเบิก" placeholder="เช่น REQ-2025-001"
+            value={receiveForm.reference_no} onChange={e => rf('reference_no', e.target.value)} />
+          <Textarea label="หมายเหตุ" rows={2}
+            value={receiveForm.note} onChange={e => rf('note', e.target.value)} />
+        </div>
+      </Modal>
     </MainLayout>
   );
 }

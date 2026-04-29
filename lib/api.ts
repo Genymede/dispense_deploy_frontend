@@ -253,6 +253,12 @@ export const stockApi = {
 
   reject: (tx_id: number) =>
     api.patch<StockTransaction>(`/stock/${tx_id}/reject`, {}),
+
+  receiveFromMain: (data: {
+    med_sid: number; quantity: number; lot_number?: string;
+    expiry_date?: string; mfg_date?: string;
+    reference_no?: string; note?: string;
+  }) => api.post<StockTransaction>('/stock/from-main', data),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
