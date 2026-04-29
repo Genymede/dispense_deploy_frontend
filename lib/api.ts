@@ -592,7 +592,7 @@ export const queueApi = {
     api.get<{ data: any[]; total: number }>('/queue', { params }),
   getDisplay: () => api.get<{ current: any | null; waiting: any[] }>('/queue/display'),
   getStats:   () => api.get<{ waiting: number; called: number; completed: number; skipped: number; total: number; current_number: number }>('/queue/stats'),
-  create:     (data: { patient_id?: number; note?: string }) => api.post<any>('/queue', data),
+  create:     (data: { patient_id?: number; note?: string; ward?: string }) => api.post<any>('/queue', data),
   call:       (id: number, called_by?: string) => api.put<any>(`/queue/${id}/call`, { called_by }),
   complete:   (id: number) => api.put<any>(`/queue/${id}/complete`),
   receive:    (id: number, received_by?: string) => api.put<any>(`/queue/${id}/receive`, { received_by }),

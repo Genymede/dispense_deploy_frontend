@@ -42,11 +42,13 @@ export default function QueuePage() {
   const [saving, setSaving] = useState(false);
   const [patientId, setPatientId] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  const [ward, setWard] = useState('');
   const [modalKey, setModalKey] = useState(0);
 
   const openModal = () => {
     setPatientId(null);
     setNote('');
+    setWard('');
     setModalKey(k => k + 1);
     setModalOpen(true);
   };
@@ -54,7 +56,7 @@ export default function QueuePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await queueApi.create({ patient_id: patientId ?? undefined, note: note || undefined });
+      await queueApi.create({ patient_id: patientId ?? undefined, note: note || undefined, ward: ward || undefined });
       toast.success('เพิ่มคิวสำเร็จ');
       setModalOpen(false);
       refresh();
@@ -262,6 +264,23 @@ export default function QueuePage() {
             label="ผู้ป่วย (ไม่บังคับ)"
             onSelect={(id) => setPatientId(id as number | null)}
           />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">แผนก</label>
+            <select
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+              value={ward}
+              onChange={e => setWard(e.target.value)}
+            >
+              <option value="">-- ไม่ระบุ (A) --</option>
+              <option value="OPD">OPD — ผู้ป่วยนอก (O)</option>
+              <option value="IPD">IPD — ผู้ป่วยใน (I)</option>
+              <option value="ER">ER — ฉุกเฉิน (E)</option>
+              <option value="ICU">ICU — วิกฤต (C)</option>
+              <option value="OR">OR — ห้องผ่าตัด (R)</option>
+              <option value="ANC">ANC — ฝากครรภ์ (N)</option>
+              <option value="LR">LR — ห้องคลอด (L)</option>
+            </select>
+          </div>
           <FormSpan>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">หมายเหตุ</label>
             <textarea
