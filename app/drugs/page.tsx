@@ -356,7 +356,51 @@ export default function DrugsPage() {
       >
         {viewDrug && (
           <>
-            {/* 1. สต็อก & อายุ — สำคัญที่สุด */}
+            {/* 1. รายละเอียด Lot — สำคัญที่สุด */}
+            <DrawerSection title={`รายละเอียด Lot (${viewLots.length} lot)`}>
+              {viewLots.length === 0 ? (
+                <p className="text-xs text-slate-400">ยังไม่มี lot ในคลัง</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {['Lot Number','จำนวน','วันหมดอายุ','วันผลิต'].map(h => (
+                          <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {viewLots.map(lot => {
+                        const isExpired    = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
+                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false;
+                        return (
+                          <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
+                            <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
+                            <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
+                            <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
+                              {fmtDate(lot.exp_date)}
+                            </td>
+                            <td className="px-3 py-2 text-slate-400">
+                              {fmtDate(lot.mfg_date)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-slate-50 border-t border-slate-100">
+                      <tr>
+                        <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
+                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s,l) => s+l.quantity, 0).toLocaleString()}</td>
+                        <td colSpan={2}/>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </DrawerSection>
+
+            {/* 2. สต็อก & อายุ */}
             <DrawerSection title="สต็อก & อายุ">
               <DrawerGrid items={[
                 { label: 'สต็อกปัจจุบัน',
@@ -377,7 +421,7 @@ export default function DrugsPage() {
               ]} />
             </DrawerSection>
 
-            {/* 2. ข้อมูลยา — identity & clinical */}
+            {/* 3. ข้อมูลยา — identity & clinical */}
             <DrawerSection title="ข้อมูลยา">
               <DrawerGrid items={[
                 { label: 'ชื่อแสดง (ไทย)',   value: viewDrug.med_showname || '—', span: true },
@@ -395,7 +439,7 @@ export default function DrugsPage() {
               ]} />
             </DrawerSection>
 
-            {/* 3. ราคา */}
+            {/* 4. ราคา */}
             <DrawerSection title="ราคา">
               <DrawerGrid items={[
                 { label: 'ราคาต้นทุน', value: viewDrug.cost_price != null ? `฿${Number(viewDrug.cost_price).toFixed(2)}` : '—' },
@@ -403,7 +447,7 @@ export default function DrugsPage() {
               ]} />
             </DrawerSection>
 
-            {/* 4. เวลา */}
+            {/* 5. บันทึก */}
             <DrawerSection title="บันทึก">
               <DrawerGrid items={[
                 { label: 'เพิ่มเข้าคลัง', value: fmtDate(viewDrug.created_at, true) },
@@ -412,53 +456,7 @@ export default function DrugsPage() {
             </DrawerSection>
 
             <DrawerSection title="">
-              {/* Lots section */}
-              <div className="mt-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">รายละเอียด Lot</p>
-                {viewLots.length === 0 ? (
-                  <p className="text-xs text-slate-400">ยังไม่มี lot ในคลัง</p>
-                ) : (
-                  <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          {['Lot Number','จำนวน','วันหมดอายุ','วันผลิต'].map(h => (
-                            <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {viewLots.map(lot => {
-                          const isExpired    = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
-                          const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false;
-                          return (
-                            <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
-                              <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
-                              <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
-                              <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
-                                {fmtDate(lot.exp_date)}
-                              </td>
-                              <td className="px-3 py-2 text-slate-400">
-                                {fmtDate(lot.mfg_date)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot className="bg-slate-50 border-t border-slate-100">
-                        <tr>
-                          <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
-                          <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s,l) => s+l.quantity, 0).toLocaleString()}</td>
-                          <td colSpan={2}/>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                )}
-              </div>
-              <div className="mt-4">
-                <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
-              </div>
+              <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
             </DrawerSection>
           </>
         )}
