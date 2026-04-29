@@ -35,14 +35,17 @@ const emptyForm = {
   delivery_method: '', receiver_name: '', receiver_phone: '',
   address: '', note: '', status: 'Pending',
   medicine_list: [] as MedItem[],
+  courier_name: '', courier_phone: '', tracking_number: '',
 };
 
 const cols: ColDef[] = [
   { key: 'patient_name', label: 'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></> },
-  { key: 'receiver_name',   label: 'ผู้รับ',    className: 'text-sm' },
-  { key: 'receiver_phone',  label: 'โทร',       className: 'text-xs font-mono' },
-  { key: 'delivery_method', label: 'วิธีส่ง',   className: 'text-xs' },
+  { key: 'receiver_name',   label: 'ผู้รับ',       className: 'text-sm' },
+  { key: 'receiver_phone',  label: 'โทรผู้รับ',   className: 'text-xs font-mono' },
+  { key: 'delivery_method', label: 'วิธีส่ง',     className: 'text-xs' },
+  { key: 'courier_name',    label: 'ผู้จัดส่ง',   className: 'text-sm',
+    render: (r: any) => r.courier_name || <span className="text-slate-300">—</span> },
   { key: 'status', label: 'สถานะ',
     render: r => { const c = STATUS_MAP[r.status as keyof typeof STATUS_MAP] ?? { label: r.status, variant: 'gray' as const }; return <Badge variant={c.variant}>{c.label}</Badge>; } },
   { key: 'delivery_date', label: 'วันที่',
@@ -204,6 +207,8 @@ export default function DeliveryPage() {
       delivery_method: row.delivery_method || '', receiver_name: row.receiver_name || '',
       receiver_phone: row.receiver_phone || '', address: row.address || '',
       note: row.note || '', status: row.status || 'Pending', medicine_list: medList,
+      courier_name: row.courier_name || '', courier_phone: row.courier_phone || '',
+      tracking_number: row.tracking_number || '',
     });
     setEditingId(row.delivery_id); setResetKey(k => k + 1);
     setDrugSearch(''); setDrugResults([]);
@@ -227,6 +232,9 @@ export default function DeliveryPage() {
         patient_id: form.patient_id, delivery_method: form.delivery_method,
         receiver_name: form.receiver_name, receiver_phone: form.receiver_phone,
         address: form.address, note: form.note, status: form.status,
+        courier_name: form.courier_name || undefined,
+        courier_phone: form.courier_phone || undefined,
+        tracking_number: form.tracking_number || undefined,
         medicine_list: form.medicine_list.map(m => ({
           med_sid: m.med_sid, med_id: m.med_id, quantity: m.quantity,
           med_name: m.med_showname || m.med_name, unit_price: m.unit_price ?? 0,
@@ -293,11 +301,21 @@ export default function DeliveryPage() {
           )}
 
           <Input label="ชื่อผู้รับ" required value={form.receiver_name} onChange={e => f('receiver_name', e.target.value)} />
-          <Input label="เบอร์โทร" required value={form.receiver_phone} onChange={e => f('receiver_phone', e.target.value)} />
+          <Input label="เบอร์โทรผู้รับ" required value={form.receiver_phone} onChange={e => f('receiver_phone', e.target.value)} />
           <div className="sm:col-span-2">
             <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
               onChange={e => f('address', e.target.value)} rows={2} />
           </div>
+
+          {/* ผู้จัดส่ง — ซ่อนเมื่อมารับด้วยตนเอง */}
+          {form.delivery_method !== 'มารับด้วยตนเอง' && (<>
+            <Input label="ชื่อผู้จัดส่ง" value={form.courier_name} onChange={e => f('courier_name', e.target.value)}
+              placeholder="ชื่อพนักงานส่ง / บริษัทขนส่ง" />
+            <Input label="เบอร์โทรผู้จัดส่ง" value={form.courier_phone} onChange={e => f('courier_phone', e.target.value)}
+              placeholder="0812345678" />
+            <Input label="เลขพัสดุ / Tracking" value={form.tracking_number} onChange={e => f('tracking_number', e.target.value)}
+              placeholder="เลขติดตามพัสดุ" />
+          </>)}
 
           {/* Medicine List */}
           <div className="sm:col-span-2">
@@ -415,10 +433,14 @@ export default function DeliveryPage() {
                 { label: 'สถานะ',        value: statusBadge(drawer.status) },
                 { label: 'วิธีจัดส่ง',  value: drawer.delivery_method || '—' },
                 { label: 'วันที่',        value: fmtDate(drawer.delivery_date) },
-                { label: 'ผู้รับ',       value: drawer.receiver_name || '—' },
-                { label: 'เบอร์โทร',    value: drawer.receiver_phone || '—' },
-                { label: 'ที่อยู่',      value: drawer.address || '—', span: true },
-                { label: 'หมายเหตุ',    value: drawer.note || '—', span: true },
+                { label: 'ผู้รับ',          value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทรผู้รับ', value: drawer.receiver_phone || '—' },
+                { label: 'ที่อยู่',         value: drawer.address || '—', span: true },
+                { label: 'ผู้จัดส่ง',       value: drawer.courier_name || '—' },
+                { label: 'เบอร์ผู้จัดส่ง',  value: drawer.courier_phone || '—' },
+                { label: 'เลขพัสดุ',        value: drawer.tracking_number || '—' },
+                { label: 'เวลาจัดส่งจริง',  value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'หมายเหตุ',         value: drawer.note || '—', span: true },
               ]} />
             </DrawerSection>
 
