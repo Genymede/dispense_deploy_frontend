@@ -7,7 +7,7 @@ import SafetyPanel from '@/components/SafetyPanel';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
-import { dispenseApi, safetyApi, api, printerApi, queueApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
+import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
@@ -179,6 +179,7 @@ export default function DispensePage() {
 
   // dispense modal (confirm + full safety)
   const [dispenseRx, setDispenseRx] = useState<any | null>(null);
+  const [dispenseAllergies, setDispenseAllergies] = useState<any[]>([]);
   const [safetyResult, setSafetyResult] = useState<SafetyCheckResult | null>(null);
   const [dispensing, setDispensing] = useState(false);
   const [dispenseItems, setDispenseItems] = useState<any[]>([]);
@@ -327,7 +328,8 @@ export default function DispensePage() {
     setDispenseNote(rx.note || '');
     setDispenseDiagnosis(rx.diagnosis || '');
     setDispenseMetaChanged(false); setDispenseMetaResetKey(k => k + 1);
-    // โหลด safety + items พร้อมกัน
+    setDispenseAllergies([]);
+    // โหลด safety + items + allergies พร้อมกัน
     Promise.all([
       safetyApi.check(rx.prescription_id)
         .then(r => setSafetyResult(r.data))
@@ -339,6 +341,11 @@ export default function DispensePage() {
           setPrintSelected(new Set(items.map((_: any, i: number) => i)));
         })
         .catch(() => { }),
+      rx.patient_id
+        ? registryApi.getAllergy({ patient_id: rx.patient_id, limit: 50 })
+          .then(r => setDispenseAllergies(r.data.data ?? []))
+          .catch(() => { })
+        : Promise.resolve(),
     ]);
   };
   // filter stock alerts สำหรับรายการที่ mark เป็น overdue แล้ว
@@ -1103,6 +1110,32 @@ export default function DispensePage() {
                   <p className="text-xs text-slate-400">RX: <span className="font-mono text-primary-600">{dispenseRx.prescription_no}</span></p>
                 </div>
               </div>
+
+              {/* allergies */}
+              {dispenseAllergies.length > 0 && (
+                <div className="rounded-lg border border-red-200 bg-red-50 overflow-hidden">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-red-500 px-3 pt-2.5 pb-1">
+                    ⚠ ยาที่แพ้ ({dispenseAllergies.length})
+                  </p>
+                  <div className="divide-y divide-red-100">
+                    {dispenseAllergies.map((a: any) => (
+                      <div key={a.allr_id} className="px-3 py-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-semibold text-red-800 leading-snug">{a.med_name}</p>
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${
+                            a.severity === 'severe'   ? 'bg-red-200 text-red-800' :
+                            a.severity === 'moderate' ? 'bg-orange-100 text-orange-700' :
+                                                        'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {a.severity === 'severe' ? 'รุนแรง' : a.severity === 'moderate' ? 'ปานกลาง' : 'เล็กน้อย'}
+                          </span>
+                        </div>
+                        {a.symptoms && <p className="text-[11px] text-red-600 mt-0.5">{a.symptoms}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* treatment right */}
               {(dispenseRx as any).treatment_right && (
