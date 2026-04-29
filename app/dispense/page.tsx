@@ -47,7 +47,7 @@ const DISPENSE_TABS = [
 ] as const;
 
 const FREQ = ['OD', 'BID', 'TID', 'QID', 'PRN', 'STAT', 'q4h', 'q6h', 'q8h', 'q12h', 'HS'];
-const ROUTE = ['รับประทาน', 'ฉีดเข้ากล้าม', 'ฉีดเข้าเส้นเลือด', 'พ่น', 'ทาภายนอก', 'หยอดตา', 'หยอดหู', 'อม', 'เหน็บ'];
+const ROUTE = ['รับประทาน', 'ฉีดเข้ากล้ามเนื้อ', 'ฉีดเข้าเส้นเลือด', 'พ่น', 'ทาภายนอก', 'หยอดตา', 'หยอดหู', 'อม', 'เหน็บ'];
 
 interface DrugItem {
   med_sid: number; med_id?: number; med_showname: string; med_name: string;
@@ -160,7 +160,7 @@ export default function DispensePage() {
   const [ward, setWard] = useState('');
   const [note, setNote] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
-  const [patientTreatmentRight, setPatientTreatmentRight]     = useState<string | null>(null);
+  const [patientTreatmentRight, setPatientTreatmentRight] = useState<string | null>(null);
   const [patientTreatmentRightNote, setPatientTreatmentRightNote] = useState<string | null>(null);
   const [items, setItems] = useState<DrugItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -648,7 +648,7 @@ export default function DispensePage() {
               </select>
               <Button variant="secondary" size="sm" onClick={handleMock} loading={mocking}>สุ่มผู้ป่วย</Button>
             </div>
-<Button onClick={() => { resetForm(); setShowCreate(true); }} icon={<Plus size={14} />}>สร้างใบสั่งยา</Button>
+            <Button onClick={() => { resetForm(); setShowCreate(true); }} icon={<Plus size={14} />}>สร้างใบสั่งยา</Button>
           </div>
         ) : null
       }>
@@ -982,12 +982,11 @@ export default function DispensePage() {
 
           {/* ─── Safety check ──────────────────────────────────────── */}
           {items.length > 0 && (
-            <div className={`rounded-xl border px-4 py-3 ${
-              loadingSafety ? 'bg-slate-50 border-slate-200' :
+            <div className={`rounded-xl border px-4 py-3 ${loadingSafety ? 'bg-slate-50 border-slate-200' :
               allLiveAlerts.some(a => a.level === 'critical') ? 'bg-red-50 border-red-200' :
-              allLiveAlerts.some(a => a.level === 'warning')  ? 'bg-amber-50 border-amber-200' :
-              'bg-green-50 border-green-200'
-            }`}>
+                allLiveAlerts.some(a => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
+                  'bg-green-50 border-green-200'
+              }`}>
               {/* ── header ── */}
               <div className="flex items-center gap-2 mb-1">
                 {loadingSafety
@@ -1026,7 +1025,7 @@ export default function DispensePage() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-3 py-2.5 text-left font-semibold text-slate-500 w-6 text-center">#</th>
-                    {['ชื่อยา', 'จำนวน', 'ความถี่', 'เส้นทาง', 'ราคา (บาท)', ''].map(h => (
+                    {['ชื่อยา', 'จำนวน', 'ความถี่', 'วิธีใช้งาน', 'ราคา (บาท)', ''].map(h => (
                       <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-500">{h}</th>
                     ))}
                   </tr>
@@ -1122,11 +1121,10 @@ export default function DispensePage() {
                       <div key={a.allr_id} className="px-3 py-2">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-xs font-semibold text-red-800 leading-snug">{a.med_name}</p>
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${
-                            a.severity === 'severe'   ? 'bg-red-200 text-red-800' :
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ${a.severity === 'severe' ? 'bg-red-200 text-red-800' :
                             a.severity === 'moderate' ? 'bg-orange-100 text-orange-700' :
-                                                        'bg-yellow-100 text-yellow-700'
-                          }`}>
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
                             {a.severity === 'severe' ? 'รุนแรง' : a.severity === 'moderate' ? 'ปานกลาง' : 'เล็กน้อย'}
                           </span>
                         </div>
@@ -1199,12 +1197,11 @@ export default function DispensePage() {
 
               {/* live safety (แสดงเมื่อแก้ไขรายการยา) */}
               {dispenseItemsChanged && (
-                <div className={`rounded-xl border px-4 py-3 ${
-                  loadingSafety ? 'bg-slate-50 border-slate-200' :
+                <div className={`rounded-xl border px-4 py-3 ${loadingSafety ? 'bg-slate-50 border-slate-200' :
                   Object.values(liveAlerts).flat().some((a: any) => a.level === 'critical') ? 'bg-red-50 border-red-200' :
-                  Object.values(liveAlerts).flat().some((a: any) => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
-                  'bg-green-50 border-green-200'
-                }`}>
+                    Object.values(liveAlerts).flat().some((a: any) => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
+                      'bg-green-50 border-green-200'
+                  }`}>
                   <div className="flex items-center gap-2">
                     {loadingSafety
                       ? <><Loader2 size={13} className="animate-spin text-slate-400" /><span className="text-xs text-slate-500">ตรวจสอบความปลอดภัย...</span></>
@@ -1252,7 +1249,7 @@ export default function DispensePage() {
                         <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500 w-8">
                           <input type="checkbox" className="rounded accent-primary-600"
                             checked={printSelected.size === dispenseItems.length}
-                            onChange={e => setPrintSelected(e.target.checked ? new Set(dispenseItems.map((_,i)=>i)) : new Set())}
+                            onChange={e => setPrintSelected(e.target.checked ? new Set(dispenseItems.map((_, i) => i)) : new Set())}
                           />
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
@@ -1444,7 +1441,7 @@ export default function DispensePage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {it.frequency &&<span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">{it.frequency}</span>}
+                        {it.frequency && <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">{it.frequency}</span>}
                         {it.route && <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{it.route}</span>}
                         {it.med_severity?.includes('เสพติด') && <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">ยาเสพติด</span>}
                         {it.med_pregnancy_category === 'X' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Preg Cat X</span>}
