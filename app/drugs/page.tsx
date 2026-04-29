@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
@@ -27,6 +28,7 @@ const emptyForm = {
 };
 
 export default function DrugsPage() {
+  const searchParams = useSearchParams();
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -115,6 +117,15 @@ export default function DrugsPage() {
   }, [search, filterCat, filterStatus, page]);
 
   useEffect(() => { loadDrugs(); }, [loadDrugs]);
+
+  // auto-open edit modal เมื่อมาจาก alerts (?edit=<med_sid>)
+  useEffect(() => {
+    const editSid = searchParams.get('edit');
+    if (!editSid) return;
+    drugApi.getById(Number(editSid))
+      .then(r => openEdit(r.data))
+      .catch(() => toast.error('ไม่พบรายการยา'));
+  }, []);
 
   useEffect(() => {
     drugApi.getCategories().then((r) => setCategories(r.data)).catch(() => { });
@@ -275,7 +286,6 @@ export default function DrugsPage() {
                     const isLow = !isExp && d.min_quantity != null && d.current_stock < d.min_quantity;
                     const statusV = isExp ? 'danger' : isLow ? 'warning' : 'success';
                     const statusL = isExp ? 'หมดอายุ' : isLow ? 'สต็อกต่ำ' : 'ปกติ';
-                    const isIncomplete = !d.med_showname || !d.med_showname_eng || d.cost_price == null || d.unit_price == null || d.min_quantity == null;
                     return (
                       <tr key={d.med_sid} className="table-row-hover cursor-pointer" onClick={() => setViewDrug(d)}>
                         {/* รูป */}
@@ -293,14 +303,7 @@ export default function DrugsPage() {
                         </td>
                         {/* ชื่อยา */}
                         <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-1.5 leading-tight">
-                            <p className="font-medium text-slate-800">{d.med_showname || d.med_name}</p>
-                            {isIncomplete && (
-                              <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                                ข้อมูลไม่ครบ
-                              </span>
-                            )}
-                          </div>
+                          <p className="font-medium text-slate-800 leading-tight">{d.med_showname || d.med_name}</p>
                           <p className="text-xs text-slate-400 mt-0.5">{d.med_generic_name || d.med_name}</p>
                         </td>
                         {/* หมวดหมู่ */}

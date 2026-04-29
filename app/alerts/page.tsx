@@ -13,7 +13,7 @@ const ALERT_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: s
   near_expiry:       { icon: <Calendar size={16} />,       color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100', label: 'ใกล้หมดอายุ' },
   expired:           { icon: <AlertTriangle size={16} />,  color: 'text-red-600',    bg: 'bg-red-50 border-red-100',       label: 'หมดอายุ' },
   overstock:         { icon: <Package size={16} />,        color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-100',     label: 'เกินสต็อก' },
-  incomplete_record: { icon: <ClipboardList size={16} />,  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'ข้อมูลไม่ครบ' },
+  incomplete_record: { icon: <ClipboardList size={16} />,  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'เพิ่มข้อมูลยาใหม่' },
 };
 
 export default function AlertsPage() {
@@ -117,8 +117,10 @@ export default function AlertsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <Link href={`/drugs?search=${a.drug_name}`}>
-                        <Button variant="secondary" size="xs" icon={<Eye size={12} />}>ดูรายการยา</Button>
+                      <Link href={a.alert_type === 'incomplete_record' ? `/drugs?edit=${a.med_sid}` : `/drugs?search=${a.drug_name}`}>
+                        <Button variant="secondary" size="xs" icon={<Eye size={12} />}>
+                          {a.alert_type === 'incomplete_record' ? 'เพิ่มข้อมูลยา' : 'ดูรายการยา'}
+                        </Button>
                       </Link>
                       {!a.is_read && (
                         <Button variant="ghost" size="xs" onClick={() => handleMarkRead(a)}>อ่านแล้ว</Button>
