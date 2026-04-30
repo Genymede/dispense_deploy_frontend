@@ -173,9 +173,6 @@ export default function DashboardPage() {
               <Card>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-slate-700">Queue วันนี้</h2>
-                  <Link href="/queue" className="text-xs text-primary-600 hover:underline flex items-center gap-0.5">
-                    จัดการ <ChevronRight size={11} />
-                  </Link>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="py-2.5 bg-amber-50 rounded-xl">
