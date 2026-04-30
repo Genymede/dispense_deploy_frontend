@@ -1,41 +1,21 @@
 'use client';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
-import { Button, Input, Card, Badge, Modal, EmptyState, Spinner, Textarea } from '@/components/ui';
-import { stockApi, drugApi, type Drug, type StockTransaction } from '@/lib/api';
+import { Button, Input, Card, Badge, EmptyState, Spinner } from '@/components/ui';
+import { stockApi, type StockTransaction } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import UserSelect from '@/components/UserSelect';
-import SearchSelect from '@/components/SearchSelect';
-import { ArrowDownToLine, Search, Plus, Package, Clock, CheckCircle, ShieldCheck, X } from 'lucide-react';
+import { ArrowDownToLine, Search, Package, Clock, CheckCircle, ShieldCheck, X, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { thaiToday, fmtDate } from '@/lib/dateUtils';
-
-const emptyForm = {
-  med_sid: 0,
-  quantity: '',
-  lot_number: '',
-  expiry_date: '',
-  reference_no: '',
-  note: '',
-};
 
 export default function StockInPage() {
   const [history, setHistory] = useState<StockTransaction[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const { user } = useAuth();
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState(emptyForm);
-  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
-  const [drugList, setDrugList] = useState<Drug[]>([]);
-  const [drugSearch, setDrugSearch] = useState('');
-  const [showDrugPicker, setShowDrugPicker] = useState(false);
-  const [pickerLoading, setPickerLoading] = useState(false);
   const [searchTx, setSearchTx] = useState('');
   const [page, setPage] = useState(1);
   const perPage = 30;
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const [pending, setPending] = useState<StockTransaction[]>([]);
   const [pendingLoading, setPendingLoading] = useState(true);
   const [approving, setApproving] = useState<number | null>(null);
@@ -43,9 +23,7 @@ export default function StockInPage() {
   const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await stockApi.getTransactions({
-        tx_type: 'in', page, limit: perPage,
-      });
+      const res = await stockApi.getTransactions({ tx_type: 'in', page, limit: perPage });
       setHistory(res.data.data);
       setTotal(res.data.total);
     } catch (err: any) {
@@ -88,67 +66,7 @@ export default function StockInPage() {
     } finally { setApproving(null); }
   };
 
-  // drug picker search
-  useEffect(() => {
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(async () => {
-      if (!showDrugPicker) return;
-      setPickerLoading(true);
-      try {
-        const res = await drugApi.getAll({ search: drugSearch, limit: 50 });
-        setDrugList(res.data.data);
-      } catch {} finally {
-        setPickerLoading(false);
-      }
-    }, 300);
-  }, [drugSearch, showDrugPicker]);
-
-  const openPicker = async () => {
-    setShowDrugPicker(true);
-    setPickerLoading(true);
-    try {
-      const res = await drugApi.getAll({ limit: 50 });
-      setDrugList(res.data.data);
-    } catch {} finally {
-      setPickerLoading(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!form.med_sid) { toast.error('กรุณาเลือกยา'); return; }
-    if (!form.quantity || Number(form.quantity) <= 0) { toast.error('กรุณาระบุจำนวน > 0'); return; }
-    if (Number(form.quantity) > 99999) { toast.error('จำนวนสูงสุดคือ 99,999'); return; }
-    if (form.expiry_date && new Date(form.expiry_date) <= new Date()) {
-      toast.error('วันหมดอายุต้องเป็นวันในอนาคต'); return;
-    }
-    setSaving(true);
-    try {
-      const tx = await stockApi.stockIn({
-        med_sid: form.med_sid,
-        quantity: Number(form.quantity),
-        lot_number: form.lot_number || undefined,
-        expiry_date: form.expiry_date || undefined,
-        reference_no: form.reference_no || undefined,
-        note: form.note || undefined,
-      });
-      toast.success('บันทึกการรับยาเรียบร้อย');
-      setHistory((h) => [tx.data, ...h]);
-      setTotal((t) => t + 1);
-      setShowModal(false);
-      setForm(emptyForm);
-      setSelectedDrug(null);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const todayTxs = history.filter((h) =>
-    h.created_at.startsWith(thaiToday())
-  );
-
-  const f = (k: string, v: any) => setForm((p) => ({ ...p, [k]: v }));
+  const todayTxs = history.filter((h) => h.created_at.startsWith(thaiToday()));
 
   const filteredHistory = searchTx
     ? history.filter(
@@ -162,7 +80,15 @@ export default function StockInPage() {
     <MainLayout
       title="รับยาเข้าคลัง"
       subtitle="บันทึกการรับยาจากคลังกลาง"
-      actions={<Button icon={<Plus size={15} />} onClick={() => setShowModal(true)}>บันทึกรับยา</Button>}
+      actions={
+        <a
+          href="https://warehouse.hpk-hms.site/request/withdraw"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button icon={<ExternalLink size={15} />}>เบิกยาจากคลังหลัก</Button>
+        </a>
+      }
     >
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-5">
@@ -207,9 +133,7 @@ export default function StockInPage() {
             <tbody className="divide-y divide-slate-50">
               {pending.map(tx => (
                 <tr key={tx.tx_id} className="table-row-hover">
-                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-                    {fmtDate(tx.created_at, true)}
-                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(tx.created_at, true)}</td>
                   <td className="px-4 py-3 font-medium text-slate-800">{tx.med_showname || tx.med_name}</td>
                   <td className="px-4 py-3"><Badge variant="info">+{tx.quantity.toLocaleString()}</Badge></td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-400">{tx.lot_number || '-'}</td>
@@ -267,9 +191,7 @@ export default function StockInPage() {
               <tbody className="divide-y divide-slate-50">
                 {filteredHistory.map((tx) => (
                   <tr key={tx.tx_id} className="table-row-hover">
-                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-                      {fmtDate(tx.created_at, true)}
-                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(tx.created_at, true)}</td>
                     <td className="px-4 py-3 font-medium text-slate-800">{tx.med_showname || tx.med_name}</td>
                     <td className="px-4 py-3"><Badge variant="success">+{tx.quantity.toLocaleString()}</Badge></td>
                     <td className="px-4 py-3 text-xs font-mono text-slate-500">
@@ -302,66 +224,6 @@ export default function StockInPage() {
           </>
         )}
       </Card>
-
-      {/* Stock In Modal */}
-      <Modal open={showModal} onClose={() => { setShowModal(false); setSelectedDrug(null); setForm(emptyForm); }}
-        title="บันทึกรับยาเข้าคลัง" size="lg"
-        footer={<><Button variant="secondary" onClick={() => setShowModal(false)}>ยกเลิก</Button>
-          <Button icon={<CheckCircle size={15} />} onClick={handleSubmit} loading={saving}>บันทึก</Button></>}
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-medium text-slate-700">เลือกยา <span className="text-red-500">*</span></label>
-            <button type="button" onClick={openPicker}
-              className="mt-1 w-full h-9 px-3 border border-slate-200 rounded-lg text-sm text-left flex items-center gap-2 hover:border-primary-400 transition-colors">
-              {selectedDrug
-                ? <span className="text-slate-800">{selectedDrug.med_showname || selectedDrug.med_name}</span>
-                : <span className="text-slate-400 flex items-center gap-2"><Search size={13} />คลิกเพื่อเลือกยา</span>}
-            </button>
-          </div>
-          {selectedDrug && (
-            <div className="p-3 bg-primary-50 rounded-xl border border-primary-100 text-sm grid grid-cols-3 gap-2">
-              <div><p className="text-xs text-slate-500">สต็อกปัจจุบัน</p><p className="font-semibold">{selectedDrug.current_stock} {selectedDrug.unit}</p></div>
-              <div><p className="text-xs text-slate-500">สต็อกสูงสุด</p><p className="font-semibold">{selectedDrug.max_quantity ?? '-'}</p></div>
-              <div><p className="text-xs text-slate-500">ที่เก็บ</p><p className="font-semibold">{selectedDrug.location || '-'}</p></div>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="จำนวนที่รับ" type="number" required placeholder="0" value={form.quantity}
-              onChange={(e) => f('quantity', e.target.value)} suffix={selectedDrug?.unit || 'หน่วย'} />
-            <Input label="เลข Lot" placeholder="LOT240101" value={form.lot_number} onChange={(e) => f('lot_number', e.target.value)} />
-            <Input label="วันหมดอายุ" type="date" value={form.expiry_date} onChange={(e) => f('expiry_date', e.target.value)} />
-            <Input label="เลขอ้างอิง / ใบสั่งซื้อ" placeholder="PO-2024-001" value={form.reference_no} onChange={(e) => f('reference_no', e.target.value)} />
-          </div>
-          <Textarea label="หมายเหตุ" placeholder="หมายเหตุเพิ่มเติม..." value={form.note} onChange={(e) => f('note', e.target.value)} />
-        </div>
-      </Modal>
-
-      {/* Drug Picker */}
-      <Modal open={showDrugPicker} onClose={() => setShowDrugPicker(false)} title="เลือกยา" size="md">
-        <Input placeholder="ค้นหา..." value={drugSearch} onChange={(e) => setDrugSearch(e.target.value)} icon={<Search size={13} />} className="mb-3" />
-        <div className="space-y-1.5 max-h-72 overflow-y-auto">
-          {pickerLoading ? (
-            <div className="flex justify-center py-8"><Spinner /></div>
-          ) : drugList.length === 0 ? (
-            <p className="text-center text-sm text-slate-400 py-8">ไม่พบรายการ</p>
-          ) : drugList.map((d) => (
-            <button key={d.med_sid}
-              onClick={() => { setSelectedDrug(d); f('med_sid', d.med_sid); setShowDrugPicker(false); }}
-              className="w-full text-left p-3 rounded-lg border border-slate-100 hover:border-primary-300 hover:bg-primary-50 transition-all">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-800 text-sm">{d.med_showname || d.med_name}</p>
-                  <p className="text-xs text-slate-500">{d.med_generic_name} · {d.packaging_type}</p>
-                </div>
-                <Badge variant={d.current_stock === 0 ? 'danger' : d.min_quantity != null && d.current_stock < d.min_quantity ? 'warning' : 'success'}>
-                  {d.current_stock} {d.unit}
-                </Badge>
-              </div>
-            </button>
-          ))}
-        </div>
-      </Modal>
     </MainLayout>
   );
 }
