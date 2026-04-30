@@ -7,8 +7,8 @@ import {
   Package, Truck, Pill, Bell, Settings, ChevronRight,
   BarChart3, BookOpen, LogOut, ChevronDown,
   Database, ShieldAlert, FlaskConical, Repeat2,
-  Stethoscope, ClipboardList, Clock, FileWarning,
-  AlertTriangle, FileText, CalendarClock,
+  Stethoscope, ClipboardList, Clock, FileText,
+  AlertTriangle, FileWarning,
   LayoutDashboard, ArrowDownToLine, Activity, Tag,
 } from "lucide-react";
 import clsx from "clsx";
@@ -56,11 +56,9 @@ const reportsGroup: NavGroup = {
     { href: "/reports/allergy-registry", label: "การแพ้ยา", icon: ShieldAlert },
     { href: "/reports/adr-registry", label: "อาการไม่พึงประสงค์จากยา", icon: FlaskConical },
     { href: "/reports/med-interaction", label: "ปฏิกิริยายา", icon: Repeat2 },
-    { href: "/reports/error-medication", label: "ความคลาดเคลื่อนทางยา", icon: FileWarning },
     { href: "/reports/med-problem", label: "ปัญหาการใช้ยา", icon: AlertTriangle },
     { href: "/reports/med-delivery", label: "การจัดส่ง", icon: Truck },
     { href: "/reports/overdue-med", label: "ยาค้างจ่าย", icon: Clock },
-    { href: "/reports/cut-off", label: "ช่วงตัดรอบยา", icon: CalendarClock },
     { href: "/reports/rad-registry", label: "ยาปฏิชีวนะควบคุม", icon: FileText },
     { href: "/transactions", label: "ประวัติเคลื่อนไหวยา", icon: Activity },
   ],
