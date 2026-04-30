@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Card, Badge, Button, EmptyState, Spinner } from '@/components/ui';
 import { alertApi, type Alert } from '@/lib/api';
-import { Bell, AlertTriangle, Calendar, TrendingDown, Package, CheckCheck, Eye, ClipboardList } from 'lucide-react';
+import { Bell, AlertTriangle, Calendar, TrendingDown, Package, CheckCheck, Eye, ClipboardList, Sparkles } from 'lucide-react';
 import { fmtDate } from '@/lib/dateUtils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ const ALERT_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: s
   expired:           { icon: <AlertTriangle size={16} />,  color: 'text-red-600',    bg: 'bg-red-50 border-red-100',       label: 'หมดอายุ' },
   overstock:         { icon: <Package size={16} />,        color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-100',     label: 'เกินสต็อก' },
   incomplete_record: { icon: <ClipboardList size={16} />,  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'เพิ่มข้อมูลยาใหม่' },
+  new_drug:          { icon: <Sparkles size={16} />,        color: 'text-teal-600',   bg: 'bg-teal-50 border-teal-100',     label: 'ยาใหม่เข้าคลัง' },
 };
 
 export default function AlertsPage() {
