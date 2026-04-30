@@ -169,6 +169,24 @@ export interface DashboardStats {
   today_dispense_count: number;
   today_stock_in_count: number;
   total_transactions_today: number;
+  pending_prescriptions: number;
+  queue_waiting: number;
+  queue_called: number;
+  queue_completed_today: number;
+  near_expiry_top: Array<{
+    med_sid: number;
+    drug_name: string;
+    exp_date: string;
+    med_quantity: number;
+    days_left: number;
+  }>;
+  recent_transactions: Array<{
+    tx_id: number;
+    tx_type: string;
+    quantity: number;
+    created_at: string;
+    drug_name: string;
+  }>;
 }
 
 export interface StockSummary {
@@ -176,6 +194,7 @@ export interface StockSummary {
   stock_in: number;
   stock_out: number;
   stock_return: number;
+  dispensed_count: number;
 }
 
 export interface InventoryItem extends Drug {
