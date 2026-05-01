@@ -7,7 +7,7 @@ import SafetyPanel from '@/components/SafetyPanel';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
-import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
+import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
@@ -166,6 +166,13 @@ export default function DispensePage() {
   const [saving, setSaving] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
+  // create form — patient demographics panel
+  const [createPatientDetail,    setCreatePatientDetail]    = useState<any | null>(null);
+  const [createAllergies,        setCreateAllergies]        = useState<any[]>([]);
+  const [createAllergyLoading,   setCreateAllergyLoading]   = useState(false);
+  const [createVitals,           setCreateVitals]           = useState({ temp: '', bp: '' });
+  const [addToQueue,             setAddToQueue]             = useState(false);
+
   // live safety (create/edit form)
   const [liveAlerts, setLiveAlerts] = useState<Record<number, any[]>>({}); // med_sid → alerts
   const [loadingSafety, setLoadingSafety] = useState(false);
@@ -246,6 +253,20 @@ export default function DispensePage() {
     if (showCreate) runLiveSafety(patientId, items);
   }, [patientId, items, showCreate, runLiveSafety]);
 
+  // Fetch full patient detail + allergies when patient selected in create form
+  useEffect(() => {
+    if (!showCreate || !patientId) {
+      setCreatePatientDetail(null); setCreateAllergies([]);
+      return;
+    }
+    setCreateAllergyLoading(true);
+    Promise.all([
+      patientApi.getById(patientId).then(r => setCreatePatientDetail(r.data)).catch(() => {}),
+      registryApi.getAllergy({ patient_id: patientId, limit: 50 })
+        .then(r => setCreateAllergies(r.data.data ?? [])).catch(() => {}),
+    ]).finally(() => setCreateAllergyLoading(false));
+  }, [patientId, showCreate]);
+
   // ── Items ──────────────────────────────────────────────────────────────────
   const addItem = (drug: any) => {
     if (!drug) return;
@@ -270,6 +291,8 @@ export default function DispensePage() {
     setWard(''); setNote(''); setDiagnosis(''); setItems([]);
     setEditingRxId(null); setLiveAlerts({});
     setPatientTreatmentRight(null); setPatientTreatmentRightNote(null);
+    setCreatePatientDetail(null); setCreateAllergies([]);
+    setCreateVitals({ temp: '', bp: '' }); setAddToQueue(false);
     setResetKey(k => k + 1);
   };
 
@@ -311,6 +334,10 @@ export default function DispensePage() {
             frequency: it.frequency, route: it.route,
           })),
         });
+        if (addToQueue && patientId) {
+          try { await queueApi.create({ patient_id: patientId, ward }); }
+          catch { /* queue creation is non-blocking */ }
+        }
         toast.success('สร้างใบสั่งยาเรียบร้อย');
       }
       setShowCreate(false); resetForm(); loadList();
@@ -899,16 +926,23 @@ export default function DispensePage() {
       ════════════════════════════════════════════════════════════════════ */}
       <Modal open={showCreate}
         onClose={() => { setShowCreate(false); resetForm(); }}
-        size="xl"
+        size="2xl"
         title={editingRxId ? `แก้ไขใบสั่งยา` : 'สร้างใบสั่งยาใหม่'}
         footer={
           <div className="flex items-center justify-between w-full">
             {/* Live safety summary */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               {loadingSafety
                 ? <span className="flex items-center gap-1 text-xs text-slate-400"><Loader2 size={12} className="animate-spin" />ตรวจสอบยา...</span>
                 : <InlineSafetyBadge alerts={allLiveAlerts} />
               }
+              {!editingRxId && (
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                  <input type="checkbox" checked={addToQueue} onChange={e => setAddToQueue(e.target.checked)}
+                    className="w-4 h-4 text-primary-600 rounded" />
+                  ออกคิวรับยา
+                </label>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => { setShowCreate(false); resetForm(); }}>ยกเลิก</Button>
@@ -949,14 +983,6 @@ export default function DispensePage() {
                   placeholder="เช่น J06.9, HT, DM Type 2..."
                   className="w-full h-9 border border-slate-200 rounded-lg text-sm px-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
               </div>
-              {patientId > 0 && (
-                <div className="col-span-2 flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100">
-                  <span className="text-xs text-slate-400">สิทธิ์การรักษา:</span>
-                  <span className="text-xs font-medium text-slate-700">
-                    {treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}
-                  </span>
-                </div>
-              )}
               <div className="col-span-2">
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">หมายเหตุจากแพทย์</label>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
@@ -965,6 +991,84 @@ export default function DispensePage() {
               </div>
             </div>
           </div>
+
+          {/* ─── Patient Demographics Panel ────────────────────────── */}
+          {patientId > 0 && (
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              {/* Allergy banner */}
+              {createAllergyLoading ? (
+                <div className="px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs text-slate-400">
+                  <Loader2 size={12} className="animate-spin" /> กำลังตรวจสอบแพ้ยา...
+                </div>
+              ) : createAllergies.length > 0 ? (
+                <div className="px-4 py-2.5 bg-red-500 text-white flex items-start gap-2">
+                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-sm font-bold">แพ้ยา: </span>
+                    <span className="text-sm">
+                      {createAllergies.map(a => a.med_name || a.drug_name || '').filter(Boolean).join(' · ')}
+                    </span>
+                    {createAllergies.some(a => a.symptoms) && (
+                      <p className="text-xs mt-0.5 text-red-100">
+                        อาการ: {createAllergies.map(a => a.symptoms).filter(Boolean).join('; ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 py-2 bg-green-50 flex items-center gap-2">
+                  <CheckCircle2 size={13} className="text-green-500" />
+                  <span className="text-xs text-green-700 font-medium">ไม่มีประวัติแพ้ยา</span>
+                </div>
+              )}
+
+              {/* Demographics + treatment right */}
+              {createPatientDetail && (
+                <div className="px-4 py-3 space-y-3">
+                  <div className="grid grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
+                    <div><span className="text-slate-400">HN: </span><span className="font-mono font-semibold text-slate-700">{createPatientDetail.hn_number}</span></div>
+                    <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender === 'M' ? 'ชาย' : createPatientDetail.gender === 'F' ? 'หญิง' : '—'}</span></div>
+                    <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
+                    <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
+                    <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
+                    <div><span className="text-slate-400">โทร: </span><span>{createPatientDetail.phone || '—'}</span></div>
+                    <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}</span></div>
+                    {createPatientDetail.PMH && (
+                      <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
+                    )}
+                  </div>
+
+                  {/* Vitals */}
+                  <div className="grid grid-cols-5 gap-3 pt-2 border-t border-slate-100">
+                    <div className="text-xs">
+                      <span className="text-slate-400 block mb-1">น้ำหนัก (kg)</span>
+                      <span className="font-medium">{createPatientDetail.weight ?? '—'}</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-slate-400 block mb-1">ส่วนสูง (cm)</span>
+                      <span className="font-medium">{createPatientDetail.height ?? '—'}</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-slate-400 block mb-1">BMI</span>
+                      <span className="font-medium">{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span>
+                    </div>
+                    <div className="text-xs">
+                      <label className="text-slate-400 block mb-1">Temp (°C)</label>
+                      <input value={createVitals.temp} onChange={e => setCreateVitals(v => ({ ...v, temp: e.target.value }))}
+                        placeholder="36.5"
+                        className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
+                    </div>
+                    <div className="text-xs">
+                      <label className="text-slate-400 block mb-1">BP (mmHg)</label>
+                      <input value={createVitals.bp} onChange={e => setCreateVitals(v => ({ ...v, bp: e.target.value }))}
+                        placeholder="120/80"
+                        className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="border-t border-slate-100" />
 
