@@ -15,12 +15,21 @@ export default function CutOffPage() {
 
   const handleExecute = async (row: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    const id = row.cut_off_period_id ?? row.id;
+    const id = row.med_period_id ?? row.cut_off_period_id ?? row.id;
     if (!id) { toast.error('ไม่พบ ID ของรายการ'); return; }
     setExecuting(id);
     try {
-      await api.post(`/reports/cut-off/${id}/execute`);
-      toast.success('ดำเนินการตัดรอบเรียบร้อย');
+      const res = await api.post(`/reports/cut-off/${id}/execute`);
+      const s = res.data?.summary;
+      if (s) {
+        toast.success(
+          `ตัดรอบ "${s.warehouse_name}" เรียบร้อย\n` +
+          `หมดอายุ ${s.newly_expired_count} | ใกล้หมดอายุ ${s.near_expiry_count} | สต็อกต่ำ ${s.low_stock_count}`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success('ดำเนินการตัดรอบเรียบร้อย');
+      }
       setRefreshKey(k => k + 1);
     } catch (err: any) {
       toast.error(err?.message || 'เกิดข้อผิดพลาด');
@@ -42,7 +51,7 @@ export default function CutOffPage() {
           size="sm"
           variant="secondary"
           icon={<Play size={12} />}
-          disabled={executing === (r.cut_off_period_id ?? r.id)}
+          loading={executing === (r.med_period_id ?? r.cut_off_period_id ?? r.id)}
           onClick={(e) => handleExecute(r, e)}
         >
           ดำเนินการตัดรอบ
@@ -52,7 +61,7 @@ export default function CutOffPage() {
   ];
 
   return (
-    <MainLayout title="Cut-off Period" subtitle="Cut-off Period Report"
+    <MainLayout title="Cut-off Period" subtitle="ตัดรอบคลังยาตามกำหนดเวลา"
       actions={<ExportButtons report="inventory" />}>
       <DataTable cols={COLS}
         fetcher={p => extraReportApi.getCutOff(p).then((r: any) => ({ data: r.data.data ?? r.data, total: r.data.total ?? 0 }))}
@@ -66,11 +75,12 @@ export default function CutOffPage() {
         subtitle={'ช่วงเวลา cut-off'}
         fields={[
           { label: 'คลังยา',  key: 'warehouse_name' },
-          { label: 'วัน',     key: 'period_day', type: 'number' as const },
+          { label: 'วัน',     key: 'period_day',   type: 'number' as const },
           { label: 'เดือน',   key: 'period_month', type: 'number' as const },
           { label: 'เวลา',    key: 'period_time_h', type: 'template' as const,
             template: r => `${String(r.period_time_h??'0').padStart(2,'0')}:${String(r.period_time_m??'0').padStart(2,'0')} น.` },
           { label: 'สถานะ',  key: 'is_active', type: 'boolean' as const },
+          { label: 'รันล่าสุด', key: 'last_executed_at', type: 'datetime' as const },
         ]}
       />
     </MainLayout>
