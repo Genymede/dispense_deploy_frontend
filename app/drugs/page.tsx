@@ -5,7 +5,7 @@ import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { drugApi, stockApi, api, type Drug, type MedTableItem, type StockLot } from '@/lib/api';
-import { ExternalLink, Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine } from 'lucide-react';
+import { Plus, Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine } from 'lucide-react';
 import SearchSelect from '@/components/SearchSelect';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -231,11 +231,7 @@ export default function DrugsPage() {
     <MainLayout
       title="รายการยาในคลังย่อย"
       subtitle={`ทั้งหมด ${total} รายการ`}
-      actions={
-        <a href="https://warehouse.hpk-hms.site/request/withdraw" target="_blank" rel="noopener noreferrer">
-          <Button icon={<ExternalLink size={15} />}>เบิกยาจากคลังหลัก</Button>
-        </a>
-      }
+      actions={<Button icon={<Plus size={15} />} onClick={openCreate}>เพิ่มยาในคลัง</Button>}
     >
       {/* Filters */}
       <Card className="mb-5">
