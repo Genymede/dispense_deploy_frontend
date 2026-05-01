@@ -665,47 +665,51 @@ export default function DispensePage() {
         </div>
 
         {tab === 'prescriptions' && (
-          <div className="flex gap-2 flex-wrap items-center flex-1 min-w-0">
-            <div className="flex-1 min-w-44">
-              <Input placeholder="เลขใบสั่ง, ชื่อผู้ป่วย, HN..."
-                value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+          <Card className="flex-1 min-w-0 !p-3">
+            <div className="flex gap-2 flex-wrap items-center">
+              <div className="flex-1 min-w-44">
+                <Input placeholder="เลขใบสั่ง, ชื่อผู้ป่วย, HN..."
+                  value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+              </div>
+              <Select placeholder="ทุกสถานะ" value={fStatus}
+                onChange={e => { setFStatus(e.target.value); setPage(1); }}
+                options={Object.entries(STATUS_TH).map(([v, l]) => ({ value: v, label: l }))} />
+              <Input placeholder="แผนก..." value={fWard}
+                onChange={e => { setFWard(e.target.value); setPage(1); }} className="w-28" />
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-slate-500 whitespace-nowrap">คิววันที่</label>
+                <input type="date" value={queueDate} onChange={e => setQueueDate(e.target.value)}
+                  className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
+              </div>
+              <button onClick={loadList} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            <Select placeholder="ทุกสถานะ" value={fStatus}
-              onChange={e => { setFStatus(e.target.value); setPage(1); }}
-              options={Object.entries(STATUS_TH).map(([v, l]) => ({ value: v, label: l }))} />
-            <Input placeholder="แผนก..." value={fWard}
-              onChange={e => { setFWard(e.target.value); setPage(1); }} className="w-28" />
-            <div className="flex items-center gap-1.5">
-              <label className="text-xs text-slate-500 whitespace-nowrap">คิววันที่</label>
-              <input type="date" value={queueDate} onChange={e => setQueueDate(e.target.value)}
-                className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
-            </div>
-            <button onClick={loadList} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            </button>
-          </div>
+          </Card>
         )}
 
         {tab === 'dispensed' && (
-          <div className="flex gap-2 flex-wrap items-center flex-1 min-w-0">
-            <div className="flex-1 min-w-44">
-              <Input placeholder="เลขใบสั่ง, ชื่อผู้ป่วย, HN..."
-                value={dispensedSearch} onChange={e => { setDispensedSearch(e.target.value); setDispensedPage(1); }} />
+          <Card className="flex-1 min-w-0 !p-3">
+            <div className="flex gap-2 flex-wrap items-center">
+              <div className="flex-1 min-w-44">
+                <Input placeholder="เลขใบสั่ง, ชื่อผู้ป่วย, HN..."
+                  value={dispensedSearch} onChange={e => { setDispensedSearch(e.target.value); setDispensedPage(1); }} />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-slate-500 whitespace-nowrap">จากวันที่</label>
+                <input type="date" value={dispensedDateFrom} onChange={e => { setDispensedDateFrom(e.target.value); setDispensedPage(1); }}
+                  className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-slate-500 whitespace-nowrap">ถึงวันที่</label>
+                <input type="date" value={dispensedDateTo} onChange={e => { setDispensedDateTo(e.target.value); setDispensedPage(1); }}
+                  className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
+              </div>
+              <button onClick={loadDispensed} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
+                <RefreshCw size={14} className={dispensedLoading ? 'animate-spin' : ''} />
+              </button>
             </div>
-            <div className="flex items-center gap-1.5">
-              <label className="text-xs text-slate-500 whitespace-nowrap">จากวันที่</label>
-              <input type="date" value={dispensedDateFrom} onChange={e => { setDispensedDateFrom(e.target.value); setDispensedPage(1); }}
-                className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <label className="text-xs text-slate-500 whitespace-nowrap">ถึงวันที่</label>
-              <input type="date" value={dispensedDateTo} onChange={e => { setDispensedDateTo(e.target.value); setDispensedPage(1); }}
-                className="h-9 border border-slate-200 shadow-sm rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-primary-400 bg-white" />
-            </div>
-            <button onClick={loadDispensed} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors">
-              <RefreshCw size={14} className={dispensedLoading ? 'animate-spin' : ''} />
-            </button>
-          </div>
+          </Card>
         )}
       </div>
 
