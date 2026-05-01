@@ -13,6 +13,11 @@ const TREATMENT_RIGHT_LABEL: Record<string, string> = {
   UC: 'บัตรทอง (UC)', SSO: 'ประกันสังคม', GOVT: 'สวัสดิการข้าราชการ',
   LGO: 'องค์กรปกครองส่วนท้องถิ่น', SELF: 'ชำระเองเต็ม', OTHER: 'อื่นๆ',
 };
+
+const genderMap: Record<string, string> = {
+  M: 'ชาย',
+  F: 'หญิง',
+};
 function treatmentRightLabel(right: string | null, note: string | null): string {
   if (!right) return '—';
   const label = TREATMENT_RIGHT_LABEL[right] ?? right;
@@ -90,7 +95,10 @@ export default function PatientDrawer({ patientId, open, onClose }: Props) {
             <DrawerGrid items={[
               //{ label: 'ชื่อ-นามสกุล', value: `${patient.first_name} ${patient.last_name}` },
               //{ label: 'HN', value: patient.hn_number ?? '—' },
-              { label: 'เพศ', value: patient.gender ?? '—' },
+              {
+                label: 'เพศ',
+                value: patient.gender ? genderMap[patient.gender] : '—'
+              },
               { label: 'เลขบัตรประชาชน', value: patient.national_id ?? '—' },
               { label: 'วันเกิด', value: safeDate(patient.birthday) },
               { label: 'อายุ', value: patient.age_y != null ? `${patient.age_y} ปี ${patient.age_m ?? 0} เดือน` : calcAge(patient.birthday) },
