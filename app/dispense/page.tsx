@@ -167,11 +167,11 @@ export default function DispensePage() {
   const [resetKey, setResetKey] = useState(0);
 
   // create form — patient demographics panel
-  const [createPatientDetail,    setCreatePatientDetail]    = useState<any | null>(null);
-  const [createAllergies,        setCreateAllergies]        = useState<any[]>([]);
-  const [createAllergyLoading,   setCreateAllergyLoading]   = useState(false);
-  const [createVitals,           setCreateVitals]           = useState({ temp: '', bp: '' });
-  const [addToQueue,             setAddToQueue]             = useState(false);
+  const [createPatientDetail, setCreatePatientDetail] = useState<any | null>(null);
+  const [createAllergies, setCreateAllergies] = useState<any[]>([]);
+  const [createAllergyLoading, setCreateAllergyLoading] = useState(false);
+  const [createVitals, setCreateVitals] = useState({ temp: '', bp: '' });
+  const [addToQueue, setAddToQueue] = useState(false);
 
   // live safety (create/edit form)
   const [liveAlerts, setLiveAlerts] = useState<Record<number, any[]>>({}); // med_sid → alerts
@@ -186,8 +186,8 @@ export default function DispensePage() {
 
   // dispense modal (confirm + full safety)
   const [dispenseRx, setDispenseRx] = useState<any | null>(null);
-  const [dispenseAllergies,      setDispenseAllergies]      = useState<any[]>([]);
-  const [dispensePatientDetail,  setDispensePatientDetail]  = useState<any | null>(null);
+  const [dispenseAllergies, setDispenseAllergies] = useState<any[]>([]);
+  const [dispensePatientDetail, setDispensePatientDetail] = useState<any | null>(null);
   const [safetyResult, setSafetyResult] = useState<SafetyCheckResult | null>(null);
   const [dispensing, setDispensing] = useState(false);
   const [dispenseItems, setDispenseItems] = useState<any[]>([]);
@@ -262,9 +262,9 @@ export default function DispensePage() {
     }
     setCreateAllergyLoading(true);
     Promise.all([
-      patientApi.getById(patientId).then(r => setCreatePatientDetail(r.data)).catch(() => {}),
+      patientApi.getById(patientId).then(r => setCreatePatientDetail(r.data.patient ?? r.data)).catch(() => { }),
       registryApi.getAllergy({ patient_id: patientId, limit: 50 })
-        .then(r => setCreateAllergies(r.data.data ?? [])).catch(() => {}),
+        .then(r => setCreateAllergies(r.data.data ?? [])).catch(() => { }),
     ]).finally(() => setCreateAllergyLoading(false));
   }, [patientId, showCreate]);
 
@@ -376,7 +376,7 @@ export default function DispensePage() {
         : Promise.resolve(),
       rx.patient_id
         ? patientApi.getById(rx.patient_id)
-          .then(r => setDispensePatientDetail(r.data))
+          .then(r => setDispensePatientDetail(r.data.patient ?? r.data))
           .catch(() => { })
         : Promise.resolve(),
     ]);
@@ -1037,7 +1037,7 @@ export default function DispensePage() {
                     <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
                     <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
                     <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
-                    <div><span className="text-slate-400">โทร: </span><span>{createPatientDetail.phone || '—'}</span></div>
+                    <div><span className="text-slate-400">เบอร์โทรศัพท์: </span><span>{createPatientDetail.phone || '—'}</span></div>
                     <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}</span></div>
                     {createPatientDetail.PMH && (
                       <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
