@@ -137,21 +137,24 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
         {/* Main column */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in">
 
-            {/* Page header */}
-            <div className="flex items-start justify-between gap-4 mb-6">
+          {/* Page header bar */}
+          <div className="flex-shrink-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-1 h-8 rounded-full bg-primary-500 flex-shrink-0" />
               <div className="min-w-0">
-                <h1 className="text-xl font-bold text-slate-800 leading-tight">{title}</h1>
-                {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+                <h1 className="text-lg font-bold text-slate-800 leading-tight">{title}</h1>
+                {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
               </div>
-              {actions && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {actions}
-                </div>
-              )}
             </div>
+            {actions && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {actions}
+              </div>
+            )}
+          </div>
 
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in">
             {children}
           </main>
 
