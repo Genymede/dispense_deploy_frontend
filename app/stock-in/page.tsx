@@ -215,12 +215,12 @@ export default function StockInPage() {
           <Card className="!p-3">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex gap-1">
-                {(['all', 'DRAFT', 'PENDING', 'APPROVED', 'ISSUED', 'REJECTED', 'CANCELLED'] as const).map(s => (
+                {(['all', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'] as const).map(s => (
                   <button key={s}
                     onClick={() => { setReqStatus(s); setReqPage(1); }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${reqStatus === s
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}>
                     {s === 'all' ? 'ทั้งหมด' : (REQ_STATUS[s]?.label ?? s)}
                   </button>
