@@ -66,6 +66,8 @@ export default function DeliveryPage() {
   const [resetKey,  setResetKey]  = useState(0);
   const [drawer,    setDrawer]    = useState<any | null>(null);
   const [patientDrawerId, setPatientDrawerId] = useState<number | null>(null);
+  const [drawerAllergies, setDrawerAllergies] = useState<any[]>([]);
+  const [drawerAllergyLoading, setDrawerAllergyLoading] = useState(false);
 
   // drug search state
   const [drugSearch, setDrugSearch]     = useState('');
@@ -78,6 +80,16 @@ export default function DeliveryPage() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+
+  // โหลดประวัติแพ้ยาเมื่อ drawer เปิด
+  useEffect(() => {
+    if (!drawer?.patient_id) { setDrawerAllergies([]); return; }
+    setDrawerAllergyLoading(true);
+    registryApi.getAllergy({ patient_id: drawer.patient_id, limit: 200 } as any)
+      .then((res: any) => setDrawerAllergies(res.data.data ?? []))
+      .catch(() => setDrawerAllergies([]))
+      .finally(() => setDrawerAllergyLoading(false));
+  }, [drawer?.patient_id]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -475,6 +487,34 @@ export default function DeliveryPage() {
                 </div>
               </DrawerSection>
             )}
+
+            <DrawerSection title="ประวัติแพ้ยา">
+              {drawerAllergyLoading ? (
+                <div className="flex justify-center py-4"><Spinner size={16} /></div>
+              ) : drawerAllergies.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-3">ไม่มีประวัติแพ้ยา</p>
+              ) : (
+                <div className="space-y-2">
+                  {drawerAllergies.map((a: any) => (
+                    <div key={a.allr_id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-red-50 border border-red-100">
+                      <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800 truncate">
+                          {a.med_name || a.med_showname || `ยา #${a.med_id}`}
+                        </p>
+                        {a.symptoms && <p className="text-xs text-slate-500 mt-0.5">{a.symptoms}</p>}
+                      </div>
+                      <Badge variant={
+                        a.severity === 'severe'   ? 'danger'  :
+                        a.severity === 'moderate' ? 'warning' : 'gray'
+                      }>
+                        {a.severity === 'severe' ? 'รุนแรงมาก' : a.severity === 'moderate' ? 'ปานกลาง' : 'เล็กน้อย'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DrawerSection>
 
             <DrawerSection title="">
               <Button variant="secondary" onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
