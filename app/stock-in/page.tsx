@@ -4,7 +4,7 @@ import MainLayout from '@/components/MainLayout';
 import { Button, Input, Card, Badge, EmptyState, Spinner } from '@/components/ui';
 import { stockApi, type StockTransaction } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowDownToLine, Search, Package, Clock, CheckCircle, ShieldCheck, X, ExternalLink } from 'lucide-react';
+import { ArrowDownToLine, Search, Package, Clock, CheckCircle, ShieldCheck, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { thaiToday, fmtDate } from '@/lib/dateUtils';
 
@@ -80,15 +80,6 @@ export default function StockInPage() {
     <MainLayout
       title="รับยาเข้าคลัง"
       subtitle="บันทึกการรับยาจากคลังกลาง"
-      actions={
-        <a
-          href="https://warehouse.hpk-hms.site/request/withdraw"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button icon={<ExternalLink size={15} />}>เบิกยาจากคลังหลัก</Button>
-        </a>
-      }
     >
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-5">
