@@ -511,15 +511,28 @@ export default function DeliveryPage() {
             </DrawerSection>
 
             {Array.isArray(drawer.medicine_list) && drawer.medicine_list.length > 0 && (
-              <DrawerSection title="รายการยา">
+              <DrawerSection title={`รายการยา (${drawer.medicine_list.length} รายการ)${Number(drawer.total_cost) > 0 ? ` · ${Number(drawer.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : ''}`}>
                 <div className="space-y-2">
                   {drawer.medicine_list.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
-                      <Pill size={14} className="text-primary-500 shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-800">{item.med_name || item.med_showname}</p>
+                    <div key={i} className="rounded-xl border px-4 py-3 bg-slate-50 border-slate-100">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-800">{item.med_name || item.med_showname}</p>
+                          {item.med_generic_name && (
+                            <p className="text-xs text-slate-500 mt-0.5">{item.med_generic_name}</p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-bold text-slate-800">
+                            {item.quantity} {item.unit || 'หน่วย'}
+                          </p>
+                          {Number(item.unit_price) > 0 && (
+                            <p className="text-xs text-primary-600 font-medium">
+                              {Number(item.unit_price).toFixed(2)} × {item.quantity} = {(Number(item.unit_price) * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-sm font-semibold text-slate-700">{item.quantity}</span>
                     </div>
                   ))}
                 </div>
