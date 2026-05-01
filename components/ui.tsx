@@ -86,7 +86,7 @@ export function Input({ label, error, icon, suffix, className, ...props }: Input
         <input
           className={clsx(
             "w-full h-9 rounded-lg border text-sm bg-white text-slate-800 placeholder:text-slate-400 transition-colors",
-            "border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none",
+            "border-slate-200 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none",
             icon ? "pl-9" : "pl-3",
             suffix ? "pr-9" : "pr-3",
             error && "border-red-400 focus:border-red-500 focus:ring-red-100",
@@ -124,7 +124,7 @@ export function Select({ label, error, options, placeholder, className, ...props
       <select
         className={clsx(
           "w-full h-9 rounded-lg border text-sm bg-white text-slate-800 transition-colors px-3 outline-none",
-          "border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100",
+          "border-slate-200 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100",
           error && "border-red-400",
           className
         )}
