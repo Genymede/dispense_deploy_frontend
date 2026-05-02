@@ -20,11 +20,6 @@ const REQ_STATUS: Record<string, { label: string; badge: 'warning' | 'info' | 's
   CANCELLED: { label: 'ยกเลิก', badge: 'gray' },
 };
 
-const PAGE_TABS = [
-  { key: 'history', label: 'ประวัติรับยาเข้าคลัง', icon: <ArrowDownToLine size={14} /> },
-] as const;
-type PageTab = typeof PAGE_TABS[number]['key'];
-
 // ─── Requisition expandable row ─────────────────────────────────────────────
 function RequisitionRow({ req }: { req: any }) {
   const [open, setOpen] = useState(false);
@@ -87,7 +82,6 @@ function RequisitionRow({ req }: { req: any }) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function StockInPage() {
-  const [tab, setTab] = useState<PageTab>('history');
   const { user } = useAuth();
 
   // Requisitions
@@ -143,13 +137,12 @@ export default function StockInPage() {
     } catch { } finally { setPendingLoading(false); }
   }, []);
 
+  // โหลดข้อมูลทั้งหมดเมื่อเปิดหน้า
   useEffect(() => {
-    if (tab === 'history') {
-      loadHistory();
-      loadPending();
-      loadReqs();
-    }
-  }, [tab, loadHistory, loadPending, loadReqs]);
+    loadHistory();
+    loadPending();
+    loadReqs();
+  }, [loadHistory, loadPending, loadReqs]);
 
   const handleApprove = async (tx_id: number) => {
     setApproving(tx_id);
@@ -191,15 +184,6 @@ export default function StockInPage() {
           <Button icon={<ExternalLink size={15} />}>เบิกยาจากคลังหลัก</Button>
         </a>
       }>
-
-      <div className="flex gap-1 bg-slate-200 p-1 rounded-xl mb-5 w-fit">
-        {PAGE_TABS.map(({ key, label, icon }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-white text-primary-700 shadow-sm">
-            {icon}{label}
-          </button>
-        ))}
-      </div>
 
       <div className="space-y-5">
         {/* Summary Cards */}
