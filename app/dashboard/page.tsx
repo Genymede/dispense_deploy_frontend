@@ -116,9 +116,8 @@ function ToggleGroup<T extends string>({
           key={opt.id}
           type="button"
           onClick={() => onChange(opt.id)}
-          className={`px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-md transition-all ${
-            value === opt.id ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-          }`}
+          className={`px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-semibold rounded-md transition-all ${value === opt.id ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
         >
           {opt.label}
         </button>
@@ -165,7 +164,7 @@ export default function DashboardPage() {
       ]);
       setStats(statsRes.data);
       setChart(chartRes.data);
-      setAlerts(alertsRes.data.filter((a: Alert) => a.alert_type !== 'new_drug').slice(0, 5));
+      setAlerts(alertsRes.data.slice(0, 5));
       setLowStock(lowRes.data.data);
       setLastUpdate(new Date());
     } catch (err: any) {
@@ -223,10 +222,10 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Chart */}
-              <ChartCard 
-                title="ความเคลื่อนไหวสต็อก 30 วัน" 
-                icon={BarChart3} 
-                iconColor="text-blue-600" 
+              <ChartCard
+                title="ความเคลื่อนไหวสต็อก 30 วัน"
+                icon={BarChart3}
+                iconColor="text-blue-600"
                 className="lg:col-span-2"
                 toolbar={
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -260,7 +259,7 @@ export default function DashboardPage() {
                       <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#f97316' }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                       <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
-                      
+
                       {chartType === "bar" ? (
                         <>
                           <Bar yAxisId="left" dataKey="รับเข้า" fill="#3b82f6" opacity={0.85} radius={[4, 4, 0, 0]} maxBarSize={12} />
@@ -308,10 +307,10 @@ export default function DashboardPage() {
                 </ChartCard>
 
                 {/* Alerts */}
-                <ChartCard 
-                  title="การแจ้งเตือน" 
-                  icon={Bell} 
-                  iconColor="text-rose-500" 
+                <ChartCard
+                  title="การแจ้งเตือน"
+                  icon={Bell}
+                  iconColor="text-rose-500"
                   className="flex-1 min-h-0"
                   toolbar={
                     <div className="flex items-center gap-2">
@@ -353,9 +352,9 @@ export default function DashboardPage() {
             {/* ── Low stock + Near expiry ────────────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Low stock */}
-              <ChartCard 
-                title="ยาสต็อกต่ำ — ต้องสั่งเพิ่ม" 
-                icon={PackageMinus} 
+              <ChartCard
+                title="ยาสต็อกต่ำ — ต้องสั่งเพิ่ม"
+                icon={PackageMinus}
                 iconColor="text-violet-600"
                 toolbar={<Link href="/drugs?low_stock=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
               >
@@ -384,9 +383,9 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Near expiry */}
-              <ChartCard 
-                title="ยาใกล้หมดอายุ" 
-                icon={CalendarClock} 
+              <ChartCard
+                title="ยาใกล้หมดอายุ"
+                icon={CalendarClock}
                 iconColor="text-orange-500"
                 toolbar={<Link href="/drugs?near_expiry=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
               >
@@ -420,9 +419,9 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Recent transactions ─────────────────────────────────────────── */}
-            <ChartCard 
-              title="ธุรกรรมล่าสุด" 
-              icon={Activity} 
+            <ChartCard
+              title="ธุรกรรมล่าสุด"
+              icon={Activity}
               iconColor="text-slate-600"
               toolbar={<Link href="/drugs" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูคลัง</Link>}
             >
