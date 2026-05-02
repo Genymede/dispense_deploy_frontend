@@ -43,7 +43,7 @@ function RequisitionRow({ req }: { req: any }) {
 
       {/* Expanded Row */}
       {open && items.length > 0 && (
-        <tr className="bg-slate-50">
+        <tr className="bg-white">
           <td colSpan={8} className="px-6 pb-4 pt-1">
             <div className="rounded-xl border border-slate-200 overflow-hidden mt-1">
               <table className="w-full text-xs">
