@@ -33,7 +33,7 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
       const d = res.data;
       const name = [d.firstname_th, d.lastname_th].filter(Boolean).join(' ');
       if (name) setFullName(name);
-    }).catch(() => {});
+    }).catch(() => { });
   }, [user]);
 
   useEffect(() => {
@@ -47,8 +47,8 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
   }, []);
 
   const displayName = fullName || user?.email || "ผู้ใช้งาน";
-  const roleLabel   = user?.role_name ?? '';
-  const initials    = fullName
+  const roleLabel = user?.role_name ?? '';
+  const initials = fullName
     ? fullName.substring(0, 2)
     : (user?.email?.[0]?.toUpperCase() ?? 'U');
 
