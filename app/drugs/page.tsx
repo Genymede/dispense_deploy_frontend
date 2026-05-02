@@ -487,9 +487,7 @@ export default function DrugsPage() {
                         ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
                         : <Badge variant="success" dot>ปกติ</Badge>
                 },
-                { label: 'วันหมดอายุ', value: fmtDate(viewDrug.exp_date) },
                 { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
-                { label: 'ขั้นต่ำ / สูงสุด', value: `${viewDrug.min_quantity ?? '—'} / ${viewDrug.max_quantity ?? '—'}` },
                 { label: 'ที่เก็บ', value: viewDrug.location || '—' },
               ]} />
             </DrawerSection>
