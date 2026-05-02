@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth';
 import {
   ArrowDownToLine, Search, Package, Clock, CheckCircle,
   ShieldCheck, X, ExternalLink, ChevronDown, ChevronRight,
-  RefreshCw, ClipboardList
+  RefreshCw, ClipboardList,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { thaiToday, fmtDate } from '@/lib/dateUtils';
@@ -25,7 +25,7 @@ const PAGE_TABS = [
 ] as const;
 type PageTab = typeof PAGE_TABS[number]['key'];
 
-// ─── Requisition row (ปรับใหม่) ─────────────────────────────────────────────
+// ─── Requisition expandable row ─────────────────────────────────────────────
 function RequisitionRow({ req }: { req: any }) {
   const [open, setOpen] = useState(false);
   const cfg = REQ_STATUS[req.status?.toUpperCase()] ?? { label: req.status, badge: 'gray' as const };
@@ -35,33 +35,27 @@ function RequisitionRow({ req }: { req: any }) {
     <>
       <tr className="table-row-hover cursor-pointer border-b border-slate-50"
         onClick={() => setOpen(o => !o)}>
+        <td className="px-4 py-3 font-mono text-xs font-semibold text-primary-700">{req.doc_no}</td>
         <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(req.request_date || req.created_at, true)}</td>
-        <td className="px-4 py-3 font-medium text-slate-800 font-mono">{req.doc_no}</td>
-        <td className="px-4 py-3 font-medium text-slate-800">{req.requester_name || '—'}</td>
         <td className="px-4 py-3 text-xs text-slate-500 text-center">{req.item_count ?? items.length} รายการ</td>
+        <td className="px-4 py-3 text-xs text-slate-600">{req.requester_name || '—'}</td>
+        <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(req.expected_date) || '—'}</td>
         <td className="px-4 py-3">
           <Badge variant={cfg.badge}>{cfg.label}</Badge>
         </td>
-        <td className="px-4 py-3 text-xs text-slate-600 max-w-40 truncate">{req.note || '—'}</td>
-        <td className="px-4 py-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
-            className="text-primary-600 hover:text-primary-700 text-xs font-medium flex items-center gap-1"
-          >
-            ดูรายละเอียด {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-        </td>
+        <td className="px-4 py-3 text-xs text-slate-600">{req.approver_name || '—'}</td>
+        <td className="px-4 py-3 text-xs text-slate-400 max-w-40 truncate">{req.note || '—'}</td>
       </tr>
 
-      {/* Expanded Detail */}
+      {/* Expanded Row */}
       {open && items.length > 0 && (
         <tr className="bg-slate-50">
-          <td colSpan={7} className="px-6 pb-4 pt-1">
+          <td colSpan={8} className="px-6 pb-4 pt-1">
             <div className="rounded-xl border border-slate-200 overflow-hidden mt-1">
               <table className="w-full text-xs">
                 <thead className="bg-slate-100 border-b border-slate-200">
                   <tr>
-                    {['ชื่อรายการ', 'รหัส', 'ขอ', 'อนุมัติ', 'จ่าย', 'Lot', 'หมายเหตุ'].map(h => (
+                    {['ชื่อรายการ', 'รหัส', 'ขอ', 'อนุมัติ', 'จ่าย'].map(h => (
                       <th key={h} className="px-3 py-2 text-left font-semibold text-slate-500">{h}</th>
                     ))}
                   </tr>
@@ -80,8 +74,6 @@ function RequisitionRow({ req }: { req: any }) {
                       <td className="px-3 py-2">
                         {it.issued_qty != null && it.issued_qty > 0 ? <Badge variant="success">{it.issued_qty}</Badge> : <span className="text-slate-300">—</span>}
                       </td>
-                      <td className="px-3 py-2 font-mono text-slate-500">{it.lot_number || '—'}</td>
-                      <td className="px-3 py-2 text-slate-400 max-w-40 truncate">{it.note || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -94,12 +86,12 @@ function RequisitionRow({ req }: { req: any }) {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Main Component ─────────────────────────────────────────────────────────
 export default function StockInPage() {
   const [tab, setTab] = useState<PageTab>('history');
   const { user } = useAuth();
 
-  // ── Requisitions ────────────────────────────────────────────────────────────
+  // Requisitions
   const [reqs, setReqs] = useState<any[]>([]);
   const [reqTotal, setReqTotal] = useState(0);
   const [reqLoading, setReqLoading] = useState(false);
@@ -122,7 +114,7 @@ export default function StockInPage() {
     } finally { setReqLoading(false); }
   }, [reqStatus, reqPage]);
 
-  // ── History & Pending ───────────────────────────────────────────────────────
+  // History & Pending
   const [history, setHistory] = useState<StockTransaction[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -211,7 +203,7 @@ export default function StockInPage() {
       </div>
 
       <div className="space-y-5">
-        {/* Summary */}
+        {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: 'รับยาวันนี้', value: todayTxs.length, icon: <ArrowDownToLine size={18} />, color: 'text-primary-600 bg-primary-50' },
@@ -245,7 +237,7 @@ export default function StockInPage() {
             </button>
           </div>
 
-          {/* Filters */}
+          {/* Filter Buttons */}
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
             <div className="flex items-center gap-2 flex-wrap">
               {(['all', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'] as const).map(s => (
@@ -264,12 +256,13 @@ export default function StockInPage() {
           {reqLoading ? (
             <div className="flex justify-center py-12"><Spinner size={24} /></div>
           ) : reqs.length === 0 ? (
-            <EmptyState icon={<ClipboardList size={36} />} title="ไม่พบคำขอเบิกยา" />
+            <EmptyState icon={<ClipboardList size={36} />} title="ไม่พบคำขอเบิกยา"
+              description="ไม่มีคำขอจากห้องจ่ายยาในขณะนี้" />
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-blue-50 border-b border-blue-100">
                 <tr>
-                  {['เวลาขอ', 'เลขที่เอกสาร', 'ผู้ขอ', 'จำนวนรายการ', 'สถานะ', 'หมายเหตุ', 'จัดการ'].map(h => (
+                  {['เลขที่เอกสาร', 'วันที่ขอ', 'รายการ', 'ผู้ขอ', 'กำหนดรับ', 'สถานะ', 'ผู้อนุมัติ', 'หมายเหตุ'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-blue-700 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -282,7 +275,6 @@ export default function StockInPage() {
             </table>
           )}
 
-          {/* Pagination */}
           {reqTotalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
               <p className="text-xs text-slate-500">หน้า {reqPage}/{reqTotalPages} · {reqTotal.toLocaleString()} รายการ</p>
@@ -294,43 +286,46 @@ export default function StockInPage() {
           )}
         </Card>
 
-        {/* Pending Stock-In และประวัติการรับยา (เดิม) */}
-        {/* ... (ส่วน Pending และ History ยังคงเหมือนเดิม) ... */}
+        {/* คำขอรับเข้ารออนุมัติ */}
         <Card className="overflow-hidden p-0">
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <h2 className="text-sm font-semibold text-slate-700">คำขอรับเข้ารออนุมัติ</h2>
-            {pending.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{pending.length}</span>
-            )}
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-slate-700">คำขอรับเข้ารออนุมัติ</h2>
+              {pending.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{pending.length}</span>
+              )}
+            </div>
           </div>
-          {/* ตาราง Pending (ย่อให้กระชับ) */}
+
           {pendingLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
-          ) : pending.length > 0 && (
+          ) : pending.length === 0 ? (
+            <EmptyState icon={<CheckCircle size={28} />} title="ไม่มีคำขอรับเข้ารออนุมัติ" />
+          ) : (
             <table className="w-full text-sm">
               <thead className="bg-amber-50 border-b border-amber-100">
                 <tr>
                   {['เวลา', 'ชื่อยา', 'จำนวน', 'ผู้ขอ', 'จัดการ'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-amber-700">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-amber-700 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-50">
                 {pending.map(tx => (
                   <tr key={tx.tx_id} className="table-row-hover">
-                    <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(tx.created_at, true)}</td>
-                    <td className="px-4 py-3 font-medium">{tx.med_showname || tx.med_name}</td>
-                    <td className="px-4 py-3"><Badge variant="success">+{tx.quantity}</Badge></td>
+                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(tx.created_at, true)}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{tx.med_showname || tx.med_name}</td>
+                    <td className="px-4 py-3"><Badge variant="success">+{tx.quantity.toLocaleString()}</Badge></td>
                     <td className="px-4 py-3 text-xs text-slate-600">{tx.performed_by_name || '-'}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <button onClick={() => handleApprove(tx.tx_id)} disabled={approving === tx.tx_id}
-                          className="px-3 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700">
-                          อนุมัติ
+                      <div className="flex items-center gap-1">
+                        <button disabled={approving === tx.tx_id} onClick={() => handleApprove(tx.tx_id)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                          <ShieldCheck size={13} />อนุมัติ
                         </button>
-                        <button onClick={() => handleReject(tx.tx_id)} disabled={approving === tx.tx_id}
-                          className="px-3 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700">
-                          ปฏิเสธ
+                        <button disabled={approving === tx.tx_id} onClick={() => handleReject(tx.tx_id)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">
+                          <X size={13} />ปฏิเสธ
                         </button>
                       </div>
                     </td>
@@ -341,7 +336,7 @@ export default function StockInPage() {
           )}
         </Card>
 
-        {/* ประวัติการรับยา (เดิม) */}
+        {/* ประวัติการรับยา */}
         <Card className="overflow-hidden p-0">
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-700">ประวัติการรับยา</h2>
@@ -349,15 +344,54 @@ export default function StockInPage() {
               <Input placeholder="ค้นหา..." value={searchTx} onChange={e => setSearchTx(e.target.value)} icon={<Search size={13} />} />
             </div>
           </div>
-          {/* ตารางประวัติเดิม (ไม่เปลี่ยน) */}
+
           {loading ? (
             <div className="flex justify-center py-12"><Spinner /></div>
           ) : filteredHistory.length === 0 ? (
             <EmptyState icon={<ArrowDownToLine size={36} />} title="ยังไม่มีประวัติการรับยา" />
           ) : (
-            <table className="w-full text-sm"> {/* ตารางเดิม ... */}
-              {/* (โค้ดตารางประวัติเดิมทั้งหมด) */}
-            </table>
+            <>
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    {['เวลา', 'ชื่อยา', 'จำนวนรับ', 'สต็อกก่อน→หลัง', 'Lot', 'เลขอ้างอิง', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredHistory.map(tx => (
+                    <tr key={tx.tx_id} className="table-row-hover">
+                      <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(tx.created_at, true)}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{tx.med_showname || tx.med_name}</td>
+                      <td className="px-4 py-3"><Badge variant="success">+{tx.quantity.toLocaleString()}</Badge></td>
+                      <td className="px-4 py-3 text-xs font-mono text-slate-500">
+                        {tx.balance_before} <span className="text-slate-300">→</span> <span className="font-semibold text-primary-700">{tx.balance_after}</span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-400">{tx.lot_number || '-'}</td>
+                      <td className="px-4 py-3 text-xs text-slate-500">{tx.reference_no || '-'}</td>
+                      <td className="px-4 py-3">
+                        {tx.approval_status === 'approved' ? <Badge variant="success">อนุมัติแล้ว</Badge>
+                          : tx.approval_status === 'rejected' ? <Badge variant="danger">ปฏิเสธ</Badge>
+                            : <Badge variant="warning">รออนุมัติ</Badge>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-600">{tx.performed_by_name || '-'}</td>
+                      <td className="px-4 py-3 text-xs text-slate-400 max-w-32 truncate">{tx.note || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {histTotalPages > 1 && (
+                <div className="flex justify-between items-center px-4 py-3 border-t border-slate-100">
+                  <p className="text-xs text-slate-500">หน้า {histPage}/{histTotalPages}</p>
+                  <div className="flex gap-1">
+                    <Button variant="secondary" size="xs" disabled={histPage === 1} onClick={() => setHistPage(p => p - 1)}>◀</Button>
+                    <Button variant="secondary" size="xs" disabled={histPage >= histTotalPages} onClick={() => setHistPage(p => p + 1)}>▶</Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </Card>
       </div>
