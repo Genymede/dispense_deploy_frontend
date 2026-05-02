@@ -62,13 +62,6 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
       >
         {/* Left: Logo + Name */}
         <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink-0">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors cursor-pointer sm:mr-1 shrink-0"
-            aria-label="Toggle Sidebar"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
           <div
             className="flex items-center gap-2 sm:space-x-4 cursor-pointer min-w-0"
             onClick={() => router.push('/')}
@@ -172,6 +165,15 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
             "h-full flex flex-col flex-shrink-0 shadow-xl bg-white border-r border-slate-200 transition-all duration-300 overflow-x-hidden"
           )}
         >
+          <div className={clsx("flex items-center h-14 flex-shrink-0 border-b border-slate-100", isSidebarOpen ? "px-3" : "justify-center")}>
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer text-slate-500 hover:text-slate-800"
+              aria-label="Toggle Sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
           <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ width: isSidebarOpen ? "var(--sidebar-w)" : "64px" }}>
             <Sidebar alertCount={unreadCount} isExpanded={isSidebarOpen} />
           </div>

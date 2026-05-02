@@ -15,7 +15,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   const refresh = async () => {
     try {
       const res = await alertApi.getAll();
-      const count = (res.data as any[]).filter((a: any) => !a.is_read).length;
+      const count = (res.data as any[]).filter((a: any) => !a.is_read && a.alert_type !== 'new_drug').length;
       setUnreadCount(count);
     } catch {}
   };
