@@ -39,7 +39,6 @@ function RequisitionRow({ req }: { req: any }) {
         <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(req.request_date || req.created_at, true)}</td>
         <td className="px-4 py-3 text-xs text-slate-500 text-center">{req.item_count ?? items.length} รายการ</td>
         <td className="px-4 py-3 text-xs text-slate-600">{req.requester_name || '—'}</td>
-        <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(req.expected_date) || '—'}</td>
         <td className="px-4 py-3">
           <Badge variant={cfg.badge}>{cfg.label}</Badge>
         </td>
@@ -262,7 +261,7 @@ export default function StockInPage() {
             <table className="w-full text-sm">
               <thead className="bg-blue-50 border-b border-blue-100">
                 <tr>
-                  {['เลขที่เอกสาร', 'วันที่ขอ', 'รายการ', 'ผู้ขอ', 'กำหนดรับ', 'สถานะ', 'ผู้อนุมัติ', 'หมายเหตุ'].map(h => (
+                  {['เลขที่เอกสาร', 'วันที่ขอ', 'รายการ', 'ผู้ขอ', 'สถานะ', 'ผู้อนุมัติ', 'หมายเหตุ'].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-blue-700 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -283,56 +282,6 @@ export default function StockInPage() {
                 <Button variant="secondary" size="xs" disabled={reqPage >= reqTotalPages} onClick={() => setReqPage(p => p + 1)}>▶</Button>
               </div>
             </div>
-          )}
-        </Card>
-
-        {/* คำขอรับเข้ารออนุมัติ */}
-        <Card className="overflow-hidden p-0">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-slate-700">คำขอรับเข้ารออนุมัติ</h2>
-              {pending.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{pending.length}</span>
-              )}
-            </div>
-          </div>
-
-          {pendingLoading ? (
-            <div className="flex justify-center py-8"><Spinner /></div>
-          ) : pending.length === 0 ? (
-            <EmptyState icon={<CheckCircle size={28} />} title="ไม่มีคำขอรับเข้ารออนุมัติ" />
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-amber-50 border-b border-amber-100">
-                <tr>
-                  {['เวลา', 'ชื่อยา', 'จำนวน', 'ผู้ขอ', 'จัดการ'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-amber-700 whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {pending.map(tx => (
-                  <tr key={tx.tx_id} className="table-row-hover">
-                    <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{fmtDate(tx.created_at, true)}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{tx.med_showname || tx.med_name}</td>
-                    <td className="px-4 py-3"><Badge variant="success">+{tx.quantity.toLocaleString()}</Badge></td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{tx.performed_by_name || '-'}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button disabled={approving === tx.tx_id} onClick={() => handleApprove(tx.tx_id)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                          <ShieldCheck size={13} />อนุมัติ
-                        </button>
-                        <button disabled={approving === tx.tx_id} onClick={() => handleReject(tx.tx_id)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">
-                          <X size={13} />ปฏิเสธ
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           )}
         </Card>
 
