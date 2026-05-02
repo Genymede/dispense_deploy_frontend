@@ -55,7 +55,7 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
       {/* ── Global Header ──────────────────────────────────────────────────── */}
       <header
-        className="flex-shrink-0 h-16 sm:h-20 w-full z-50 shadow-md flex items-center justify-between px-3 sm:px-6 text-white relative"
+        className="flex-shrink-0 h-14 sm:h-16 w-full z-50 shadow-md flex items-center justify-between px-3 sm:px-6 text-white relative"
         style={{ background: "linear-gradient(90deg, #003d82 0%, #00306a 100%)" }}
       >
         {/* Left: Logo + Name */}
@@ -64,14 +64,14 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
             className="flex items-center gap-2 sm:space-x-4 cursor-pointer min-w-0"
             onClick={() => router.push('/')}
           >
-            <div className="w-10 h-10 sm:w-16 sm:h-16 flex bg-white rounded-xl sm:rounded-[15px] items-center justify-center shrink-0 overflow-hidden shadow-sm">
-              <Image src="/logo.png" alt="Logo" width={64} height={64} className="w-full h-full object-cover p-0.5 sm:p-1" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 flex bg-white rounded-xl items-center justify-center shrink-0 overflow-hidden shadow-sm border border-white/20">
+              <Image src="/logo.png" alt="Logo" width={44} height={44} className="w-full h-full object-cover p-0.5 sm:p-1" />
             </div>
             <div className="hidden md:block min-w-0">
-              <h2 className="font-bold text-lg lg:text-xl leading-tight py-0.5 truncate">
+              <h2 className="font-bold text-[14px] lg:text-[15px] leading-tight py-0.5 truncate">
                 โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม
               </h2>
-              <p className="text-sm lg:text-base text-blue-100 font-medium truncate">
+              <p className="text-[11px] text-blue-100 font-medium truncate">
                 PharmSub — ระบบบริหารคลังยาย่อย
               </p>
             </div>
@@ -113,10 +113,10 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
             <button
               onClick={() => setShowUserMenu(v => !v)}
-              className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/20 text-white text-sm font-black overflow-hidden cursor-pointer transition-all active:scale-95 shrink-0 shadow-inner"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/20 text-white text-xs sm:text-sm font-black overflow-hidden cursor-pointer transition-all active:scale-95 shrink-0 shadow-inner"
               title={displayName}
             >
-              {user ? initials : <User className="w-5 h-5" />}
+              {user ? initials : <User className="w-4 h-4" />}
             </button>
 
             {showUserMenu && (
