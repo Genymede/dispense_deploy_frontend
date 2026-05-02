@@ -205,7 +205,7 @@ export default function StockInPage() {
 
         {/* คำขอเบิกจากคลังหลัก */}
         <Card className="overflow-hidden p-0">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-slate-700">คำขอเบิกจากคลังหลัก</h2>
               {reqs.length > 0 && (
@@ -271,7 +271,7 @@ export default function StockInPage() {
 
         {/* ประวัติการรับยา */}
         <Card className="overflow-hidden p-0">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-4 border-b border-slate-100">
             <h2 className="text-sm font-semibold text-slate-700">ประวัติการรับยา</h2>
             <div className="w-64">
               <Input placeholder="ค้นหา..." value={searchTx} onChange={e => setSearchTx(e.target.value)} icon={<Search size={13} />} />
