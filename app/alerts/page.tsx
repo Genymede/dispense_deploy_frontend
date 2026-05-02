@@ -9,11 +9,11 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const ALERT_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
-  low_stock:         { icon: <TrendingDown size={16} />,   color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-100',   label: 'สต็อกต่ำ' },
-  near_expiry:       { icon: <Calendar size={16} />,       color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100', label: 'ใกล้หมดอายุ' },
-  expired:           { icon: <AlertTriangle size={16} />,  color: 'text-red-600',    bg: 'bg-red-50 border-red-100',       label: 'หมดอายุ' },
-  overstock:         { icon: <Package size={16} />,        color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-100',     label: 'เกินสต็อก' },
-  incomplete_record: { icon: <ClipboardList size={16} />,  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'เพิ่มข้อมูลยาใหม่' },
+  low_stock: { icon: <TrendingDown size={16} />, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', label: 'สต็อกต่ำ' },
+  near_expiry: { icon: <Calendar size={16} />, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100', label: 'ใกล้หมดอายุ' },
+  expired: { icon: <AlertTriangle size={16} />, color: 'text-red-600', bg: 'bg-red-50 border-red-100', label: 'หมดอายุ' },
+  overstock: { icon: <Package size={16} />, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100', label: 'เกินสต็อก' },
+
 };
 
 export default function AlertsPage() {
@@ -35,12 +35,12 @@ export default function AlertsPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleMarkRead = async (a: Alert) => {
-    try { await alertApi.markRead(a.med_sid, a.alert_type); } catch {}
+    try { await alertApi.markRead(a.med_sid, a.alert_type); } catch { }
     setAlerts(prev => prev.map(x => x.id === a.id ? { ...x, is_read: true } : x));
   };
 
   const handleMarkAllRead = async () => {
-    try { await alertApi.markAllRead(); } catch {}
+    try { await alertApi.markAllRead(); } catch { }
     setAlerts(prev => prev.map(x => ({ ...x, is_read: true })));
     toast.success('อ่านทั้งหมดแล้ว');
   };
@@ -67,7 +67,7 @@ export default function AlertsPage() {
       {/* Filter tabs */}
       <div className="flex gap-2 mb-5 flex-wrap items-center">
         {[{ value: '', label: 'ทั้งหมด', count: alerts.length },
-          ...Object.entries(ALERT_CONFIG).map(([v, { label }]) => ({ value: v, label, count: typeCounts[v] ?? 0 }))
+        ...Object.entries(ALERT_CONFIG).map(([v, { label }]) => ({ value: v, label, count: typeCounts[v] ?? 0 }))
         ].map(({ value, label, count }) => (
           <button key={value} onClick={() => setFilterType(value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterType === value ? 'bg-primary-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-primary-300'}`}>
