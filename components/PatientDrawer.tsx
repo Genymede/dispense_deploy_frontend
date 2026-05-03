@@ -97,7 +97,7 @@ export default function PatientDrawer({ patientId, open, onClose }: Props) {
               //{ label: 'HN', value: patient.hn_number ?? '—' },
               {
                 label: 'เพศ',
-                value: patient.gender ? genderMap[patient.gender] : '—'
+                value: patient.gender ? (genderMap[String(patient.gender).toUpperCase()] || patient.gender) : '—'
               },
               { label: 'เลขบัตรประชาชน', value: patient.national_id ?? '—' },
               { label: 'วันเกิด', value: safeDate(patient.birthday) },
