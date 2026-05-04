@@ -290,12 +290,17 @@ export default function DrugsPage() {
                     const isNearExp = !isExp && (targetExpDate ? new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000) : false);
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
                     
+                    const isPartialExp = !isExp && (d as any).expired_lot_count > 0;
+                    
                     let statusV: any = 'success';
                     let statusL = 'ปกติ';
                     
                     if (isExp) {
                       statusV = 'danger';
                       statusL = 'หมดอายุ';
+                    } else if (isPartialExp) {
+                      statusV = 'warning';
+                      statusL = 'มีล็อตหมดอายุ';
                     } else if (isLow && isNearExp) {
                       statusV = 'danger';
                       statusL = 'ต่ำ & ใกล้หมดอายุ';
@@ -500,11 +505,13 @@ export default function DrugsPage() {
                 {
                   label: 'สถานะ', value: viewDrug.is_expired
                     ? <Badge variant="danger" dot>หมดอายุ</Badge>
-                    : viewDrug.med_out_of_stock
-                      ? <Badge variant="warning" dot>หมดสต็อก</Badge>
-                      : viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity
-                        ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
-                        : <Badge variant="success" dot>ปกติ</Badge>
+                    : (viewDrug as any).expired_lot_count > 0
+                      ? <Badge variant="warning" dot>มีล็อตหมดอายุ</Badge>
+                      : viewDrug.med_out_of_stock
+                        ? <Badge variant="warning" dot>หมดสต็อก</Badge>
+                        : viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity
+                          ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
+                          : <Badge variant="success" dot>ปกติ</Badge>
                 },
                 { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
                 { label: 'ที่เก็บ', value: viewDrug.location || '—' },
