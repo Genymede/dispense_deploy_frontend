@@ -8,6 +8,7 @@ import {
   Stethoscope, ClipboardList, Clock, FileText,
   AlertTriangle, FileWarning,
   LayoutDashboard, ArrowDownToLine, Activity, Tag,
+  CalendarClock,
 } from "lucide-react";
 import clsx from "clsx";
 import { useState } from "react";
@@ -58,6 +59,7 @@ const reportsGroup: NavGroup = {
     { href: "/reports/med-delivery", label: "การจัดส่งยา", icon: Truck },
     { href: "/reports/overdue-med", label: "ยาค้างจ่าย", icon: Clock },
     { href: "/reports/rad-registry", label: "ยาปฏิชีวนะควบคุม", icon: FileText },
+    { href: "/reports/cut-off-summary", label: "สรุปการตัดรอบ", icon: CalendarClock },
     { href: "/transactions", label: "ประวัติเคลื่อนไหวยา", icon: Activity },
   ],
 };
