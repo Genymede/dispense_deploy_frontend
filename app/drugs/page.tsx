@@ -38,6 +38,7 @@ export default function DrugsPage() {
   const [categories,    setCategories]    = useState<string[]>([]);
   const [packagingTypes, setPackagingTypes] = useState<string[]>(DEFAULT_PACKAGING);
   const [page, setPage] = useState(1);
+  const [nearExpiryDays, setNearExpiryDays] = useState(30);
   const perPage = 30;
 
   const [showModal, setShowModal] = useState(false);
@@ -133,6 +134,7 @@ export default function DrugsPage() {
     drugApi.getCategories().then((r) => setCategories(r.data)).catch(() => { });
     api.get('/settings').then(r => {
       if (r.data.drug_units) try { setPackagingTypes(JSON.parse(r.data.drug_units)); } catch { }
+      if (r.data.near_expiry_days) setNearExpiryDays(Number(r.data.near_expiry_days));
     }).catch(() => { });
   }, []);
 
@@ -289,9 +291,8 @@ export default function DrugsPage() {
                     const isAnyLotExpired = targetExpDate ? new Date(targetExpDate) < new Date() : false;
                     const hasValidLots = (d as any).lot_count > 0; // จำนวนล็อตที่ยังไม่หมดอายุ
                     
-                    // 2. คำนวณ "ใกล้หมดอายุ" (จากล็อตที่ยังไม่หมดอายุที่ใกล้ที่สุด - ซึ่งตอนนี้ targetExpDate อาจจะเป็นของที่หมดอายุไปแล้ว)
-                    // ดังนั้นเราจะใช้ targetExpDate เช็ค Near Exp เฉพาะเมื่อมันยังไม่หมดอายุ
-                    const isNearExp = !isAnyLotExpired && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000));
+                    // คำนวณ "ใกล้หมดอายุ" จากล็อตที่ยังไม่หมดอายุที่ใกล้ที่สุด (ตามค่าที่ตั้งไว้ใน Settings)
+                    const isNearExp = !isAnyLotExpired && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + nearExpiryDays * 86400_000));
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
                     
                     let statusV: any = 'success';
