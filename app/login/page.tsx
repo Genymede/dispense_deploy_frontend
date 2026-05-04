@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, FormEvent } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Eye, EyeOff, ExternalLink, Loader2, Lock, User } from 'lucide-react';
 
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
 
+  const router = useRouter();
+
   // Production: redirect ไป portal อัตโนมัติ
   useEffect(() => {
     if (IS_DEV) return;
@@ -28,6 +31,7 @@ export default function LoginPage() {
     setLoading(true); setError('');
     try {
       await login(username, password);
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
     } finally { setLoading(false); }
