@@ -20,7 +20,7 @@ interface ReportPrintTemplateProps {
   userName?: string;
 }
 
-const TEAL = '#0f766e';
+const TEAL = '#006fc6'; // Changed to blue
 
 const S = {
   page: {
@@ -88,7 +88,7 @@ export default function ReportPrintTemplate({ title, dateRange, columns, data, s
           />
           <div>
             <p style={{ fontSize: '17px', fontWeight: 700, margin: 0 }}>โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม</p>
-            <p style={{ fontSize: '12px', margin: 0, color: '#4b5563' }}>แผนกชีวาภิบาล (ห้องคลังยาย่อย)</p>
+            <p style={{ fontSize: '12px', margin: 0, color: '#4b5563' }}>แผนกจ่ายยาและคลังยาย่อย</p>
             <p style={{ fontSize: '11px', margin: '2px 0 0', color: '#6b7280' }}>เลขที่ 553/11 หมู่ 14 ตำบลริมกก อำเภอเมืองเชียงราย จังหวัดเชียงราย 57100</p>
           </div>
         </div>

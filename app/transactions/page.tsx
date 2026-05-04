@@ -4,6 +4,8 @@ import MainLayout from '@/components/MainLayout';
 import { Input, Select, Card, Badge, Button, EmptyState, Spinner } from '@/components/ui';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { stockApi, type StockTransaction } from '@/lib/api';
+import ReportPrintTemplate from '@/components/ReportPrintTemplate';
+import { createPortal } from 'react-dom';
 import { Activity, Search, ArrowUpCircle, ArrowDownCircle, RotateCcw, AlertTriangle, Settings, Download } from 'lucide-react';
 import { thaiToday, thaiDaysAgo, fmtDate as safeDate } from '@/lib/dateUtils';
 import toast from 'react-hot-toast';
@@ -28,6 +30,8 @@ export default function TransactionsPage() {
   const perPage = 40;
   const [selectedTx, setSelectedTx] = useState<StockTransaction | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [printData, setPrintData] = useState<StockTransaction[]>([]);
 
   const TX_LABEL: Record<string, string> = {
     in: 'รับเข้า', out: 'จ่ายออก', adjust: 'ปรับสต็อก', return: 'คืนยา', expired: 'หมดอายุ',
@@ -76,70 +80,13 @@ export default function TransactionsPage() {
     setExporting(true);
     try {
       const rows = await fetchAll();
-      const { default: jsPDF } = await import('jspdf');
-      const { default: autoTable } = await import('jspdf-autotable');
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-
-      const [regularBuf, boldBuf, logoBuf] = await Promise.all([
-        fetch('/font/ThaiSarabun/subset-Sarabun-Regular.ttf').then(r => r.arrayBuffer()),
-        fetch('/font/ThaiSarabun/subset-Sarabun-Bold.ttf').then(r => r.arrayBuffer()),
-        fetch('/logo.png').then(r => r.arrayBuffer()).catch(() => null),
-      ]);
-      const toB64 = (buf: ArrayBuffer) => {
-        const b = new Uint8Array(buf); let s = '';
-        for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-        return btoa(s);
-      };
-      doc.addFileToVFS('Sarabun.ttf', toB64(regularBuf));
-      doc.addFont('Sarabun.ttf', 'Sarabun', 'normal');
-      doc.addFileToVFS('Sarabun-Bold.ttf', toB64(boldBuf));
-      doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold');
-
-      const W = doc.internal.pageSize.getWidth();
-      const title = 'รายงานประวัติการเคลื่อนไหวยา';
-      const currentDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      const drawHeader = (data: any) => {
-        const pageCount = (doc.internal as any).getNumberOfPages();
-        if (logoBuf) { try { doc.addImage(toB64(logoBuf), 'PNG', 10, 8, 20, 20); } catch {} }
-        doc.setFont('Sarabun', 'bold'); doc.setFontSize(13);
-        doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
-        doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
-        doc.text('553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100', W / 2, 20, { align: 'center' });
-        doc.text(`โทร: 052 029 888   |   วันที่: ${currentDate}`, W / 2, 26, { align: 'center' });
-        doc.setFont('Sarabun', 'bold'); doc.setFontSize(11);
-        doc.text(title, W / 2, 34, { align: 'center' });
-        doc.setDrawColor('#006FC6'); doc.setLineWidth(0.4);
-        doc.line(10, 38, W - 10, 38);
-        doc.setFont('Sarabun', 'normal'); doc.setFontSize(8); doc.setTextColor(150);
-        doc.text(`หน้า ${data.pageNumber} จาก ${pageCount}`, W - 10, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
-        doc.setTextColor(0);
-      };
-
-      const columns = ['วันเวลา', 'ประเภท', 'ชื่อยา', 'จำนวน', 'ก่อน→หลัง', 'เลขอ้างอิง', 'ผู้ดำเนินการ'];
-      const body = rows.map(t => [
-        safeDate(t.created_at, true),
-        TX_LABEL[t.tx_type] ?? t.tx_type,
-        t.med_showname || t.med_name,
-        (t.tx_type === 'in' || t.tx_type === 'return' ? '+' : '') + t.quantity.toLocaleString(),
-        `${t.balance_before.toLocaleString()} → ${t.balance_after.toLocaleString()}`,
-        t.reference_no || t.prescription_no || t.ward_from || '-',
-        t.performed_by_name || '-',
-      ]);
-
-      autoTable(doc, {
-        startY: 42,
-        head: [columns],
-        body,
-        styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [0, 111, 198], textColor: 255, fontSize: 8 },
-        alternateRowStyles: { fillColor: [240, 247, 255] },
-        margin: { top: 42, left: 10, right: 10, bottom: 15 },
-        didDrawPage: drawHeader,
-      });
-
-      doc.save(`ประวัติเคลื่อนไหวยา_${dateFrom}_${dateTo}.pdf`);
-    } catch (err: any) { toast.error('ออก PDF ไม่สำเร็จ: ' + err.message); }
+      setPrintData(rows);
+      setIsPrinting(true);
+      setTimeout(() => {
+        window.print();
+        setIsPrinting(false);
+      }, 500);
+    } catch (err: any) { toast.error('โหลดข้อมูล PDF ไม่สำเร็จ: ' + err.message); }
     finally { setExporting(false); }
   }
 
@@ -168,6 +115,27 @@ export default function TransactionsPage() {
       )
     : txs;
 
+  if (isPrinting) {
+    const content = (
+      <div className="print-only print-unbound bg-white text-black min-h-screen">
+        <ReportPrintTemplate
+          title="รายงานประวัติการเคลื่อนไหวยา"
+          dateRange={`วันที่ ${dateFrom} ถึง ${dateTo}`}
+          columns={[
+            { label: 'วันเวลา', key: 'created_at', render: r => safeDate(r.created_at, true) },
+            { label: 'ประเภท', key: 'tx_type', render: r => TX_LABEL[r.tx_type] ?? r.tx_type },
+            { label: 'ชื่อยา', key: 'drug_name', render: r => r.med_showname || r.med_name },
+            { label: 'จำนวน', key: 'quantity', render: r => (r.tx_type === 'in' || r.tx_type === 'return' ? '+' : '') + r.quantity.toLocaleString() },
+            { label: 'ก่อน→หลัง', key: 'balance', render: r => `${r.balance_before.toLocaleString()} → ${r.balance_after.toLocaleString()}` },
+            { label: 'เลขอ้างอิง', key: 'ref', render: r => r.reference_no || r.prescription_no || r.ward_from || '-' },
+            { label: 'ผู้ดำเนินการ', key: 'performed_by_name', render: r => r.performed_by_name || '-' }
+          ]}
+          data={printData}
+        />
+      </div>
+    );
+    return createPortal(content, document.body);
+  }
 
   return (
     <MainLayout
