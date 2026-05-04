@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
-import { Card, Button, Badge, Spinner, EmptyState, Modal, Input, Select } from '@/components/ui';
+import { Card, Button, Badge, Spinner, EmptyState, Modal, Select } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ interface SubWarehouse { sub_warehouse_id: number; name: string; is_active: bool
 interface CutOffPeriod {
   med_period_id: number; sub_warehouse_id: number; warehouse_name: string;
   period_month: number; period_day: number; period_time_h: number; period_time_m: number;
-  is_active: boolean; last_executed_at: string | null;
+  is_active: boolean; last_executed_at: string | null; frequency?: string;
 }
 interface RunLog {
   warehouse_name: string; executed_at: string; status: 'success' | 'error'; error?: string;
@@ -23,8 +23,16 @@ interface RunLog {
 }
 
 const MONTHS = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const DOW_TH = ['', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
 const pad = (n: number) => String(n ?? 0).padStart(2, '0');
-const fmtSched = (r: CutOffPeriod) => `${r.period_day} ${MONTHS[r.period_month]} ${pad(r.period_time_h)}:${pad(r.period_time_m)} น.`;
+const fmtSched = (r: CutOffPeriod) => {
+  const t = `${pad(r.period_time_h)}:${pad(r.period_time_m)} น.`;
+  const freq = r.frequency || 'monthly';
+  if (freq === 'daily')   return `ทุกวัน เวลา ${t}`;
+  if (freq === 'weekly')  return `ทุกวัน${DOW_TH[r.period_day] || r.period_day} เวลา ${t}`;
+  if (freq === 'monthly') return `ทุกวันที่ ${r.period_day} เวลา ${t}`;
+  return `${r.period_day} ${MONTHS[r.period_month]} เวลา ${t}`;
+};
 const timeSince = (iso: string | null) => {
   if (!iso) return 'ยังไม่เคยรัน';
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -34,7 +42,13 @@ const timeSince = (iso: string | null) => {
   return `${Math.floor(h / 24)} วันที่แล้ว`;
 };
 
-const emptyForm = { sub_warehouse_id: '', period_month: '1', period_day: '1', period_time_h: '0', period_time_m: '0', is_active: true };
+const FREQ_OPTIONS = [
+  { value: 'daily',   label: 'รายวัน — ทุกวันตามเวลาที่กำหนด' },
+  { value: 'weekly',  label: 'รายสัปดาห์ — เลือกวันในสัปดาห์' },
+  { value: 'monthly', label: 'รายเดือน — เลือกวันที่ในเดือน' },
+  { value: 'yearly',  label: 'รายปี — เลือกวันที่ + เดือน' },
+];
+const emptyForm = { sub_warehouse_id: '', frequency: 'monthly', period_month: '1', period_day: '1', period_time_h: '0', period_time_m: '0', is_active: true };
 
 export default function CutOffSummaryPage() {
   const [periods, setPeriods] = useState<CutOffPeriod[]>([]);
@@ -75,6 +89,7 @@ export default function CutOffSummaryPage() {
     setEditRow(row);
     setForm({
       sub_warehouse_id: String(row.sub_warehouse_id),
+      frequency: row.frequency || 'monthly',
       period_month: String(row.period_month),
       period_day: String(row.period_day),
       period_time_h: String(row.period_time_h),
@@ -90,6 +105,7 @@ export default function CutOffSummaryPage() {
     try {
       const payload = {
         sub_warehouse_id: Number(form.sub_warehouse_id),
+        frequency: form.frequency,
         period_month: Number(form.period_month),
         period_day: Number(form.period_day),
         period_time_h: Number(form.period_time_h),
@@ -318,43 +334,57 @@ export default function CutOffSummaryPage() {
               <label className="block text-xs font-medium text-slate-600 mb-1">คลังยา *</label>
               {warehouses.length === 0
                 ? <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">ไม่พบคลังยา — กรุณาเพิ่มคลังยาก่อน</p>
-                : <Select
-                    placeholder="เลือกคลังยา"
-                    value={form.sub_warehouse_id}
+                : <Select placeholder="เลือกคลังยา" value={form.sub_warehouse_id}
                     onChange={e => setForm(f => ({ ...f, sub_warehouse_id: e.target.value }))}
-                    options={warehouses.map(w => ({ value: String(w.sub_warehouse_id), label: w.name }))}
-                  />}
+                    options={warehouses.map(w => ({ value: String(w.sub_warehouse_id), label: w.name }))} />}
             </div>
           )}
           {editRow && (
-            <div className="bg-slate-50 rounded-lg px-3 py-2 text-sm font-medium text-slate-700">
-              📦 {editRow.warehouse_name}
+            <div className="bg-slate-50 rounded-lg px-3 py-2 text-sm font-medium text-slate-700">📦 {editRow.warehouse_name}</div>
+          )}
+
+          {/* Frequency */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">ความถี่การตัดรอบ</label>
+            <Select value={form.frequency} onChange={e => setForm(f => ({ ...f, frequency: e.target.value }))} options={FREQ_OPTIONS} />
+          </div>
+
+          {/* Day of week — weekly only */}
+          {form.frequency === 'weekly' && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">วันในสัปดาห์</label>
+              <Select value={form.period_day}
+                onChange={e => setForm(f => ({ ...f, period_day: e.target.value }))}
+                options={DOW_TH.slice(1).map((d, i) => ({ value: String(i + 1), label: d }))} />
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">เดือน (1-12)</label>
-              <Select value={form.period_month} onChange={e => setForm(f => ({ ...f, period_month: e.target.value }))}
-                options={numOpts(1, 12).map(o => ({ ...o, label: `${o.label} - ${MONTHS[Number(o.value)]}` }))} />
+          {/* Day of month — monthly / yearly */}
+          {(form.frequency === 'monthly' || form.frequency === 'yearly') && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">วันที่ (1-31)</label>
+                <Select value={form.period_day} onChange={e => setForm(f => ({ ...f, period_day: e.target.value }))} options={numOpts(1, 31)} />
+              </div>
+              {form.frequency === 'yearly' && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">เดือน</label>
+                  <Select value={form.period_month} onChange={e => setForm(f => ({ ...f, period_month: e.target.value }))}
+                    options={numOpts(1, 12).map(o => ({ ...o, label: `${o.label} - ${MONTHS[Number(o.value)]}` }))} />
+                </div>
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">วัน (1-31)</label>
-              <Select value={form.period_day} onChange={e => setForm(f => ({ ...f, period_day: e.target.value }))}
-                options={numOpts(1, 31)} />
-            </div>
-          </div>
+          )}
 
+          {/* Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">ชั่วโมง (0-23)</label>
-              <Select value={form.period_time_h} onChange={e => setForm(f => ({ ...f, period_time_h: e.target.value }))}
-                options={numOpts(0, 23)} />
+              <Select value={form.period_time_h} onChange={e => setForm(f => ({ ...f, period_time_h: e.target.value }))} options={numOpts(0, 23)} />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">นาที (0-59)</label>
-              <Select value={form.period_time_m} onChange={e => setForm(f => ({ ...f, period_time_m: e.target.value }))}
-                options={numOpts(0, 59)} />
+              <Select value={form.period_time_m} onChange={e => setForm(f => ({ ...f, period_time_m: e.target.value }))} options={numOpts(0, 59)} />
             </div>
           </div>
 
@@ -366,7 +396,12 @@ export default function CutOffSummaryPage() {
           </div>
 
           <div className="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
-            กำหนด: ทุกวันที่ {form.period_day || '?'} {MONTHS[Number(form.period_month)] || '?'} เวลา {pad(Number(form.period_time_h))}:{pad(Number(form.period_time_m))} น.
+            📅 {
+              form.frequency === 'daily'   ? `ทุกวัน เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+              form.frequency === 'weekly'  ? `ทุกวัน${DOW_TH[+form.period_day] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+              form.frequency === 'monthly' ? `ทุกวันที่ ${form.period_day} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+              `${form.period_day} ${MONTHS[+form.period_month] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.`
+            }
           </div>
 
           <div className="flex gap-2 justify-end pt-1">
