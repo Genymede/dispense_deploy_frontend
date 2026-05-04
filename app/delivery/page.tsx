@@ -257,16 +257,12 @@ export default function DeliveryPage() {
     setSaving(true);
     try {
       // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
-      const stockChecks = await Promise.all(form.medicine_list.map(async it => {
-        const { ok, available } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity, true);
-        return { name: it.med_showname || it.med_name, required: it.quantity, available, ok };
-      }));
-
-      const invalidItem = stockChecks.find(c => !c.ok);
-      if (invalidItem) {
-        toast.error(`ไม่สามารถบันทึกได้: ยา "${invalidItem.name}" มีสต็อกที่ยังไม่หมดอายุเพียง ${invalidItem.available} (ต้องการ ${invalidItem.required})`, { duration: 5000 });
-        setSaving(false);
-        return;
+      for (const it of form.medicine_list) {
+        const { ok } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity);
+        if (!ok) {
+          setSaving(false);
+          return;
+        }
       }
 
       const payload = {

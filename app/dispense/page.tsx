@@ -413,16 +413,12 @@ export default function DispensePage() {
     setDispensing(true);
     try {
       // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
-      const stockChecks = await Promise.all(dispenseItems.map(async it => {
-        const { ok, available } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity, true);
-        return { name: it.med_showname || it.med_name, required: it.quantity, available, ok };
-      }));
-
-      const invalidItem = stockChecks.find(c => !c.ok);
-      if (invalidItem) {
-        toast.error(`ไม่สามารถจ่ายยา "${invalidItem.name}" ได้: สต็อกที่ยังไม่หมดอายุมีเพียง ${invalidItem.available} (ต้องการ ${invalidItem.required})`, { duration: 5000 });
-        setDispensing(false);
-        return;
+      for (const it of dispenseItems) {
+        const { ok } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity);
+        if (!ok) {
+          setDispensing(false);
+          return;
+        }
       }
 
       // บันทึก meta ที่แก้ไขก่อนจ่าย
