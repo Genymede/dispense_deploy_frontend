@@ -284,10 +284,12 @@ export default function DrugsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {drugs.map((d) => {
-                    // Use nearest_lot_exp if available, fallback to exp_date
-                    const targetExpDate = (d as any).nearest_lot_exp || d.exp_date;
+                    // ยึดตามวันหมดอายุของล็อตที่ใกล้ที่สุด (ที่ยังไม่หมดอายุ) เป็นหลัก
+                    const targetExpDate = (d as any).nearest_lot_exp;
                     const isExp = d.is_expired || (targetExpDate ? new Date(targetExpDate) < new Date() : false);
-                    const isNearExp = !isExp && (targetExpDate ? new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000) : false);
+                    
+                    // คำนวณ "ใกล้หมดอายุ" จากล็อตที่ใกล้ที่สุดเท่านั้น (ภายใน 180 วัน)
+                    const isNearExp = !isExp && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000));
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
                     
                     const isPartialExp = !isExp && (d as any).expired_lot_count > 0;
