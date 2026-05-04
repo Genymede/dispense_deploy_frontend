@@ -7,7 +7,7 @@ import SafetyPanel from '@/components/SafetyPanel';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
-import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
+import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, drugApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
@@ -406,6 +406,29 @@ export default function DispensePage() {
   const handleDispense = async () => {
     setDispensing(true);
     try {
+      // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
+      const stockChecks = await Promise.all(dispenseItems.map(async it => {
+        try {
+          const lotRes = await drugApi.getLots(it.med_sid);
+          const lots = lotRes.data ?? [];
+          const now = new Date();
+          // กรองเฉพาะล็อตที่ยังไม่หมดอายุ
+          const validStock = lots
+            .filter(l => !l.exp_date || new Date(l.exp_date) >= now)
+            .reduce((sum, l) => sum + l.quantity, 0);
+          return { name: it.med_showname || it.med_name, required: it.quantity, available: validStock, ok: validStock >= it.quantity };
+        } catch {
+          return { name: it.med_showname || it.med_name, required: it.quantity, available: 0, ok: false };
+        }
+      }));
+
+      const invalidItem = stockChecks.find(c => !c.ok);
+      if (invalidItem) {
+        toast.error(`ไม่สามารถจ่ายยา "${invalidItem.name}" ได้: สต็อกที่ยังไม่หมดอายุมีเพียง ${invalidItem.available} (ต้องการ ${invalidItem.required})`, { duration: 5000 });
+        setDispensing(false);
+        return;
+      }
+
       // บันทึก meta ที่แก้ไขก่อนจ่าย
       if (dispenseMetaChanged) {
         await api.put(`/dispense/${dispenseRx.prescription_id}/meta`, {

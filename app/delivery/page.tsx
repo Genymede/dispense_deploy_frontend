@@ -248,8 +248,31 @@ export default function DeliveryPage() {
     }
     if (!form.address) { toast.error('กรุณากรอกที่อยู่'); return; }
     if (!form.medicine_list || form.medicine_list.length === 0) { toast.error('กรุณาเพิ่มรายการยาอย่างน้อย 1 รายการ'); return; }
+
     setSaving(true);
     try {
+      // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
+      const stockChecks = await Promise.all(form.medicine_list.map(async it => {
+        try {
+          const lotRes = await drugApi.getLots(it.med_sid);
+          const lots = lotRes.data ?? [];
+          const now = new Date();
+          const validStock = lots
+            .filter(l => !l.exp_date || new Date(l.exp_date) >= now)
+            .reduce((sum, l) => sum + l.quantity, 0);
+          return { name: it.med_showname || it.med_name, required: it.quantity, available: validStock, ok: validStock >= it.quantity };
+        } catch {
+          return { name: it.med_showname || it.med_name, required: it.quantity, available: 0, ok: false };
+        }
+      }));
+
+      const invalidItem = stockChecks.find(c => !c.ok);
+      if (invalidItem) {
+        toast.error(`ไม่สามารถบันทึกได้: ยา "${invalidItem.name}" มีสต็อกที่ยังไม่หมดอายุเพียง ${invalidItem.available} (ต้องการ ${invalidItem.required})`, { duration: 5000 });
+        setSaving(false);
+        return;
+      }
+
       const payload = {
         patient_id: form.patient_id, delivery_method: form.delivery_method,
         receiver_name: form.receiver_name, receiver_phone: form.receiver_phone,
