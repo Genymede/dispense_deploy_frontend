@@ -549,7 +549,19 @@ export const extraReportApi = {
   getMedProblem:       (p?: any) => api.get<any>('/reports/med-problem', { params: p }),
   getMedDelivery:      (p?: any) => api.get<any>('/reports/med-delivery', { params: p }),
   getOverdueMed:       (p?: any) => api.get<any>('/reports/overdue-med', { params: p }),
+
+  // Cut-off CRUD
   getCutOff:           (p?: any) => api.get<any>('/reports/cut-off', { params: p }),
+  createCutOff:        (data: { sub_warehouse_id: number; period_month: number; period_day: number; period_time_h: number; period_time_m: number; is_active?: boolean }) =>
+    api.post<any>('/reports/cut-off', data),
+  executeCutOff:       (id: number) => api.post<any>(`/reports/cut-off/${id}/execute`),
+  updateCutOff:        (id: number, data: Partial<{ period_month: number; period_day: number; period_time_h: number; period_time_m: number; is_active: boolean }>) =>
+    api.put<any>(`/reports/cut-off/${id}`, data),
+  deleteCutOff:        (id: number) => api.delete<any>(`/reports/cut-off/${id}`),
+
+  // Sub-warehouse
+  getSubWarehouses:    () => api.get<any>('/sub-warehouse'),
+
   getRadRegistry:      (p?: any) => api.get<any>('/reports/rad-registry', { params: p }),
   getAllergyRegistry:   (p?: any) => api.get<any>('/registry/allergy', { params: p }),
   getAdrRegistry:      (p?: any) => api.get<any>('/registry/adr', { params: p }),
