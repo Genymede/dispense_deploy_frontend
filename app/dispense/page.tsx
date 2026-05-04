@@ -8,6 +8,7 @@ import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDraw
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
 import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, drugApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
+import { validateDrugLots } from '@/lib/drugUtils';
 import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
@@ -269,9 +270,14 @@ export default function DispensePage() {
   }, [patientId, showCreate]);
 
   // ── Items ──────────────────────────────────────────────────────────────────
-  const addItem = (drug: any) => {
+  const addItem = async (drug: any) => {
     if (!drug) return;
     if (items.find(i => i.med_sid === drug.med_sid)) { toast('ยานี้มีในรายการแล้ว'); return; }
+
+    // ตรวจสอบล็อตยาและวันหมดอายุ (FEFO)
+    const { ok } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
+    if (!ok) return;
+
     setItems(prev => [...prev, {
       med_sid: drug.med_sid, med_id: drug.med_id,
       med_showname: drug.med_showname || drug.med_name,
@@ -408,18 +414,8 @@ export default function DispensePage() {
     try {
       // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
       const stockChecks = await Promise.all(dispenseItems.map(async it => {
-        try {
-          const lotRes = await drugApi.getLots(it.med_sid);
-          const lots = lotRes.data ?? [];
-          const now = new Date();
-          // กรองเฉพาะล็อตที่ยังไม่หมดอายุ
-          const validStock = lots
-            .filter(l => !l.exp_date || new Date(l.exp_date) >= now)
-            .reduce((sum, l) => sum + l.quantity, 0);
-          return { name: it.med_showname || it.med_name, required: it.quantity, available: validStock, ok: validStock >= it.quantity };
-        } catch {
-          return { name: it.med_showname || it.med_name, required: it.quantity, available: 0, ok: false };
-        }
+        const { ok, available } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity, true);
+        return { name: it.med_showname || it.med_name, required: it.quantity, available, ok };
       }));
 
       const invalidItem = stockChecks.find(c => !c.ok);
@@ -519,9 +515,14 @@ export default function DispensePage() {
   };
 
   // ── Dispense modal inline edit helpers ───────────────────────────────────
-  const addDispenseItem = (drug: any) => {
+  const addDispenseItem = async (drug: any) => {
     if (!drug) return;
     if (dispenseItems.find((i: any) => i.med_sid === drug.med_sid)) { toast('ยานี้มีในรายการแล้ว'); return; }
+
+    // ตรวจสอบล็อตยาและวันหมดอายุ (FEFO)
+    const { ok } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
+    if (!ok) return;
+
     const newItems = [...dispenseItems, {
       item_id: undefined,
       med_sid: drug.med_sid, med_id: drug.med_id,

@@ -8,6 +8,7 @@ import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { registryApi, crudApi, drugApi, type Drug } from '@/lib/api';
+import { validateDrugLots } from '@/lib/drugUtils';
 import { Truck, Pill, X, AlertTriangle, Search, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -190,6 +191,10 @@ export default function DeliveryPage() {
       return;
     }
 
+    // ตรวจสอบล็อตยาและวันหมดอายุ (FEFO)
+    const { ok } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
+    if (!ok) return;
+
     const item: MedItem = {
       med_sid: drug.med_sid,
       med_id: drug.med_id,
@@ -253,17 +258,8 @@ export default function DeliveryPage() {
     try {
       // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
       const stockChecks = await Promise.all(form.medicine_list.map(async it => {
-        try {
-          const lotRes = await drugApi.getLots(it.med_sid);
-          const lots = lotRes.data ?? [];
-          const now = new Date();
-          const validStock = lots
-            .filter(l => !l.exp_date || new Date(l.exp_date) >= now)
-            .reduce((sum, l) => sum + l.quantity, 0);
-          return { name: it.med_showname || it.med_name, required: it.quantity, available: validStock, ok: validStock >= it.quantity };
-        } catch {
-          return { name: it.med_showname || it.med_name, required: it.quantity, available: 0, ok: false };
-        }
+        const { ok, available } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity, true);
+        return { name: it.med_showname || it.med_name, required: it.quantity, available, ok };
       }));
 
       const invalidItem = stockChecks.find(c => !c.ok);
