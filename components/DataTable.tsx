@@ -5,6 +5,7 @@ import { Search, FileSpreadsheet, FileText, RefreshCw, Filter, Plus } from 'luci
 import { format, subDays } from 'date-fns';
 import toast from 'react-hot-toast';
 import { exportApi } from '@/lib/api';
+import ReportPrintTemplate from '@/components/ReportPrintTemplate';
 
 // ── CSV helper ────────────────────────────────────────────────────────────────
 function downloadCSV(filename: string, columns: string[], rows: string[][]) {
@@ -14,64 +15,6 @@ function downloadCSV(filename: string, columns: string[], rows: string[][]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
-}
-
-// ── PDF helper (client-side, Sarabun font, hospital header) ──────────────────
-async function downloadPDF(filename: string, title: string, columns: string[], rows: string[][]) {
-  const { default: jsPDF } = await import('jspdf');
-  const { default: autoTable } = await import('jspdf-autotable');
-
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-
-  const [regularBuf, boldBuf, logoBuf] = await Promise.all([
-    fetch('/font/ThaiSarabun/subset-Sarabun-Regular.ttf').then(r => r.arrayBuffer()),
-    fetch('/font/ThaiSarabun/subset-Sarabun-Bold.ttf').then(r => r.arrayBuffer()),
-    fetch('/logo.png').then(r => r.arrayBuffer()).catch(() => null),
-  ]);
-  const toB64 = (buf: ArrayBuffer) => { const b = new Uint8Array(buf); let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); };
-
-  doc.addFileToVFS('Sarabun.ttf', toB64(regularBuf));
-  doc.addFont('Sarabun.ttf', 'Sarabun', 'normal');
-  doc.addFileToVFS('Sarabun-Bold.ttf', toB64(boldBuf));
-  doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold');
-
-  const W = doc.internal.pageSize.getWidth();
-  const currentDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  const drawHeader = (data: any) => {
-    const pageCount = (doc.internal as any).getNumberOfPages();
-    // logo
-    if (logoBuf) { try { doc.addImage(toB64(logoBuf), 'PNG', 10, 8, 20, 20); } catch {} }
-    // hospital info
-    doc.setFont('Sarabun', 'bold'); doc.setFontSize(13);
-    doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
-    doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
-    doc.text('553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100', W / 2, 20, { align: 'center' });
-    doc.text(`โทร: 052 029 888   |   วันที่: ${currentDate}`, W / 2, 26, { align: 'center' });
-    // report title
-    doc.setFont('Sarabun', 'bold'); doc.setFontSize(11);
-    doc.text(title, W / 2, 34, { align: 'center' });
-    // divider
-    doc.setDrawColor('#006FC6'); doc.setLineWidth(0.4);
-    doc.line(10, 38, W - 10, 38);
-    // page number
-    doc.setFont('Sarabun', 'normal'); doc.setFontSize(8); doc.setTextColor(150);
-    doc.text(`หน้า ${data.pageNumber} จาก ${pageCount}`, W - 10, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
-    doc.setTextColor(0);
-  };
-
-  autoTable(doc, {
-    startY: 42,
-    head: [columns],
-    body: rows,
-    styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-    headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [0, 111, 198], textColor: 255, fontSize: 8 },
-    alternateRowStyles: { fillColor: [240, 247, 255] },
-    margin: { top: 42, left: 10, right: 10, bottom: 15 },
-    didDrawPage: drawHeader,
-  });
-
-  doc.save(filename);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -181,6 +124,9 @@ export default function DataTable({
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
   const [delTarget, setDelTarget] = useState<any | null>(null);
   const [deleting, setDeleting]   = useState(false);
+  
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [printData, setPrintData]   = useState<any[]>([]);
 
   // filter values managed by DataTable
   const [filterValues, setFilterValues] = useState<Record<string, string>>(() =>
@@ -226,14 +172,14 @@ export default function DataTable({
     const filename = `${exportTitle}_${timestamp}`;
     try {
       if (type === 'pdf') {
-        // PDF → client-side (jsPDF + Sarabun font, supports Thai)
+        // Full-page ReportPrintTemplate
         const res = await fetcher(buildParams({ page: 1, limit: 9999 }));
-        const exportCols = cols.filter(c => !c.skipExport);
-        const columns = exportCols.map(c => c.label);
-        const tableRows = res.data.map(row =>
-          exportCols.map(c => c.exportValue ? c.exportValue(row) : String(row[c.key] ?? '-'))
-        );
-        await downloadPDF(`${filename}.pdf`, exportTitle!, columns, tableRows);
+        setPrintData(res.data);
+        setIsPrinting(true);
+        setTimeout(() => {
+          window.print();
+          setIsPrinting(false);
+        }, 500);
       } else {
         // CSV → fetch all data, build client-side
         const res = await fetcher(buildParams({ page: 1, limit: 9999 }));
@@ -268,6 +214,26 @@ export default function DataTable({
 
   // ── Filter controls rendered by DataTable ───────────────────────────────────
   const filterSearchKey = filters.find(f => f.type === 'search')?.key;
+
+  if (isPrinting) {
+    const { createPortal } = require('react-dom');
+    const exportCols = cols.filter(c => !c.skipExport);
+    const content = (
+      <div className="print-only print-unbound bg-white text-black min-h-screen">
+        <ReportPrintTemplate
+          title={exportTitle ?? 'รายงาน'}
+          columns={exportCols.map(c => ({
+            label: c.label,
+            key: c.key,
+            render: c.exportValue ? (r: any) => c.exportValue!(r) : undefined
+          }))}
+          data={printData}
+        />
+      </div>
+    );
+    // Render directly into body to escape MainLayout overflow-hidden bounds
+    return createPortal(content, document.body);
+  }
 
   return (
     <div className="space-y-4">

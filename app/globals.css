@@ -233,5 +233,24 @@ button:focus-visible {
   }
 }
 .print-only { display: none; }
-@media print { .print-only { display: block !important; position: absolute; left: 0; top: 0; width: 100%; z-index: 9999; background: white; } body * { visibility: hidden; } .print-only, .print-only * { visibility: visible; } }
+@media print { 
+  /* Hide all main app wrappers so they don't interfere with page flow */
+  body > *:not(.print-only) { display: none !important; }
+  
+  /* Ensure the portal print div flows naturally for multi-page */
+  .print-only { 
+    display: block !important; 
+    position: static !important; 
+    background: white; 
+    width: 100%;
+  } 
+  
+  /* Remove height constraints */
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+}
 
