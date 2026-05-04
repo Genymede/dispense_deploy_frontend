@@ -192,7 +192,7 @@ export default function DeliveryPage() {
     }
 
     // ตรวจสอบล็อตยาและวันหมดอายุ (FEFO)
-    const { ok } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
+    const { ok, available } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
     if (!ok) return;
 
     const item: MedItem = {
@@ -202,7 +202,7 @@ export default function DeliveryPage() {
       med_showname: drug.med_showname || drug.med_name || '',
       quantity: 1,
       unit: drug.unit || '',
-      stock: drug.current_stock ?? 0,
+      stock: available,
       unit_price: drug.unit_price ?? 0,
     };
     setForm(p => ({ ...p, medicine_list: [...p.medicine_list, item] }));

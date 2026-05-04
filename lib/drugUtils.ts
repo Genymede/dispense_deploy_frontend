@@ -29,7 +29,7 @@ export async function validateDrugLots(
 
     let totalValidStock = 0;
     let foundValid = false;
-    let checkLogs: string[] = [];
+    let expiredLogs: string[] = [];
 
     for (let i = 0; i < sortedLots.length; i++) {
       const lot = sortedLots[i];
@@ -38,37 +38,37 @@ export async function validateDrugLots(
       
       if (isExpired) {
         const expStr = new Date(lot.exp_date!).toLocaleDateString('th-TH');
-        checkLogs.push(`${lotLabel} หมดอายุเมื่อ ${expStr} (ตรวจสอบล็อตถัดไป...)`);
+        expiredLogs.push(`${lotLabel} หมดอายุเมื่อ ${expStr}`);
       } else {
-        if (!foundValid) {
-          checkLogs.push(`${lotLabel} ยังไม่หมดอายุ - สามารถจ่ายได้`);
-          foundValid = true;
-        }
+        foundValid = true;
         totalValidStock += lot.quantity;
       }
     }
 
+    // ถ้าไม่เจอล็อตที่ใช้งานได้เลย (หมดอายุทุกล็อต)
     if (!foundValid) {
       if (!silent) {
         toast.error(
           React.createElement('div', null, [
             React.createElement('p', { className: 'font-bold mb-1', key: 'title' }, `ไม่สามารถเลือกยา "${med_name}" ได้`),
-            ...checkLogs.map((log, idx) => 
-              React.createElement('p', { className: 'text-[10px] text-red-500 leading-tight', key: idx }, `• ${log}`)
+            ...expiredLogs.map((log, idx) => 
+              React.createElement('p', { className: 'text-[10px] text-red-500 leading-tight', key: idx }, `• ${log} (ตรวจสอบล็อตถัดไป...)`)
             ),
             React.createElement('p', { className: 'mt-1 text-xs font-semibold text-red-700 border-t pt-1', key: 'summary' }, 'สรุป: ยาหมดอายุทุกล็อต')
           ]),
           { duration: 6000 }
         );
       }
-      return { ok: false, available: 0, logs: checkLogs };
+      return { ok: false, available: 0, logs: expiredLogs };
     }
 
+    // ถ้าสต็อกที่ยังไม่หมดอายุไม่พอ
     if (totalValidStock < requiredQty && !silent) {
-      toast.error(`สต็อกที่ยังไม่หมดอายุมีเพียง ${totalValidStock} ${lots[0]?.lot_number ? '' : '(รวมทุกเขต)'}`);
+      toast.error(`ยา "${med_name}" มีสต็อกที่ยังไม่หมดอายุเพียง ${totalValidStock} (ต้องการ ${requiredQty})`);
+      return { ok: false, available: totalValidStock, logs: [] };
     }
 
-    return { ok: totalValidStock >= requiredQty, available: totalValidStock, logs: checkLogs };
+    return { ok: true, available: totalValidStock, logs: [] };
   } catch (error: any) {
     if (!silent) toast.error(`เกิดข้อผิดพลาดในการตรวจสอบล็อตยา: ${error.message}`);
     return { ok: false, available: 0, logs: [error.message] };

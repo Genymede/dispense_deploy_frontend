@@ -520,7 +520,7 @@ export default function DispensePage() {
     if (dispenseItems.find((i: any) => i.med_sid === drug.med_sid)) { toast('ยานี้มีในรายการแล้ว'); return; }
 
     // ตรวจสอบล็อตยาและวันหมดอายุ (FEFO)
-    const { ok } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
+    const { ok, available } = await validateDrugLots(drug.med_sid, drug.med_showname || drug.med_name);
     if (!ok) return;
 
     const newItems = [...dispenseItems, {
@@ -530,7 +530,7 @@ export default function DispensePage() {
       med_name: drug.med_name, quantity: 1, frequency: 'OD',
       route: 'รับประทาน', unit: drug.unit || 'เม็ด',
       unit_price: Number(drug.unit_price) || Number(drug.list_selling_price) || 0,
-      stock_available: Number(drug.stock_quantity) || 0,
+      stock_available: available,
       line_total: 0,
     }];
     setDispenseItems(newItems);
