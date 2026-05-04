@@ -471,7 +471,7 @@ export default function DrugsPage() {
                     <tbody className="divide-y divide-slate-50">
                       {viewLots.map(lot => {
                         const isExpired = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
-                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 180 * 86400_000) : false;
+                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + nearExpiryDays * 86400_000) : false;
                         return (
                           <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
                             <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
