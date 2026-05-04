@@ -9,7 +9,7 @@ const PORTAL_URL = 'https://hpk-hms.site';
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
@@ -17,6 +17,13 @@ export default function LoginPage() {
   const [error, setError]       = useState('');
 
   const router = useRouter();
+
+  // หากมี user อยู่แล้ว (ล็อกอินแล้ว) ให้ไปที่หน้า dashboard ทันที
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   // Production: redirect ไป portal อัตโนมัติ
   useEffect(() => {
