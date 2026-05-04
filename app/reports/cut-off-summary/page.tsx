@@ -80,10 +80,11 @@ interface LotDetail {
   lot_id: number; lot_number: string; med_sid: number;
   med_showname: string; exp_date: string; quantity: number; days_remaining?: number;
 }
+interface SnapshotDetail { med_showname: string; quantity: number; unit: string; }
 interface RunLog {
   warehouse_name: string; executed_at: string; status: 'success' | 'error'; error?: string;
   newly_expired_count?: number; near_expiry_count?: number; low_stock_count?: number; snapshot_count?: number;
-  expired_lots?: LotDetail[]; near_expiry_lots?: LotDetail[];
+  expired_lots?: LotDetail[]; near_expiry_lots?: LotDetail[]; snapshot_details?: SnapshotDetail[];
 }
 
 const MONTHS = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -311,8 +312,8 @@ export default function CutOffSummaryPage() {
     e?.stopPropagation();
     setExecuting(row.med_period_id);
     try {
-      const res = await extraReportApi.executeCutOff(row.med_period_id);
-      const s = res.data?.summary;
+      const res: any = await extraReportApi.executeCutOff(row.med_period_id);
+      const s = res.summary || res.data?.summary; // ยืดหยุ่นตาม response จริง
       const log: RunLog = {
         warehouse_name: row.warehouse_name,
         executed_at: new Date().toISOString(),
@@ -320,7 +321,7 @@ export default function CutOffSummaryPage() {
         ...s,
       };
       setLogs(prev => [log, ...prev].slice(0, 30));
-      setReportLog(log); // เปิด report modal ทันที
+      setReportLog(log);
       toast.success(`ตัดรอบ "${row.warehouse_name}" สำเร็จ`, { duration: 4000 });
       await load();
     } catch (err: any) {
@@ -664,6 +665,33 @@ export default function CutOffSummaryPage() {
                             <td className="px-3 py-1.5 font-semibold text-amber-700">{l.days_remaining} วัน</td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>}
+            </div>
+
+            {/* Snapshot Details Table */}
+            <div>
+              <h4 className="text-sm font-semibold text-blue-700 mb-1.5 flex items-center gap-1.5">
+                <Package size={14}/> รายการยาคงคลังทั้งหมด (Snapshot - {reportLog.snapshot_count ?? (reportLog.snapshot_details ?? []).length} รายการ)
+              </h4>
+              {(reportLog.snapshot_details ?? []).length === 0 && !(reportLog.snapshot_count ?? 0)
+                ? <p className="text-xs text-slate-400 pl-1">ไม่มีข้อมูลยาคงคลัง</p>
+                : <div className="overflow-x-auto rounded-lg border border-blue-100 max-h-64 overflow-y-auto shadow-inner bg-white">
+                    <table className="w-full text-xs">
+                      <thead className="bg-blue-50 sticky top-0 shadow-sm">
+                        <tr>{['ชื่อยา','ยอดคงเหลือ'].map(h => <th key={h} className="px-3 py-2 text-left text-blue-700 font-bold whitespace-nowrap">{h}</th>)}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-blue-50">
+                        {(reportLog.snapshot_details ?? []).map((item, idx) => (
+                          <tr key={idx} className="hover:bg-blue-50/50">
+                            <td className="px-3 py-2 font-medium text-slate-700">{item.med_showname}</td>
+                            <td className="px-3 py-2 font-bold text-slate-900">{item.quantity} {item.unit || 'หน่วย'}</td>
+                          </tr>
+                        ))}
+                        {(reportLog.snapshot_details ?? []).length === 0 && (reportLog.snapshot_count ?? 0) > 0 && (
+                           <tr><td colSpan={2} className="px-3 py-4 text-center text-slate-400 italic">Snapshot ข้อมูลเรียบร้อยแล้ว {reportLog.snapshot_count} รายการ</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>}
