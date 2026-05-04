@@ -396,9 +396,19 @@ export default function DispensePage() {
         .filter((it: any) => pendingOverdueIds.has(it.item_id))
         .flatMap((it: any) => [it.med_name, it.med_showname].filter(Boolean))
     );
-    return safetyResult.alerts.filter(a =>
-      a.type !== 'stock' || !overdueMedNames.has(a.med_name ?? '')
-    );
+    return safetyResult.alerts.filter(a => {
+      // 1. กรองสต็อกถ้าจ่ายเป็นยาค้างจ่ายแล้ว
+      const isStockOverdue = a.type === 'stock' && overdueMedNames.has(a.med_name ?? '');
+      if (isStockOverdue) return false;
+
+      // 2. กรองแจ้งเตือนหมดอายุ ถ้ายังมีสต็อกที่จ่ายได้จริง (Good lots)
+      if (a.type === 'expired') {
+        const item = safetyResult.items?.find(it => it.med_name === a.med_name);
+        if (item && Number(item.stock_available) > 0) return false;
+      }
+
+      return true;
+    });
   }, [safetyResult, pendingOverdueIds, dispenseItems]);
 
   // alert_level ที่ filter แล้ว (ใช้ check disabled)
