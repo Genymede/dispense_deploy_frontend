@@ -1393,7 +1393,7 @@ export default function DispensePage() {
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
                         <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">จำนวน</th>
                         <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">ความถี่</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">เส้นทาง</th>
+                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">วิธีใช้ยา</th>
                         <th className="px-2 py-2 text-right text-xs font-semibold text-slate-500">ราคา</th>
                         <th className="w-5" />
                       </tr>
