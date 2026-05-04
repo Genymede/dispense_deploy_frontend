@@ -284,25 +284,27 @@ export default function DrugsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {drugs.map((d) => {
-                    // ยึดตามวันหมดอายุของล็อตที่ใกล้ที่สุด (ที่ยังไม่หมดอายุ) เป็นหลัก
+                    // 1. ตรวจสอบวันหมดอายุจากล็อตที่ใกล้ที่สุดจริงๆ (Absolute Minimum)
                     const targetExpDate = (d as any).nearest_lot_exp;
-                    const isExp = d.is_expired || (targetExpDate ? new Date(targetExpDate) < new Date() : false);
+                    const isAnyLotExpired = targetExpDate ? new Date(targetExpDate) < new Date() : false;
+                    const hasValidLots = (d as any).lot_count > 0; // จำนวนล็อตที่ยังไม่หมดอายุ
                     
-                    // คำนวณ "ใกล้หมดอายุ" จากล็อตที่ใกล้ที่สุดเท่านั้น (ภายใน 180 วัน)
-                    const isNearExp = !isExp && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000));
+                    // 2. คำนวณ "ใกล้หมดอายุ" (จากล็อตที่ยังไม่หมดอายุที่ใกล้ที่สุด - ซึ่งตอนนี้ targetExpDate อาจจะเป็นของที่หมดอายุไปแล้ว)
+                    // ดังนั้นเราจะใช้ targetExpDate เช็ค Near Exp เฉพาะเมื่อมันยังไม่หมดอายุ
+                    const isNearExp = !isAnyLotExpired && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000));
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
-                    
-                    const isPartialExp = !isExp && (d as any).expired_lot_count > 0;
                     
                     let statusV: any = 'success';
                     let statusL = 'ปกติ';
                     
-                    if (isExp) {
-                      statusV = 'danger';
-                      statusL = 'หมดอายุ';
-                    } else if (isPartialExp) {
-                      statusV = 'warning';
-                      statusL = 'มีล็อตหมดอายุ';
+                    if (isAnyLotExpired) {
+                      if (hasValidLots) {
+                        statusV = 'warning';
+                        statusL = 'มีล็อตหมดอายุ';
+                      } else {
+                        statusV = 'danger';
+                        statusL = 'หมดอายุ';
+                      }
                     } else if (isLow && isNearExp) {
                       statusV = 'danger';
                       statusL = 'ต่ำ & ใกล้หมดอายุ';
@@ -340,7 +342,7 @@ export default function DrugsPage() {
                         <td className="px-4 py-2.5 text-xs text-slate-600">{d.packaging_type || '-'}</td>
                         {/* คงเหลือ */}
                         <td className="px-4 py-2.5">
-                          <span className={`font-semibold tabular-nums ${isLow || isExp ? 'text-red-600' : 'text-slate-800'}`}>
+                          <span className={`font-semibold tabular-nums ${isLow || isAnyLotExpired ? 'text-red-600' : 'text-slate-800'}`}>
                             {d.current_stock.toLocaleString()}
                           </span>
                           {d.lot_count != null && d.lot_count > 0 && (
