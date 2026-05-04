@@ -50,6 +50,8 @@ export interface Drug {
   unit: string;
   med_out_of_stock: boolean;
   lot_count?: number;
+  nearest_lot_exp?: string | null;
+  expired_lot_count?: number;
   lots?: StockLot[];
 }
 
