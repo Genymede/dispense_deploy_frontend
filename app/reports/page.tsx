@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import MainLayout from '@/components/MainLayout';
+import ReportPrintTemplate from '@/components/ReportPrintTemplate';
 import { Card, Button, Input, Select, Badge, Spinner, EmptyState } from '@/components/ui';
 import { reportApi, stockApi, exportApi, type InventoryItem } from '@/lib/api';
 import {
@@ -17,10 +18,14 @@ import toast from 'react-hot-toast';
 const COLORS = ['#006fc6', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0284c7', '#db2777'];
 type Tab = 'overview' | 'stock' | 'dispense' | 'inventory';
 
-function ExportBar({ report, dateFrom, dateTo, ward, txType }: {
-  report: string; dateFrom?: string; dateTo?: string; ward?: string; txType?: string;
+function ExportBar({ report, dateFrom, dateTo, ward, txType, onPrint }: {
+  report: string; dateFrom?: string; dateTo?: string; ward?: string; txType?: string; onPrint?: () => void;
 }) {
   const dl = (type: 'excel' | 'pdf') => {
+    if (type === 'pdf' && onPrint) {
+      onPrint();
+      return;
+    }
     const params: any = { report, date_from: dateFrom, date_to: dateTo };
     if (ward) params.ward = ward;
     if (txType) params.tx_type = txType;
@@ -39,18 +44,27 @@ function ExportBar({ report, dateFrom, dateTo, ward, txType }: {
 export default function ReportsPage() {
   const [tab, setTab] = useState<Tab>('overview');
   const [dateFrom, setDateFrom] = useState(thaiDaysAgo(30));
-  const [dateTo, setDateTo]     = useState(thaiToday());
+  const [dateTo, setDateTo] = useState(thaiToday());
   const [filterWard, setFilterWard] = useState('');
   const [filterTxType, setFilterTxType] = useState('');
 
   const [stockSummary, setStockSummary] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [wardData, setWardData]         = useState<any[]>([]);
-  const [topDrugs, setTopDrugs]         = useState<any[]>([]);
-  const [inventory, setInventory]       = useState<InventoryItem[]>([]);
+  const [wardData, setWardData] = useState<any[]>([]);
+  const [topDrugs, setTopDrugs] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [dispenseReport, setDispenseReport] = useState<any[]>([]);
-  const [stockReport, setStockReport]   = useState<any[]>([]);
-  const [loading, setLoading]           = useState(false);
+  const [stockReport, setStockReport] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = useCallback(() => {
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 300);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,9 +78,9 @@ export default function ReportsPage() {
         ]);
         setStockSummary(sumRes.data.map(r => ({
           date: fmtDateLabel(r.date),
-          รับเข้า:  Number(r.stock_in),
+          รับเข้า: Number(r.stock_in),
           จ่ายออก: Number(r.stock_out),
-          คืนยา:   Number(r.stock_return),
+          คืนยา: Number(r.stock_return),
         })));
         setCategoryData(catRes.data.map(r => ({ name: r.category, value: Number(r.total_dispensed) })));
         setTopDrugs(topRes.data);
@@ -102,18 +116,99 @@ export default function ReportsPage() {
   useEffect(() => { load(); }, [load]);
 
   const TABS = [
-    { key: 'overview',  label: 'ภาพรวม',                icon: <BarChart3 size={15} /> },
-    { key: 'stock',     label: 'ความเคลื่อนไหวสต็อก',  icon: <TrendingUp size={15} /> },
-    { key: 'dispense',  label: 'การจ่ายยา',              icon: <Package size={15} /> },
-    { key: 'inventory', label: 'คงคลัง',                 icon: <PieChartIcon size={15} /> },
+    { key: 'overview', label: 'ภาพรวม', icon: <BarChart3 size={15} /> },
+    { key: 'stock', label: 'ความเคลื่อนไหวสต็อก', icon: <TrendingUp size={15} /> },
+    { key: 'dispense', label: 'การจ่ายยา', icon: <Package size={15} /> },
+    { key: 'inventory', label: 'คงคลัง', icon: <PieChartIcon size={15} /> },
   ] as const;
 
   const totalInventoryValue = inventory.reduce((s, r) => s + Number(r.total_value || 0), 0);
-  const totalStockIn  = stockSummary.reduce((s, r) => s + (r.รับเข้า ?? 0), 0);
+  const totalStockIn = stockSummary.reduce((s, r) => s + (r.รับเข้า ?? 0), 0);
   const totalStockOut = stockSummary.reduce((s, r) => s + (r.จ่ายออก ?? 0), 0);
 
   const TX_LABEL: Record<string, string> = { in: 'รับเข้า', out: 'จ่ายออก', adjust: 'ปรับสต็อก', return: 'คืนยา', expired: 'หมดอายุ' };
   const STATUS_TH: Record<string, string> = { pending: 'รอจ่าย', dispensed: 'จ่ายแล้ว', returned: 'คืนยา', cancelled: 'ยกเลิก' };
+
+  if (isPrinting) {
+    return (
+      <div className="bg-white min-h-screen text-black">
+        {tab === 'stock' && (
+          <ReportPrintTemplate
+            title="รายงานความเคลื่อนไหวสต็อกยา"
+            dateRange={`ตั้งแต่ ${dateFrom} ถึง ${dateTo}`}
+            columns={[
+              { label: 'วันเวลา', key: 'created_at', render: r => fmtDate(r.created_at, true) },
+              { label: 'ประเภท', key: 'tx_type', render: r => TX_LABEL[r.tx_type] ?? r.tx_type },
+              { label: 'ชื่อยา', key: 'drug_name' },
+              { label: 'จำนวน', key: 'quantity', render: r => (r.tx_type === 'in' || r.tx_type === 'return' ? '+' : '') + r.quantity },
+              { label: 'ยอดคงเหลือ', key: 'balance', render: r => `${r.balance_before} -> ${r.balance_after}` },
+              { label: 'อ้างอิง', key: 'ref', render: r => r.reference_no || r.prescription_no || '-' },
+              { label: 'ผู้บันทึก', key: 'performed_by_name', render: r => r.performed_by_name || '-' }
+            ]}
+            data={stockReport}
+          />
+        )}
+        {tab === 'dispense' && (
+          <ReportPrintTemplate
+            title="รายงานการจ่ายยา"
+            dateRange={`ตั้งแต่ ${dateFrom} ถึง ${dateTo}`}
+            columns={[
+              { label: 'เลขใบสั่ง', key: 'prescription_no' },
+              { label: 'วันที่', key: 'created_at', render: r => fmtDate(r.created_at) },
+              { label: 'ผู้ป่วย', key: 'patient_name', render: r => r.patient_name || '-' },
+              { label: 'HN', key: 'hn_number', render: r => r.hn_number || '-' },
+              { label: 'วอร์ด', key: 'ward', render: r => r.ward || '-' },
+              { label: 'สถานะ', key: 'status', render: r => STATUS_TH[r.status] ?? r.status },
+              { label: 'รายการ', key: 'item_count', render: r => `${r.item_count} รายการ` }
+            ]}
+            data={dispenseReport}
+            summaryItems={[
+              { label: 'จำนวนทั้งหมด', value: dispenseReport.length },
+              { label: 'จ่ายแล้ว', value: dispenseReport.filter(r => r.status === 'dispensed').length },
+              { label: 'รอจ่าย', value: dispenseReport.filter(r => r.status === 'pending').length },
+              { label: 'ยกเลิก', value: dispenseReport.filter(r => r.status === 'cancelled').length },
+            ]}
+          />
+        )}
+        {tab === 'inventory' && (
+          <ReportPrintTemplate
+            title="รายงานมูลค่าคงคลัง"
+            columns={[
+               { label: 'ชื่อยา', key: 'med_name', render: r => r.med_showname || r.med_name },
+               { label: 'หมวดหมู่', key: 'category', render: r => r.category || '-' },
+               { label: 'คงเหลือ', key: 'current_stock', render: r => `${r.current_stock.toLocaleString()} ${r.unit}` },
+               { label: 'ที่เก็บ', key: 'location', render: r => r.location || '-' },
+               { label: 'มูลค่า', key: 'total_value', render: r => `฿${Number(r.total_value).toLocaleString('th', { minimumFractionDigits: 2 })}` },
+               { label: 'สถานะ', key: 'stock_status', render: r => r.stock_status === 'normal' ? 'ปกติ' : r.stock_status === 'low_stock' ? 'ต่ำ' : r.stock_status === 'out_of_stock' ? 'หมด' : 'หมดอายุ' }
+            ]}
+            data={inventory}
+            summaryItems={[
+              { label: 'รายการทั้งหมด', value: inventory.length },
+              { label: 'มูลค่าคงคลังรวม', value: `฿${totalInventoryValue.toLocaleString('th', { minimumFractionDigits: 0 })}` },
+              { label: 'ต้องดำเนินการ', value: inventory.filter(r => r.stock_status !== 'normal').length },
+            ]}
+          />
+        )}
+        {tab === 'overview' && (
+          <ReportPrintTemplate
+            title="รายงานความเคลื่อนไหวรายวัน"
+            dateRange={`ตั้งแต่ ${dateFrom} ถึง ${dateTo}`}
+            columns={[
+               { label: 'วันที่', key: 'date' },
+               { label: 'รับเข้า', key: 'รับเข้า' },
+               { label: 'จ่ายออก', key: 'จ่ายออก' },
+            ]}
+            data={stockSummary}
+            summaryItems={[
+              { label: 'รับเข้ารวม', value: totalStockIn.toLocaleString() },
+              { label: 'จ่ายออกรวม', value: totalStockOut.toLocaleString() },
+              { label: 'สัดส่วนจ่าย/รับ', value: totalStockIn > 0 ? `${((totalStockOut / totalStockIn) * 100).toFixed(1)}%` : '-' }
+            ]}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <MainLayout title="รายงานและสถิติ" subtitle="สรุปข้อมูลการบริหารคลังยาย่อย">
@@ -165,7 +260,7 @@ export default function ReportsPage() {
 
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-700">ความเคลื่อนไหวรายวัน (30 วัน)</h3>
-                <ExportBar report="stock" dateFrom={dateFrom} dateTo={dateTo} />
+                <ExportBar report="stock" dateFrom={dateFrom} dateTo={dateTo} onPrint={handlePrint} />
               </div>
               <Card>
                 {stockSummary.length === 0 ? <EmptyState icon={<BarChart3 size={32} />} title="ยังไม่มีข้อมูล" /> : (
@@ -176,7 +271,7 @@ export default function ReportsPage() {
                       <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
                       <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="รับเข้า"  fill="#006fc6" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="รับเข้า" fill="#006fc6" radius={[3, 3, 0, 0]} />
                       <Bar dataKey="จ่ายออก" fill="#16a34a" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -224,7 +319,7 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <Select placeholder="ทุกประเภท" value={filterTxType} onChange={e => setFilterTxType(e.target.value)}
                     options={Object.entries(TX_LABEL).map(([v, l]) => ({ value: v, label: l }))} />
-                  <div className="ml-auto"><ExportBar report="stock" dateFrom={dateFrom} dateTo={dateTo} txType={filterTxType} /></div>
+                  <div className="ml-auto"><ExportBar report="stock" dateFrom={dateFrom} dateTo={dateTo} txType={filterTxType} onPrint={handlePrint} /></div>
                 </div>
               </Card>
 
@@ -237,7 +332,7 @@ export default function ReportsPage() {
                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
                     <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="รับเข้า"  stroke="#006fc6" strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="รับเข้า" stroke="#006fc6" strokeWidth={2.5} dot={false} />
                     <Line type="monotone" dataKey="จ่ายออก" stroke="#16a34a" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -282,7 +377,7 @@ export default function ReportsPage() {
               <Card>
                 <div className="flex items-center gap-3 flex-wrap">
                   <Input placeholder="กรองวอร์ด..." value={filterWard} onChange={e => setFilterWard(e.target.value)} className="w-48" />
-                  <div className="ml-auto"><ExportBar report="dispense" dateFrom={dateFrom} dateTo={dateTo} ward={filterWard} /></div>
+                  <div className="ml-auto"><ExportBar report="dispense" dateFrom={dateFrom} dateTo={dateTo} ward={filterWard} onPrint={handlePrint} /></div>
                 </div>
               </Card>
 
@@ -365,7 +460,7 @@ export default function ReportsPage() {
                     <Card key={label}><p className="text-xs text-slate-500">{label}</p><p className="text-xl font-bold text-slate-800 mt-1">{value}</p></Card>
                   ))}
                 </div>
-                <ExportBar report="inventory" />
+                <ExportBar report="inventory" onPrint={handlePrint} />
               </div>
 
               <Card className="overflow-hidden p-0">
@@ -407,6 +502,7 @@ export default function ReportsPage() {
               </Card>
             </div>
           )}
+          {/* ══ PRINT TEMPLATES ═════════════════════════════════════════════ */}
         </>
       )}
     </MainLayout>

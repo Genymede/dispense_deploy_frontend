@@ -232,3 +232,6 @@ button:focus-visible {
     border: 1px solid #ccc;
   }
 }
+.print-only { display: none; }
+@media print { .print-only { display: block !important; position: absolute; left: 0; top: 0; width: 100%; z-index: 9999; background: white; } body * { visibility: hidden; } .print-only, .print-only * { visibility: visible; } }
+
