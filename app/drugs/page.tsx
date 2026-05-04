@@ -285,9 +285,26 @@ export default function DrugsPage() {
                 <tbody className="divide-y divide-slate-50">
                   {drugs.map((d) => {
                     const isExp = d.is_expired || (d.exp_date ? new Date(d.exp_date) < new Date() : false);
-                    const isLow = !isExp && d.min_quantity != null && d.current_stock < d.min_quantity;
-                    const statusV = isExp ? 'danger' : isLow ? 'warning' : 'success';
-                    const statusL = isExp ? 'หมดอายุ' : isLow ? 'สต็อกต่ำ' : 'ปกติ';
+                    const isNearExp = !isExp && (d.exp_date ? new Date(d.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false);
+                    const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
+                    
+                    let statusV: any = 'success';
+                    let statusL = 'ปกติ';
+                    
+                    if (isExp) {
+                      statusV = 'danger';
+                      statusL = 'หมดอายุ';
+                    } else if (isLow && isNearExp) {
+                      statusV = 'danger';
+                      statusL = 'ต่ำ & ใกล้หมดอายุ';
+                    } else if (isLow) {
+                      statusV = 'warning';
+                      statusL = 'สต็อกต่ำ';
+                    } else if (isNearExp) {
+                      statusV = 'warning';
+                      statusL = 'ใกล้หมดอายุ';
+                    }
+
                     return (
                       <tr key={d.med_sid} className="table-row-hover cursor-pointer" onClick={() => setViewDrug(d)}>
                         {/* รูป */}
