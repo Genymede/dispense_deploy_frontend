@@ -284,8 +284,10 @@ export default function DrugsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {drugs.map((d) => {
-                    const isExp = d.is_expired || (d.exp_date ? new Date(d.exp_date) < new Date() : false);
-                    const isNearExp = !isExp && (d.exp_date ? new Date(d.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false);
+                    // Use nearest_lot_exp if available, fallback to exp_date
+                    const targetExpDate = (d as any).nearest_lot_exp || d.exp_date;
+                    const isExp = d.is_expired || (targetExpDate ? new Date(targetExpDate) < new Date() : false);
+                    const isNearExp = !isExp && (targetExpDate ? new Date(targetExpDate) <= new Date(Date.now() + 180 * 86400_000) : false);
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
                     
                     let statusV: any = 'success';
@@ -459,7 +461,7 @@ export default function DrugsPage() {
                     <tbody className="divide-y divide-slate-50">
                       {viewLots.map(lot => {
                         const isExpired = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
-                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 30 * 86400_000) : false;
+                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + 180 * 86400_000) : false;
                         return (
                           <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
                             <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
