@@ -9,7 +9,66 @@ import {
   CalendarClock, Play, CheckCircle2, XCircle,
   AlertTriangle, PackageX, Package, Clock,
   RefreshCw, Warehouse, Plus, Pencil, Trash2,
+  FileText, FileSpreadsheet,
 } from 'lucide-react';
+
+// ── Export helpers (same pattern as expiry report) ────────────────────────────
+const toB64 = (buf: ArrayBuffer) => {
+  const b = new Uint8Array(buf); let s = '';
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s);
+};
+
+async function exportPDF(title: string, columns: string[], rows: string[][]) {
+  const { default: jsPDF }     = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+  const [regularBuf, boldBuf, logoBuf] = await Promise.all([
+    fetch('/font/ThaiSarabun/subset-Sarabun-Regular.ttf').then(r => r.arrayBuffer()),
+    fetch('/font/ThaiSarabun/subset-Sarabun-Bold.ttf').then(r => r.arrayBuffer()),
+    fetch('/logo.png').then(r => r.arrayBuffer()).catch(() => null),
+  ]);
+  doc.addFileToVFS('Sarabun.ttf', toB64(regularBuf));
+  doc.addFont('Sarabun.ttf', 'Sarabun', 'normal');
+  doc.addFileToVFS('Sarabun-Bold.ttf', toB64(boldBuf));
+  doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold');
+  const W = doc.internal.pageSize.getWidth();
+  const currentDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  const drawHeader = (data: any) => {
+    const pageCount = (doc.internal as any).getNumberOfPages();
+    if (logoBuf) { try { doc.addImage(toB64(logoBuf as ArrayBuffer), 'PNG', 10, 8, 20, 20); } catch {} }
+    doc.setFont('Sarabun', 'bold'); doc.setFontSize(13);
+    doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
+    doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
+    doc.text('553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100', W / 2, 20, { align: 'center' });
+    doc.text(`โทร: 052 029 888   |   วันที่: ${currentDate}`, W / 2, 26, { align: 'center' });
+    doc.setFont('Sarabun', 'bold'); doc.setFontSize(11);
+    doc.text(title, W / 2, 34, { align: 'center' });
+    doc.setDrawColor('#006FC6'); doc.setLineWidth(0.4);
+    doc.line(10, 38, W - 10, 38);
+    doc.setFont('Sarabun', 'normal'); doc.setFontSize(8); doc.setTextColor(150);
+    doc.text(`หน้า ${data.pageNumber} จาก ${pageCount}`, W - 10, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
+    doc.setTextColor(0);
+  };
+  autoTable(doc, {
+    startY: 42, head: [columns], body: rows,
+    styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+    headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [0, 111, 198], textColor: 255, fontSize: 8 },
+    alternateRowStyles: { fillColor: [240, 247, 255] },
+    margin: { top: 42, left: 10, right: 10, bottom: 15 },
+    didDrawPage: drawHeader,
+  });
+  doc.save(`${title}.pdf`);
+}
+
+function exportCSV(title: string, columns: string[], rows: string[][]) {
+  const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = '\uFEFF' + [columns.map(esc), ...rows.map(r => r.map(esc))].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `${title}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
 
 interface SubWarehouse { sub_warehouse_id: number; name: string; is_active: boolean; }
 interface CutOffPeriod {
@@ -57,6 +116,7 @@ export default function CutOffSummaryPage() {
   const [executing, setExecuting] = useState<number | null>(null);
   const [logs, setLogs] = useState<RunLog[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
 
   // Form modal state
   const [showModal, setShowModal] = useState(false);
@@ -138,6 +198,48 @@ export default function CutOffSummaryPage() {
     finally { setDeleting(null); }
   };
 
+  // ── Export ─────────────────────────────────────────────────────────────────
+  const handleExport = async (type: 'pdf' | 'csv') => {
+    const title = 'รายงานสรุปการตัดรอบคลังยา';
+    const columns = ['คลังยา', 'ความถี่', 'กำหนดการ', 'สถานะ', 'รันล่าสุด', 'นานแค่ไหน'];
+    const rows = periods.map(r => [
+      r.warehouse_name,
+      r.frequency === 'daily'   ? 'รายวัน'    :
+      r.frequency === 'weekly'  ? 'รายสัปดาห์' :
+      r.frequency === 'monthly' ? 'รายเดือน'  : 'รายปี',
+      fmtSched(r),
+      r.is_active ? 'ใช้งาน' : 'ปิดการใช้งาน',
+      r.last_executed_at ? fmtDate(r.last_executed_at, true) : 'ยังไม่เคยรัน',
+      timeSince(r.last_executed_at),
+    ]);
+    setExporting(type);
+    try {
+      if (type === 'pdf') await exportPDF(title, columns, rows);
+      else exportCSV(title, columns, rows);
+    } catch (e: any) { toast.error('ออกรายงานไม่สำเร็จ: ' + e.message); }
+    finally { setExporting(null); }
+  };
+
+  const handleExportLog = async (type: 'pdf' | 'csv') => {
+    const title = 'ประวัติการตัดรอบ (session นี้)';
+    const columns = ['คลังยา', 'เวลาที่รัน', 'สถานะ', 'หมดอายุ', 'ใกล้หมดอายุ', 'สต็อกต่ำ', 'Snapshot'];
+    const rows = logs.map(l => [
+      l.warehouse_name,
+      fmtDate(l.executed_at, true),
+      l.status === 'success' ? 'สำเร็จ' : 'ล้มเหลว',
+      String(l.newly_expired_count ?? (l.status === 'error' ? '-' : 0)),
+      String(l.near_expiry_count  ?? (l.status === 'error' ? '-' : 0)),
+      String(l.low_stock_count    ?? (l.status === 'error' ? '-' : 0)),
+      String(l.snapshot_count     ?? (l.status === 'error' ? '-' : 0)),
+    ]);
+    setExporting(type);
+    try {
+      if (type === 'pdf') await exportPDF(title, columns, rows);
+      else exportCSV(title, columns, rows);
+    } catch (e: any) { toast.error('ออกรายงานไม่สำเร็จ: ' + e.message); }
+    finally { setExporting(null); }
+  };
+
   const handleExecute = async (row: CutOffPeriod, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setExecuting(row.med_period_id);
@@ -172,6 +274,10 @@ export default function CutOffSummaryPage() {
       subtitle="จัดการและติดตาม Cut-off Period ทุกคลังยา"
       actions={
         <div className="flex gap-2">
+          <Button variant="secondary" size="sm" icon={<FileSpreadsheet size={13}/>}
+            loading={exporting === 'csv'} onClick={() => handleExport('csv')}>CSV</Button>
+          <Button variant="secondary" size="sm" icon={<FileText size={13}/>}
+            loading={exporting === 'pdf'} onClick={() => handleExport('pdf')}>PDF</Button>
           <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={load} loading={loading}>รีเฟรช</Button>
           <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={openAdd}>เพิ่มกำหนดการ</Button>
         </div>
@@ -286,7 +392,17 @@ export default function CutOffSummaryPage() {
                     <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                       <CalendarClock size={15} className="text-slate-400" /> ประวัติการรัน (session นี้)
                     </h3>
-                    <span className="text-xs text-slate-400">{logs.length} รายการ</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">{logs.length} รายการ</span>
+                      {logs.length > 0 && (
+                        <>
+                          <Button size="sm" variant="secondary" icon={<FileSpreadsheet size={11}/>}
+                            loading={exporting === 'csv'} onClick={() => handleExportLog('csv')}>CSV</Button>
+                          <Button size="sm" variant="secondary" icon={<FileText size={11}/>}
+                            loading={exporting === 'pdf'} onClick={() => handleExportLog('pdf')}>PDF</Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   {logs.length === 0 ? (
                     <div className="py-10">
