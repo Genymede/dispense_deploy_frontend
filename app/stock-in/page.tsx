@@ -287,7 +287,7 @@ export default function StockInPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    {['เวลา', 'ชื่อยา', 'จำนวนรับ', 'สต็อกก่อน→หลัง', 'Lot', 'เลขอ้างอิง', 'สถานะ', 'ผู้บันทึก', 'หมายเหตุ'].map(h => (
+                    {['เวลา', 'ชื่อยา', 'จำนวนรับ', 'สต็อกก่อน→หลัง', 'Lot', 'เลขอ้างอิง', 'สถานะ'].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -308,8 +308,8 @@ export default function StockInPage() {
                           : tx.approval_status === 'rejected' ? <Badge variant="danger">ปฏิเสธ</Badge>
                             : <Badge variant="warning">รออนุมัติ</Badge>}
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{tx.performed_by_name || '-'}</td>
-                      <td className="px-4 py-3 text-xs text-slate-400 max-w-32 truncate">{tx.note || '-'}</td>
+                      {/* <td className="px-4 py-3 text-xs text-slate-600">{tx.performed_by_name || '-'}</td>
+                      <td className="px-4 py-3 text-xs text-slate-400 max-w-32 truncate">{tx.note || '-'}</td> */}
                     </tr>
                   ))}
                 </tbody>
