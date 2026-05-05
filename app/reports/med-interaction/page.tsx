@@ -18,7 +18,9 @@ const COLS: ColDef[] = [
   { key:'severity', label:'ระดับ',
     render: r => <Badge variant={r.severity==='severe'?'danger':r.severity?'warning':'gray'}>{r.severity||'-'}</Badge>,
     exportValue: r => r.severity??'-' },
-  { key:'description', label:'คำอธิบาย', className:'text-xs max-w-[260px] truncate' },
+  { key:'description',      label:'คำอธิบาย', className:'text-xs max-w-[260px] truncate' },
+  { key:'recorded_by_name', label:'ผู้บันทึก', className:'text-xs text-slate-500',
+    exportValue: r => r.recorded_by_name??'-' },
 ];
 
 export default function MedInteractionPage() {
@@ -39,8 +41,9 @@ export default function MedInteractionPage() {
           { label:'ประเภท',     key:'interaction_type' },
           { label:'ระดับ',      key:'severity' },
           { label:'คำอธิบาย',  key:'description', span:true },
-          { label:'หลักฐาน',   key:'evidence_level' },
-          { label:'อ้างอิง',   key:'source_reference' },
+          { label:'หลักฐาน',    key:'evidence_level' },
+          { label:'อ้างอิง',    key:'source_reference' },
+          { label:'ผู้บันทึก', key:'recorded_by_name' },
         ]} />
     </MainLayout>
   );

@@ -380,6 +380,8 @@ export interface MedRegistryItem {
   med_medical_category: string | null;
   med_dosage_form: string | null;
   med_counting_unit: string;
+  recorded_by?: string | null;
+  recorded_by_name?: string | null;
   med_severity: string;
   med_cost_price: number;
   med_selling_price: number;
@@ -406,6 +408,8 @@ export interface AllergyRecord {
   hn_number: string;
   med_name: string;
   med_generic_name: string | null;
+  recorded_by?: string | null;
+  recorded_by_name?: string | null;
 }
 
 export interface AdrRecord {
@@ -447,6 +451,8 @@ export interface MedInteractionRecord {
   drug1_name: string;
   drug2_name: string;
   interacts_with_name?: string; // alias ที่ backend คืนมาจาก getDrugById (JOIN med_table AS mt2)
+  recorded_by?: string | null;
+  recorded_by_name?: string | null;
 }
 
 export const registryApi = {

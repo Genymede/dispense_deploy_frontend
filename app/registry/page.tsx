@@ -5,7 +5,9 @@ import DataTable, { ColDef } from '@/components/DataTable';
 import { CrudModal, FormGrid, FormSpan, RowActions } from '@/components/CrudModal';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { Input, Select, Textarea, Badge, Spinner } from '@/components/ui';
+import SearchSelect from '@/components/SearchSelect';
 import { registryApi, crudApi, api, type MedRegistryItem } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { BookOpen, Database } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { thaiToday, thaiDaysAgo, fmtDate } from '@/lib/dateUtils';
@@ -23,6 +25,7 @@ const empty = {
   med_essential_med_list:'', med_pregnancy_category:'',
   med_TMT_code:'', med_TPU_code:'', med_out_of_stock: false,
   med_mfg:'', med_exp:'',
+  recorded_by_id: null as string | null, recorded_by_label: '',
 };
 
 const cols: ColDef[] = [
@@ -37,11 +40,14 @@ const cols: ColDef[] = [
   { key: 'med_essential_med_list', label: 'ยาหลัก', render: r => r.med_essential_med_list === 'Y' ? <Badge variant="success">ใช่</Badge> : <span className="text-slate-300 text-xs">-</span> },
   { key: 'med_selling_price', label: 'ราคาขาย', render: r => <span className="font-semibold text-primary-700 text-xs">฿{Number(r.med_selling_price||0).toFixed(2)}</span> },
   { key: 'med_exp', label: 'หมดอายุ', render: r => fmtDate(r.med_exp) },
+  { key: 'recorded_by_name', label: 'ผู้บันทึก', className: 'text-xs text-slate-500' },
 ];
 
 export default function RegistryPage() {
+  const { user } = useAuth();
   const [form, setForm] = useState<any>(empty);
   const [editingId, setEditingId] = useState<number|null>(null);
+  const [resetKey, setResetKey] = useState(0);
   const [drugUnits, setDrugUnits] = useState<string[]>(DEFAULT_UNITS);
 
   useEffect(() => {
@@ -67,7 +73,10 @@ export default function RegistryPage() {
     finally { setDrawerLoading(false); }
   };
 
-  const openCreate = () => { setForm(empty); setEditingId(null); setShowModal(true); };
+  const openCreate = () => {
+    setForm({ ...empty, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
+    setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
+  };
   const openEdit = (row: MedRegistryItem) => {
     setForm({
       med_name: row.med_name, med_generic_name: row.med_generic_name||'',
@@ -81,9 +90,9 @@ export default function RegistryPage() {
       med_out_of_stock: row.med_out_of_stock,
       med_mfg: row.med_mfg ? row.med_mfg.slice(0,10) : '',
       med_exp: row.med_exp ? row.med_exp.slice(0,10) : '',
+      recorded_by_id: row.recorded_by ?? null, recorded_by_label: row.recorded_by_name ?? '',
     });
-    setEditingId(row.med_id);
-    setShowModal(true);
+    setEditingId(row.med_id); setResetKey(k => k + 1); setShowModal(true);
   };
 
   const handleSave = async () => {
@@ -92,12 +101,14 @@ export default function RegistryPage() {
     }
     setSaving(true);
     try {
-      const payload = { ...form,
+      const { recorded_by_id, recorded_by_label, ...rest } = form;
+      const payload = { ...rest,
         med_cost_price: Number(form.med_cost_price||0),
         med_selling_price: Number(form.med_selling_price||0),
         med_medium_price: Number(form.med_medium_price||0),
         med_mfg: form.med_mfg || thaiToday(),
         med_exp: form.med_exp || thaiDaysAgo(-365),
+        recorded_by: recorded_by_id || user?.id || null,
       };
       if (editingId) { await crudApi.updateMedTable(editingId, payload); toast.success('แก้ไขเรียบร้อย'); }
       else { await crudApi.createMedTable(payload); toast.success('เพิ่มยาใหม่เรียบร้อย'); }
@@ -161,6 +172,11 @@ export default function RegistryPage() {
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
           <Input label="วันผลิต (ทะเบียน)" type="date" value={form.med_mfg} onChange={e => f('med_mfg', e.target.value)} />
           <Input label="วันหมดอายุ (ทะเบียน)" type="date" value={form.med_exp} onChange={e => f('med_exp', e.target.value)} />
+          <div className="col-span-2">
+            <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
+              initialDisplay={form.recorded_by_label} resetKey={resetKey}
+              onSelect={u => { f('recorded_by_id', u?.uid ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
+          </div>
           <div className="flex items-center gap-2 pt-1">
             <input type="checkbox" id="oos" checked={form.med_out_of_stock} onChange={e => f('med_out_of_stock', e.target.checked)} className="w-4 h-4" />
             <label htmlFor="oos" className="text-sm text-slate-700">หมดสต็อก (Out of Stock)</label>
@@ -197,6 +213,7 @@ export default function RegistryPage() {
                 { label: 'TPU Code',        value: <span className="font-mono text-xs">{med.med_TPU_code || '—'}</span> },
                 { label: 'วันผลิต',         value: fmtDate(med.med_mfg) },
                 { label: 'วันหมดอายุ',     value: fmtDate(med.med_exp) },
+                { label: 'ผู้บันทึก',      value: med.recorded_by_name || '—' },
               ]} />
             </DrawerSection>
 

@@ -7,6 +7,7 @@ import { Select, Textarea, Badge } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
 import { registryApi, crudApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { Repeat2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,7 @@ const IT: Record<string, { label: string; variant: 'danger'|'success'|'gray'|'wa
 const emptyForm = {
   med_id_1: 0, drug1_label: '', med_id_2: 0, drug2_label: '',
   description: '', severity: '', evidence_level: '', source_reference: '', interaction_type: 'unknown',
+  recorded_by_id: null as string | null, recorded_by_label: '',
 };
 
 const TextInput = ({ label, value, onChange, placeholder }: any) => (
@@ -40,10 +42,12 @@ const cols: ColDef[] = [
   { key: 'severity', label: 'ระดับ',
     render: r => <Badge variant={r.severity === 'severe' ? 'danger' : r.severity ? 'warning' : 'gray'}>{r.severity || '-'}</Badge> },
   { key: 'description',    label: 'คำอธิบาย',  className: 'text-xs max-w-[260px] truncate' },
-  { key: 'evidence_level', label: 'หลักฐาน',   className: 'text-xs text-slate-400' },
+  { key: 'evidence_level',   label: 'หลักฐาน',  className: 'text-xs text-slate-400' },
+  { key: 'recorded_by_name', label: 'ผู้บันทึก', className: 'text-xs text-slate-500' },
 ];
 
 export default function MedInteractionsPage() {
+  const { user } = useAuth();
   const [form,      setForm]      = useState<typeof emptyForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -53,13 +57,17 @@ export default function MedInteractionsPage() {
   const [drawer,    setDrawer]    = useState<any | null>(null);
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
-  const openAdd = () => { setForm(emptyForm); setEditingId(null); setResetKey(k=>k+1); setShowModal(true); };
+  const openAdd = () => {
+    setForm({ ...emptyForm, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
+    setEditingId(null); setResetKey(k=>k+1); setShowModal(true);
+  };
   const openEdit = (row: any) => {
     setForm({ med_id_1: row.med_id_1, drug1_label: row.drug1_name||'',
       med_id_2: row.med_id_2, drug2_label: row.drug2_name||'',
       description: row.description||'', severity: row.severity||'',
       evidence_level: row.evidence_level||'', source_reference: row.source_reference||'',
-      interaction_type: row.interaction_type||'unknown' });
+      interaction_type: row.interaction_type||'unknown',
+      recorded_by_id: row.recorded_by ?? null, recorded_by_label: row.recorded_by_name ?? '' });
     setEditingId(row.interaction_id); setResetKey(k=>k+1); setShowModal(true);
   };
 
@@ -73,7 +81,8 @@ export default function MedInteractionsPage() {
       const payload = { med_id_1: form.med_id_1, med_id_2: form.med_id_2,
         description: form.description, severity: form.severity,
         evidence_level: form.evidence_level, source_reference: form.source_reference,
-        interaction_type: form.interaction_type };
+        interaction_type: form.interaction_type,
+        recorded_by: form.recorded_by_id || user?.id || null };
       if (editingId) { await crudApi.updateInteraction(editingId, payload); toast.success('แก้ไขแล้ว'); }
       else           { await crudApi.createInteraction(payload);            toast.success('เพิ่มแล้ว'); }
       setShowModal(false); setReload(r=>r+1);
@@ -113,6 +122,11 @@ export default function MedInteractionsPage() {
           </div>
           <TextInput label="ระดับหลักฐาน" value={form.evidence_level} onChange={(v: string) => f('evidence_level', v)} placeholder="Level A, RCT..." />
           <TextInput label="แหล่งอ้างอิง" value={form.source_reference} onChange={(v: string) => f('source_reference', v)} placeholder="Lexicomp, Medscape..." />
+          <div className="col-span-2">
+            <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
+              initialDisplay={form.recorded_by_label} resetKey={resetKey}
+              onSelect={u => { f('recorded_by_id', u?.uid ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
+          </div>
         </div>
       </CrudModal>
 
@@ -122,14 +136,15 @@ export default function MedInteractionsPage() {
         subtitle={r => IT[r.interaction_type]?.label ?? r.interaction_type}
         onEdit={openEdit}
         fields={[
-          { label: 'ยา 1',       key: 'drug1_name' },
-          { label: 'ยา 2',       key: 'drug2_name' },
-          { label: 'ประเภท',     key: 'interaction_type', type: 'template',
+          { label: 'ยา 1',         key: 'drug1_name' },
+          { label: 'ยา 2',         key: 'drug2_name' },
+          { label: 'ประเภท',       key: 'interaction_type', type: 'template',
             template: r => IT[r.interaction_type]?.label ?? r.interaction_type },
-          { label: 'ระดับ',      key: 'severity' },
-          { label: 'คำอธิบาย',  key: 'description', span: true },
-          { label: 'หลักฐาน',   key: 'evidence_level' },
-          { label: 'อ้างอิง',   key: 'source_reference' },
+          { label: 'ระดับ',        key: 'severity' },
+          { label: 'คำอธิบาย',    key: 'description', span: true },
+          { label: 'หลักฐาน',     key: 'evidence_level' },
+          { label: 'อ้างอิง',     key: 'source_reference' },
+          { label: 'ผู้บันทึก',   key: 'recorded_by_name' },
         ]}
       />
     </MainLayout>

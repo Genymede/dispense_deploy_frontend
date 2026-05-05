@@ -147,7 +147,7 @@ export default function Sidebar({ alertCount = 0, isExpanded = true }: { alertCo
     <nav className="p-2.5 space-y-0.5">
       <NavLink href="/dispense" label="จ่ายยา" icon={Package} isExpanded={isExpanded} />
       <NavLink href="/delivery" label="จัดส่งยา" icon={Truck} isExpanded={isExpanded} />
-      
+
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">ทะเบียน & รายงาน</p>
@@ -155,22 +155,22 @@ export default function Sidebar({ alertCount = 0, isExpanded = true }: { alertCo
       ) : <div className="h-4" />}
       <CollapseGroup group={registryGroup} isExpanded={isExpanded} />
       <CollapseGroup group={reportsGroup} isExpanded={isExpanded} />
-      
+
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">คลังยา</p>
         </div>
       ) : <div className="h-4" />}
       <CollapseGroup group={warehouseGroup} isExpanded={isExpanded} />
-      
+
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">อื่นๆ</p>
         </div>
       ) : <div className="h-4" />}
       <NavLink href="/sticker" label="สติ๊กเกอร์ยา" icon={Tag} isExpanded={isExpanded} />
-      <NavLink href="/alerts" label="แจ้งเตือน" icon={Bell} badge={alertCount} isExpanded={isExpanded} />
-      <NavLink href="/settings" label="ตั้งค่า" icon={Settings} isExpanded={isExpanded} />
+      {/* <NavLink href="/alerts" label="แจ้งเตือน" icon={Bell} badge={alertCount} isExpanded={isExpanded} />
+      <NavLink href="/settings" label="ตั้งค่า" icon={Settings} isExpanded={isExpanded} /> */}
     </nav>
   );
 }

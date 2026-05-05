@@ -24,6 +24,8 @@ const COLS: ColDef[] = [
   { key:'reported_at', label:'วันที่',
     render: r => fmtDate(r.reported_at),
     exportValue: r => fmtDate(r.reported_at) },
+  { key:'recorded_by_name', label:'ผู้บันทึก', className:'text-xs text-slate-500',
+    exportValue: r => r.recorded_by_name??'-' },
 ];
 
 export default function AllergyRegistryPage() {
@@ -44,7 +46,8 @@ export default function AllergyRegistryPage() {
           { label:'อาการ',       key:'symptoms',    span:true },
           { label:'รายละเอียด', key:'description', span:true },
           { label:'ระดับ',       key:'severity' },
-          { label:'วันที่',      key:'reported_at', type:'date' as const },
+          { label:'วันที่',      key:'reported_at',    type:'date' as const },
+          { label:'ผู้บันทึก',  key:'recorded_by_name' },
         ]} />
     </MainLayout>
   );
