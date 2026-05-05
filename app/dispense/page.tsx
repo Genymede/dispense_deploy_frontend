@@ -1231,14 +1231,12 @@ export default function DispensePage() {
 
               {/* identity row */}
               <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 border-b border-slate-100">
-                {dispenseRx.patient_photo ? (
-                  <img src={`/images/patient_image/${dispenseRx.patient_photo}`} alt={dispenseRx.patient_name || 'ผู้ป่วย'}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow flex-shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 border-2 border-white shadow">
-                    <span className="text-primary-600 font-bold text-lg">{(dispenseRx.patient_name || '?')[0]}</span>
-                  </div>
-                )}
+                <img 
+                  src={`/images/patient_image/${dispenseRx.patient_photo || 'user.png'}`} 
+                  alt={dispenseRx.patient_name || 'ผู้ป่วย'}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow flex-shrink-0" 
+                />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-800 truncate">{dispenseRx.patient_name || 'ไม่ระบุ'}</p>
                   <p className="text-xs text-slate-400 mt-0.5">HN: <span className="font-mono">{dispenseRx.hn_number || '—'}</span> · RX: <span className="font-mono text-primary-600">{dispenseRx.prescription_no}</span></p>
@@ -1521,17 +1519,12 @@ export default function DispensePage() {
                 onClick={() => drawerFull.patient_id && setPatientDrawerId(drawerFull.patient_id)}
                 className="flex items-center gap-3 mb-3 w-full text-left group"
               >
-                {drawerFull.patient_photo ? (
-                  <img
-                    src={`/images/patient_image/${drawerFull.patient_photo}`}
-                    alt={drawerFull.patient_name || 'ผู้ป่วย'}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 border-2 border-slate-200">
-                    <span className="text-primary-600 font-bold text-xl">{(drawerFull.patient_name || '?')[0]}</span>
-                  </div>
-                )}
+                <img
+                  src={`/images/patient_image/${drawerFull.patient_photo || 'user.png'}`}
+                  alt={drawerFull.patient_name || 'ผู้ป่วย'}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
+                />
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-800 truncate group-hover:text-primary-600 transition-colors underline decoration-dotted underline-offset-2">
                     {drawerFull.patient_name || 'ไม่ระบุ'}

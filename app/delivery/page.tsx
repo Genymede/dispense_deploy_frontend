@@ -464,17 +464,12 @@ export default function DeliveryPage() {
                 onClick={() => drawer.patient_id && setPatientDrawerId(drawer.patient_id)}
                 className="flex items-center gap-3 mb-3 w-full text-left group"
               >
-                {drawer.patient_photo ? (
-                  <img
-                    src={`/images/patient_image/${drawer.patient_photo}`}
-                    alt={drawer.patient_name || 'ผู้ป่วย'}
-                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 border-2 border-slate-200">
-                    <span className="text-primary-600 font-bold text-xl">{(drawer.patient_name || '?')[0]}</span>
-                  </div>
-                )}
+                <img
+                  src={`/images/patient_image/${drawer.patient_photo || 'user.png'}`}
+                  alt={drawer.patient_name || 'ผู้ป่วย'}
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
+                />
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-800 truncate group-hover:text-primary-600 transition-colors underline decoration-dotted underline-offset-2">
                     {drawer.patient_name || 'ไม่ระบุ'}
