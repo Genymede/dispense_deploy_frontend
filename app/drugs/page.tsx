@@ -286,13 +286,10 @@ export default function DrugsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {drugs.map((d) => {
-                    // 1. ตรวจสอบวันหมดอายุจากล็อตที่ใกล้ที่สุดจริงๆ (Absolute Minimum)
-                    const targetExpDate = (d as any).nearest_lot_exp;
-                    const isAnyLotExpired = targetExpDate ? new Date(targetExpDate) < new Date() : false;
-                    const hasValidLots = (d as any).lot_count > 0; // จำนวนล็อตที่ยังไม่หมดอายุ
-                    
-                    // คำนวณ "ใกล้หมดอายุ" จากล็อตที่ยังไม่หมดอายุที่ใกล้ที่สุด (ตามค่าที่ตั้งไว้ใน Settings)
-                    const isNearExp = !isAnyLotExpired && targetExpDate && (new Date(targetExpDate) <= new Date(Date.now() + nearExpiryDays * 86400_000));
+                    const isAnyLotExpired = (d.expired_lot_count ?? 0) > 0;
+                    const hasValidLots = (d.lot_count ?? 0) > 0;
+                    const isNearExp = !!d.nearest_valid_lot_exp &&
+                      new Date(d.nearest_valid_lot_exp) <= new Date(Date.now() + nearExpiryDays * 86400_000);
                     const isLow = d.min_quantity != null && d.current_stock < d.min_quantity;
                     
                     let statusV: any = 'success';
@@ -508,15 +505,20 @@ export default function DrugsPage() {
                   </span>
                 },
                 {
-                  label: 'สถานะ', value: viewDrug.is_expired
-                    ? <Badge variant="danger" dot>หมดอายุ</Badge>
-                    : (viewDrug as any).expired_lot_count > 0
-                      ? <Badge variant="warning" dot>มีล็อตหมดอายุ</Badge>
-                      : viewDrug.med_out_of_stock
-                        ? <Badge variant="warning" dot>หมดสต็อก</Badge>
-                        : viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity
-                          ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
-                          : <Badge variant="success" dot>ปกติ</Badge>
+                  label: 'สถานะ', value: (() => {
+                    const anyExpired = (viewDrug.expired_lot_count ?? 0) > 0;
+                    const validLots = (viewDrug.lot_count ?? 0) > 0;
+                    const nearExp = !!viewDrug.nearest_valid_lot_exp &&
+                      new Date(viewDrug.nearest_valid_lot_exp) <= new Date(Date.now() + nearExpiryDays * 86400_000);
+                    const low = viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity;
+                    if (anyExpired && !validLots) return <Badge variant="danger" dot>หมดอายุ</Badge>;
+                    if (anyExpired) return <Badge variant="warning" dot>มีล็อตหมดอายุ</Badge>;
+                    if (low && nearExp) return <Badge variant="danger" dot>ต่ำ & ใกล้หมดอายุ</Badge>;
+                    if (low) return <Badge variant="warning" dot>สต็อกต่ำ</Badge>;
+                    if (nearExp) return <Badge variant="warning" dot>ใกล้หมดอายุ</Badge>;
+                    if (viewDrug.med_out_of_stock) return <Badge variant="warning" dot>หมดสต็อก</Badge>;
+                    return <Badge variant="success" dot>ปกติ</Badge>;
+                  })()
                 },
                 { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
                 { label: 'ที่เก็บ', value: viewDrug.location || '—' },
