@@ -51,7 +51,7 @@ export default function AdrPage() {
   const openAdd = () => {
     setForm({
       ...emptyForm,
-      reporter_id: user?.role_id ?? 0,
+      reporter_id: user?.id ?? null,
       reporter_label: user?.email ?? '',
     });
     setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
