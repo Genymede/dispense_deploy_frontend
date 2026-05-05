@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
 import RegistryDrawer from '@/components/RegistryDrawer';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, UserCircle } from 'lucide-react';
 
 const SEV_LABEL: Record<string,string> = { mild:'เล็กน้อย', moderate:'ปานกลาง', severe:'รุนแรง' };
 
@@ -24,8 +24,9 @@ const COLS: ColDef[] = [
   { key:'reported_at', label:'วันที่',
     render: r => fmtDate(r.reported_at),
     exportValue: r => fmtDate(r.reported_at) },
-  { key:'recorded_by_name', label:'ผู้บันทึก', className:'text-xs text-slate-500',
-    exportValue: r => r.recorded_by_name??'-' },
+  { key:'recorded_by_name', label:'ผู้บันทึก',
+    render: r => r.recorded_by_name ? <span className="flex items-center gap-1"><UserCircle size={13} className="text-slate-400" />{r.recorded_by_name}</span> : <span className="text-slate-300">—</span>,
+    exportValue: r => r.recorded_by_name || '-' },
 ];
 
 export default function AllergyRegistryPage() {
@@ -47,7 +48,7 @@ export default function AllergyRegistryPage() {
           { label:'รายละเอียด', key:'description', span:true },
           { label:'ระดับ',       key:'severity' },
           { label:'วันที่',      key:'reported_at',    type:'date' as const },
-          { label:'ผู้บันทึก',  key:'recorded_by_name' },
+          { label:'ผู้บันทึก',   key:'recorded_by_name' },
         ]} />
     </MainLayout>
   );

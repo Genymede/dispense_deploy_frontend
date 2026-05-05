@@ -8,7 +8,7 @@ import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { registryApi, crudApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
 
@@ -38,7 +38,8 @@ const cols: ColDef[] = [
     }},
   { key: 'reported_at', label: 'วันที่',
     render: r => fmtDate(r.reported_at) },
-  { key: 'recorded_by_name', label: 'ผู้บันทึก', className: 'text-xs text-slate-500' },
+  { key: 'recorded_by_name', label: 'ผู้บันทึก',
+    render: r => r.recorded_by_name ? <span className="flex items-center gap-1"><UserCircle size={13} className="text-slate-400" />{r.recorded_by_name}</span> : <span className="text-slate-300">—</span> },
 ];
 
 export default function AllergyPage() {
@@ -78,7 +79,7 @@ export default function AllergyPage() {
         patient_id: form.patient_id, med_id: form.med_id,
         symptoms: form.symptoms, description: form.description,
         severity: form.severity, reported_at: form.reported_at || null,
-        recorded_by: form.recorded_by_id || user?.id || null,
+        recorded_by: user?.id || null,
       };
       if (editingId) { await crudApi.updateAllergy(editingId, payload); toast.success('แก้ไขเรียบร้อย'); }
       else           { await crudApi.createAllergy(payload);            toast.success('เพิ่มเรียบร้อย'); }
@@ -146,7 +147,7 @@ export default function AllergyPage() {
               { label: 'อาการ',        value: drawer.symptoms, span: true },
               { label: 'รายละเอียด',   value: drawer.description || '—', span: true },
               { label: 'วันที่รายงาน', value: fmtDate(drawer.reported_at) },
-              { label: 'ผู้บันทึก',    value: drawer.recorded_by_name || '—' },
+              { label: 'ผู้บันทึก', value: drawer.recorded_by_name || '—' },
               { label: 'วันที่บันทึก', value: fmtDate(drawer.created_at, true), span: true },
             ]} />
           </DrawerSection>
