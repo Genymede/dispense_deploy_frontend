@@ -79,6 +79,9 @@ export default function PatientDrawer({ patientId, open, onClose }: Props) {
             <img
               src={`/images/patient_image/${patient.photo || 'user.png'}`}
               alt={`${patient.first_name} ${patient.last_name}`}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/images/patient_image/user.png';
+              }}
               className="w-16 h-16 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
             />
             <div>
