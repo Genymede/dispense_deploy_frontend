@@ -19,7 +19,7 @@ const SEV_V: Record<string, 'danger' | 'warning' | 'gray'> = {
 const emptyForm = {
   patient_id: 0, patient_label: '',
   med_id: 0,     med_label: '',
-  reporter_id: 0, reporter_label: '',
+  reporter_id: null as string | null, reporter_label: '',
   description: '', reported_at: '', severity: '', outcome: '', symptoms: '', notes: '',
 };
 
@@ -61,7 +61,7 @@ export default function AdrPage() {
     setForm({
       patient_id: row.patient_id, patient_label: row.patient_name || '',
       med_id: row.med_id,         med_label: row.med_name || '',
-      reporter_id: row.reporter_id || 0, reporter_label: row.reporter_name || '',
+      reporter_id: row.reporter_id ?? null, reporter_label: row.reporter_name || '',
       description: row.description || '',
       reported_at: row.reported_at ? row.reported_at.slice(0, 16) : '',
       severity: row.severity || '', outcome: row.outcome || '',
