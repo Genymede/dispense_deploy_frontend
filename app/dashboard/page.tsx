@@ -406,6 +406,7 @@ export default function DashboardPage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-800 truncate">{d.drug_name}</p>
                             <p className="text-xs font-medium text-slate-500 mt-0.5">{fmtDate(d.exp_date)} · เหลือ {d.med_quantity} หน่วย</p>
+                            {d.lot_details && <p className="text-[11px] text-slate-400 mt-0.5 truncate">ล็อต: {d.lot_details}</p>}
                           </div>
                           <Badge variant={variant}>
                             {days <= 0 ? 'หมดแล้ว' : `${days} วัน`}
