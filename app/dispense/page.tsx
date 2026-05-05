@@ -1534,7 +1534,15 @@ export default function DispensePage() {
               </button>
               <DrawerGrid items={[
                 { label: 'กรุ๊ปเลือด', value: drawerFull.blood_group ?? '—' },
-                { label: 'เพศ', value: drawerFull.gender === 'M' ? 'ชาย' : drawerFull.gender === 'F' ? 'หญิง' : '—' },
+                { 
+                  label: 'เพศ', 
+                  value: (() => {
+                    const g = String(drawerFull.gender || '').toUpperCase();
+                    if (g === 'M') return 'ชาย';
+                    if (g === 'F') return 'หญิง';
+                    return drawerFull.gender || '—';
+                  })()
+                },
                 { label: 'เบอร์โทร', value: drawerFull.phone ?? '—' },
                 { label: 'เลขประจำตัว', value: drawerFull.national_id ?? '—' },
                 { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(drawerFull.treatment_right, drawerFull.treatment_right_note) ?? '—' },
