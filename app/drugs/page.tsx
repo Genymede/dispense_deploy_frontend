@@ -460,7 +460,7 @@ export default function DrugsPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50">
                       <tr>
-                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'วันผลิต'].map(h => (
+                        {['Lot Number', 'จำนวน', 'วันหมดอายุ'].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -476,9 +476,6 @@ export default function DrugsPage() {
                             <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
                               {fmtDate(lot.exp_date)}
                             </td>
-                            <td className="px-3 py-2 text-slate-400">
-                              {fmtDate(lot.mfg_date)}
-                            </td>
                           </tr>
                         );
                       })}
@@ -487,7 +484,7 @@ export default function DrugsPage() {
                       <tr>
                         <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
                         <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
-                        <td colSpan={2} />
+                        <td />
                       </tr>
                     </tfoot>
                   </table>
