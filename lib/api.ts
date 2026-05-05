@@ -181,6 +181,7 @@ export interface DashboardStats {
     exp_date: string;
     med_quantity: number;
     days_left: number;
+    lot_details?: string;
   }>;
   recent_transactions: Array<{
     tx_id: number;
