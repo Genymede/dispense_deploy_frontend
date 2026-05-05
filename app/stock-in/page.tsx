@@ -180,7 +180,7 @@ export default function StockInPage() {
       title="รับยาเข้าคลัง"
       subtitle="บันทึกการรับยาและติดตามคำขอเบิกจากคลังหลัก"
       actions={
-        <a href="https://warehouse.hpk-hms.site/request/withdraw" target="_blank" rel="noopener noreferrer">
+        <a href="https://warehouse-dev-2.hpk-hms.site/request/withdraw" target="_blank" rel="noopener noreferrer">
           <Button icon={<ExternalLink size={15} />}>เบิกยาจากคลังหลัก</Button>
         </a>
       }>
