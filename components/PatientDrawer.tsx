@@ -101,11 +101,12 @@ export default function PatientDrawer({ patientId, open, onClose }: Props) {
               {
                 label: 'เพศ',
                 value: (() => {
-                  if (!patient.gender) return '—';
-                  const g = String(patient.gender).toUpperCase();
+                  const val = patient.gender || patient.sex;
+                  if (!val) return '—';
+                  const g = String(val).toUpperCase();
                   if (genderMap[g]) return genderMap[g];
                   // ถ้ามีค่าอื่นมา (เช่น ชาย/หญิง อยู่แล้ว) ให้แสดงค่านั้นเลย
-                  return patient.gender;
+                  return val;
                 })()
               },
               { label: 'เลขบัตรประชาชน', value: patient.national_id ?? '—' },
