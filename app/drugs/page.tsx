@@ -279,7 +279,7 @@ export default function DrugsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    {['รูป', 'รหัส', 'ชื่อยา', 'หมวดหมู่', 'ประเภท', 'คงเหลือ', 'ขั้นต่ำ', 'หน่วย', 'สถานะ', 'จัดการ'].map((h) => (
+                    {['รูป', 'รหัส', 'ชื่อยา', 'คงเหลือ', 'ขั้นต่ำ', 'หน่วย', 'รูปแบบบรรจุ', 'หมวดหมู่', 'สถานะ', 'จัดการ'].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap last:text-right">{h}</th>
                     ))}
                   </tr>
@@ -334,10 +334,6 @@ export default function DrugsPage() {
                           <p className="font-medium text-slate-800 leading-tight">{d.med_showname || d.med_name}</p>
                           <p className="text-xs text-slate-400 mt-0.5">{d.med_generic_name || d.med_name}</p>
                         </td>
-                        {/* หมวดหมู่ */}
-                        <td className="px-4 py-2.5 text-xs text-slate-600">{d.category || '-'}</td>
-                        {/* ประเภท */}
-                        <td className="px-4 py-2.5 text-xs text-slate-600">{d.packaging_type || '-'}</td>
                         {/* คงเหลือ */}
                         <td className="px-4 py-2.5">
                           <span className={`font-semibold tabular-nums ${isLow || isAnyLotExpired ? 'text-red-600' : 'text-slate-800'}`}>
@@ -355,6 +351,10 @@ export default function DrugsPage() {
                         </td>
                         {/* หน่วย */}
                         <td className="px-4 py-2.5 text-xs text-slate-600">{d.unit || '-'}</td>
+                        {/* รูปแบบบรรจุ */}
+                        <td className="px-4 py-2.5 text-xs text-slate-600">{d.packaging_type || '-'}</td>
+                        {/* หมวดหมู่ */}
+                        <td className="px-4 py-2.5 text-xs text-slate-600">{d.category || '-'}</td>
                         {/* สถานะ */}
                         <td className="px-4 py-2.5"><Badge variant={statusV} dot>{statusL}</Badge></td>
                         {/* จัดการ */}
