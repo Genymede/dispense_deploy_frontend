@@ -20,7 +20,7 @@ const toB64 = (buf: ArrayBuffer) => {
 };
 
 async function exportPDF(title: string, columns: string[], rows: string[][]) {
-  const { default: jsPDF }     = await import('jspdf');
+  const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
   const [regularBuf, boldBuf, logoBuf] = await Promise.all([
@@ -36,7 +36,7 @@ async function exportPDF(title: string, columns: string[], rows: string[][]) {
   const currentDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
   const drawHeader = (data: any) => {
     const pageCount = (doc.internal as any).getNumberOfPages();
-    if (logoBuf) { try { doc.addImage(toB64(logoBuf as ArrayBuffer), 'PNG', 10, 8, 20, 20); } catch {} }
+    if (logoBuf) { try { doc.addImage(toB64(logoBuf as ArrayBuffer), 'PNG', 10, 8, 20, 20); } catch { } }
     doc.setFont('Sarabun', 'bold'); doc.setFontSize(13);
     doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
     doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
@@ -93,8 +93,8 @@ const pad = (n: number) => String(n ?? 0).padStart(2, '0');
 const fmtSched = (r: CutOffPeriod) => {
   const t = `${pad(r.period_time_h)}:${pad(r.period_time_m)} น.`;
   const freq = r.frequency || 'monthly';
-  if (freq === 'daily')   return `ทุกวัน เวลา ${t}`;
-  if (freq === 'weekly')  return `ทุกวัน${DOW_TH[r.period_day] || r.period_day} เวลา ${t}`;
+  if (freq === 'daily') return `ทุกวัน เวลา ${t}`;
+  if (freq === 'weekly') return `ทุกวัน${DOW_TH[r.period_day] || r.period_day} เวลา ${t}`;
   if (freq === 'monthly') return `ทุกวันที่ ${r.period_day} เวลา ${t}`;
   return `${r.period_day} ${MONTHS[r.period_month]} เวลา ${t}`;
 };
@@ -108,10 +108,10 @@ const timeSince = (iso: string | null) => {
 };
 
 const FREQ_OPTIONS = [
-  { value: 'daily',   label: 'รายวัน — ทุกวันตามเวลาที่กำหนด' },
-  { value: 'weekly',  label: 'รายสัปดาห์ — เลือกวันในสัปดาห์' },
+  { value: 'daily', label: 'รายวัน — ทุกวันตามเวลาที่กำหนด' },
+  { value: 'weekly', label: 'รายสัปดาห์ — เลือกวันในสัปดาห์' },
   { value: 'monthly', label: 'รายเดือน — เลือกวันที่ในเดือน' },
-  { value: 'yearly',  label: 'รายปี — เลือกวันที่ + เดือน' },
+  { value: 'yearly', label: 'รายปี — เลือกวันที่ + เดือน' },
 ];
 const emptyForm = { sub_warehouse_id: '', frequency: 'monthly', period_month: '1', period_day: '1', period_time_h: '0', period_time_m: '0', is_active: true };
 
@@ -211,9 +211,9 @@ export default function CutOffSummaryPage() {
     const columns = ['คลังยา', 'ความถี่', 'กำหนดการ', 'สถานะ', 'รันล่าสุด', 'นานแค่ไหน'];
     const rows = periods.map(r => [
       r.warehouse_name,
-      r.frequency === 'daily'   ? 'รายวัน'    :
-      r.frequency === 'weekly'  ? 'รายสัปดาห์' :
-      r.frequency === 'monthly' ? 'รายเดือน'  : 'รายปี',
+      r.frequency === 'daily' ? 'รายวัน' :
+        r.frequency === 'weekly' ? 'รายสัปดาห์' :
+          r.frequency === 'monthly' ? 'รายเดือน' : 'รายปี',
       fmtSched(r),
       r.is_active ? 'ใช้งาน' : 'ปิดการใช้งาน',
       r.last_executed_at ? fmtDate(r.last_executed_at, true) : 'ยังไม่เคยรัน',
@@ -235,9 +235,9 @@ export default function CutOffSummaryPage() {
       fmtDate(l.executed_at, true),
       l.status === 'success' ? 'สำเร็จ' : 'ล้มเหลว',
       String(l.newly_expired_count ?? (l.status === 'error' ? '-' : 0)),
-      String(l.near_expiry_count  ?? (l.status === 'error' ? '-' : 0)),
-      String(l.low_stock_count    ?? (l.status === 'error' ? '-' : 0)),
-      String(l.snapshot_count     ?? (l.status === 'error' ? '-' : 0)),
+      String(l.near_expiry_count ?? (l.status === 'error' ? '-' : 0)),
+      String(l.low_stock_count ?? (l.status === 'error' ? '-' : 0)),
+      String(l.snapshot_count ?? (l.status === 'error' ? '-' : 0)),
     ]);
     setExporting(type);
     try {
@@ -263,7 +263,7 @@ export default function CutOffSummaryPage() {
     setExporting(type);
     try {
       if (type === 'pdf') {
-        const { default: jsPDF }     = await import('jspdf');
+        const { default: jsPDF } = await import('jspdf');
         const { default: autoTable } = await import('jspdf-autotable');
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
         const [rBuf, bBuf, logo] = await Promise.all([
@@ -272,32 +272,32 @@ export default function CutOffSummaryPage() {
           fetch('/logo.png').then(r => r.arrayBuffer()).catch(() => null),
         ]);
         doc.addFileToVFS('Sarabun.ttf', toB64(rBuf)); doc.addFont('Sarabun.ttf', 'Sarabun', 'normal');
-        doc.addFileToVFS('SaraNew.ttf', toB64(bBuf));  doc.addFont('SaraNew.ttf',  'Sarabun', 'bold');
+        doc.addFileToVFS('SaraNew.ttf', toB64(bBuf)); doc.addFont('SaraNew.ttf', 'Sarabun', 'bold');
         const W = doc.internal.pageSize.getWidth();
         const drawHdr = (data: any) => {
-          if (logo) { try { doc.addImage(toB64(logo as ArrayBuffer), 'PNG', 10, 8, 18, 18); } catch {} }
-          doc.setFont('Sarabun','bold'); doc.setFontSize(12);
-          doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W/2, 14, { align:'center' });
-          doc.setFont('Sarabun','normal'); doc.setFontSize(9);
-          doc.text(`รายงานตัดรอบ: ${log.warehouse_name}  |  วันที่: ${dt}`, W/2, 21, { align:'center' });
-          doc.setFont('Sarabun','bold'); doc.setFontSize(10);
-          doc.text(data.pageNumber === 1 ? 'ยาหมดอายุ / ใกล้หมดอายุ' : title, W/2, 30, { align:'center' });
-          doc.setDrawColor('#DC2626'); doc.setLineWidth(0.4); doc.line(10, 34, W-10, 34);
-          doc.setFont('Sarabun','normal'); doc.setFontSize(7); doc.setTextColor(150);
-          doc.text(`หน้า ${data.pageNumber}`, W-10, doc.internal.pageSize.getHeight()-8, { align:'right' });
+          if (logo) { try { doc.addImage(toB64(logo as ArrayBuffer), 'PNG', 10, 8, 18, 18); } catch { } }
+          doc.setFont('Sarabun', 'bold'); doc.setFontSize(12);
+          doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
+          doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
+          doc.text(`รายงานตัดรอบ: ${log.warehouse_name}  |  วันที่: ${dt}`, W / 2, 21, { align: 'center' });
+          doc.setFont('Sarabun', 'bold'); doc.setFontSize(10);
+          doc.text(data.pageNumber === 1 ? 'ยาหมดอายุ / ใกล้หมดอายุ' : title, W / 2, 30, { align: 'center' });
+          doc.setDrawColor('#DC2626'); doc.setLineWidth(0.4); doc.line(10, 34, W - 10, 34);
+          doc.setFont('Sarabun', 'normal'); doc.setFontSize(7); doc.setTextColor(150);
+          doc.text(`หน้า ${data.pageNumber}`, W - 10, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
           doc.setTextColor(0);
         };
         // Section: expired
-        doc.setFont('Sarabun','bold'); doc.setFontSize(10);
+        doc.setFont('Sarabun', 'bold'); doc.setFontSize(10);
         doc.text(`• ยาหมดอายุ (${expRows.length} Lot)`, 10, 40);
-        autoTable(doc, { startY: 44, head: [expCols], body: expRows.length ? expRows : [['— ไม่มีรายการ —','','','']], styles:{font:'Sarabun',fontSize:8,cellPadding:2}, headStyles:{font:'Sarabun',fontStyle:'bold',fillColor:[220,38,38],textColor:255,fontSize:8}, alternateRowStyles:{fillColor:[255,245,245]}, margin:{top:38,left:10,right:10,bottom:15}, didDrawPage: drawHdr });
+        autoTable(doc, { startY: 44, head: [expCols], body: expRows.length ? expRows : [['— ไม่มีรายการ —', '', '', '']], styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2 }, headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [220, 38, 38], textColor: 255, fontSize: 8 }, alternateRowStyles: { fillColor: [255, 245, 245] }, margin: { top: 38, left: 10, right: 10, bottom: 15 }, didDrawPage: drawHdr });
         const afterExp = (doc as any).lastAutoTable.finalY + 8;
-        doc.setFont('Sarabun','bold'); doc.setFontSize(10);
+        doc.setFont('Sarabun', 'bold'); doc.setFontSize(10);
         doc.text(`• ยาใกล้หมดอายุ ≤ 30 วัน (${nearRows.length} Lot)`, 10, afterExp);
-        autoTable(doc, { startY: afterExp + 4, head: [nearCols], body: nearRows.length ? nearRows : [['— ไม่มีรายการ —','','','','']], styles:{font:'Sarabun',fontSize:8,cellPadding:2}, headStyles:{font:'Sarabun',fontStyle:'bold',fillColor:[217,119,6],textColor:255,fontSize:8}, alternateRowStyles:{fillColor:[255,251,235]}, margin:{top:38,left:10,right:10,bottom:15}, didDrawPage: drawHdr });
+        autoTable(doc, { startY: afterExp + 4, head: [nearCols], body: nearRows.length ? nearRows : [['— ไม่มีรายการ —', '', '', '', '']], styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2 }, headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [217, 119, 6], textColor: 255, fontSize: 8 }, alternateRowStyles: { fillColor: [255, 251, 235] }, margin: { top: 38, left: 10, right: 10, bottom: 15 }, didDrawPage: drawHdr });
         doc.save(`${title}.pdf`);
       } else {
-        const esc = (v: string) => `"${String(v).replace(/"/g,'""')}"`;
+        const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
         let csv = '\uFEFFยาหมดอายุ\n' + [expCols, ...expRows].map(r => r.map(esc).join(',')).join('\n');
         csv += '\n\nยาใกล้หมดอายุ\n' + [nearCols, ...nearRows].map(r => r.map(esc).join(',')).join('\n');
         const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -343,9 +343,9 @@ export default function CutOffSummaryPage() {
       subtitle="จัดการและติดตาม Cut-off Period ทุกคลังยา"
       actions={
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" icon={<FileSpreadsheet size={13}/>}
+          <Button variant="secondary" size="sm" icon={<FileSpreadsheet size={13} />}
             loading={exporting === 'csv'} onClick={() => handleExport('csv')}>CSV</Button>
-          <Button variant="secondary" size="sm" icon={<FileText size={13}/>}
+          <Button variant="secondary" size="sm" icon={<FileText size={13} />}
             loading={exporting === 'pdf'} onClick={() => handleExport('pdf')}>PDF</Button>
           <Button variant="secondary" size="sm" icon={<RefreshCw size={14} />} onClick={load} loading={loading}>รีเฟรช</Button>
           <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={openAdd}>เพิ่มกำหนดการ</Button>
@@ -465,9 +465,9 @@ export default function CutOffSummaryPage() {
                       <span className="text-xs text-slate-400">{logs.length} รายการ</span>
                       {logs.length > 0 && (
                         <>
-                          <Button size="sm" variant="secondary" icon={<FileSpreadsheet size={11}/>}
+                          <Button size="sm" variant="secondary" icon={<FileSpreadsheet size={11} />}
                             loading={exporting === 'csv'} onClick={() => handleExportLog('csv')}>CSV</Button>
-                          <Button size="sm" variant="secondary" icon={<FileText size={11}/>}
+                          <Button size="sm" variant="secondary" icon={<FileText size={11} />}
                             loading={exporting === 'pdf'} onClick={() => handleExportLog('pdf')}>PDF</Button>
                         </>
                       )}
@@ -492,9 +492,9 @@ export default function CutOffSummaryPage() {
                             </div>
                             {log.status === 'success' && (
                               <div className="mt-1 flex flex-wrap gap-3">
-                                <span className="flex items-center gap-1 text-[11px] text-red-600"><PackageX size={11}/>หมดอายุ <strong>{log.newly_expired_count}</strong> lot</span>
-                                <span className="flex items-center gap-1 text-[11px] text-amber-600"><AlertTriangle size={11}/>ใกล้หมดอายุ <strong>{log.near_expiry_count}</strong> lot</span>
-                                <span className="flex items-center gap-1 text-[11px] text-blue-600"><Package size={11}/>สต็อกต่ำ <strong>{log.low_stock_count}</strong></span>
+                                <span className="flex items-center gap-1 text-[11px] text-red-600"><PackageX size={11} />หมดอายุ <strong>{log.newly_expired_count}</strong> lot</span>
+                                <span className="flex items-center gap-1 text-[11px] text-amber-600"><AlertTriangle size={11} />ใกล้หมดอายุ <strong>{log.near_expiry_count}</strong> lot</span>
+                                <span className="flex items-center gap-1 text-[11px] text-blue-600"><Package size={11} />สต็อกต่ำ <strong>{log.low_stock_count}</strong></span>
                                 <button className="text-[11px] text-blue-600 underline ml-auto" onClick={e => { e.stopPropagation(); setReportLog(log); }}>ดูรายงาน</button>
                               </div>
                             )}
@@ -520,8 +520,8 @@ export default function CutOffSummaryPage() {
               {warehouses.length === 0
                 ? <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">ไม่พบคลังยา — กรุณาเพิ่มคลังยาก่อน</p>
                 : <Select placeholder="เลือกคลังยา" value={form.sub_warehouse_id}
-                    onChange={e => setForm(f => ({ ...f, sub_warehouse_id: e.target.value }))}
-                    options={warehouses.map(w => ({ value: String(w.sub_warehouse_id), label: w.name }))} />}
+                  onChange={e => setForm(f => ({ ...f, sub_warehouse_id: e.target.value }))}
+                  options={warehouses.map(w => ({ value: String(w.sub_warehouse_id), label: w.name }))} />}
             </div>
           )}
           {editRow && (
@@ -582,10 +582,10 @@ export default function CutOffSummaryPage() {
 
           <div className="bg-blue-50 rounded-lg px-3 py-2 text-xs text-blue-700">
             📅 {
-              form.frequency === 'daily'   ? `ทุกวัน เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
-              form.frequency === 'weekly'  ? `ทุกวัน${DOW_TH[+form.period_day] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
-              form.frequency === 'monthly' ? `ทุกวันที่ ${form.period_day} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
-              `${form.period_day} ${MONTHS[+form.period_month] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.`
+              form.frequency === 'daily' ? `ทุกวัน เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+                form.frequency === 'weekly' ? `ทุกวัน${DOW_TH[+form.period_day] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+                  form.frequency === 'monthly' ? `ทุกวันที่ ${form.period_day} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.` :
+                    `${form.period_day} ${MONTHS[+form.period_month] || ''} เวลา ${pad(+form.period_time_h)}:${pad(+form.period_time_m)} น.`
             }
           </div>
 
@@ -620,89 +620,89 @@ export default function CutOffSummaryPage() {
             {/* Expired lots table */}
             <div>
               <h4 className="text-sm font-semibold text-red-700 mb-1.5 flex items-center gap-1.5">
-                <PackageX size={14}/> ยาหมดอายุ ({(reportLog.expired_lots ?? []).length} lot)
+                <PackageX size={14} /> ยาหมดอายุ ({(reportLog.expired_lots ?? []).length} lot)
               </h4>
               {(reportLog.expired_lots ?? []).length === 0
                 ? <p className="text-xs text-slate-400 pl-1">ไม่มียาหมดอายุในรอบนี้</p>
                 : <div className="overflow-x-auto rounded-lg border border-red-100 max-h-44 overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-red-50 sticky top-0">
-                        <tr>{['ชื่อยา','เลข Lot','วันหมดอายุ','คงเหลือ'].map(h => <th key={h} className="px-3 py-2 text-left text-red-700 font-semibold whitespace-nowrap">{h}</th>)}</tr>
-                      </thead>
-                      <tbody className="divide-y divide-red-50">
-                        {(reportLog.expired_lots ?? []).map(l => (
-                          <tr key={l.lot_id} className="hover:bg-red-50/50">
-                            <td className="px-3 py-1.5 font-medium text-slate-800">{l.med_showname}</td>
-                            <td className="px-3 py-1.5 font-mono text-slate-600">{l.lot_number || '—'}</td>
-                            <td className="px-3 py-1.5 text-red-600">{fmtDate(l.exp_date)}</td>
-                            <td className="px-3 py-1.5">{l.quantity}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>}
+                  <table className="w-full text-xs">
+                    <thead className="bg-red-50 sticky top-0">
+                      <tr>{['ชื่อยา', 'เลข Lot', 'วันหมดอายุ', 'คงเหลือ'].map(h => <th key={h} className="px-3 py-2 text-left text-red-700 font-semibold whitespace-nowrap">{h}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-red-50">
+                      {(reportLog.expired_lots ?? []).map(l => (
+                        <tr key={l.lot_id} className="hover:bg-red-50/50">
+                          <td className="px-3 py-1.5 font-medium text-slate-800">{l.med_showname}</td>
+                          <td className="px-3 py-1.5 font-mono text-slate-600">{l.lot_number || '—'}</td>
+                          <td className="px-3 py-1.5 text-red-600">{fmtDate(l.exp_date)}</td>
+                          <td className="px-3 py-1.5">{l.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>}
             </div>
 
             {/* Near-expiry lots table */}
             <div>
               <h4 className="text-sm font-semibold text-amber-700 mb-1.5 flex items-center gap-1.5">
-                <AlertTriangle size={14}/> ยาใกล้หมดอายุ ≤ 30 วัน ({(reportLog.near_expiry_lots ?? []).length} lot)
+                <AlertTriangle size={14} /> ยาใกล้หมดอายุ ≤ 30 วัน ({(reportLog.near_expiry_lots ?? []).length} lot)
               </h4>
               {(reportLog.near_expiry_lots ?? []).length === 0
                 ? <p className="text-xs text-slate-400 pl-1">ไม่มียาใกล้หมดอายุในรอบนี้</p>
                 : <div className="overflow-x-auto rounded-lg border border-amber-100 max-h-44 overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-amber-50 sticky top-0">
-                        <tr>{['ชื่อยา','เลข Lot','วันหมดอายุ','คงเหลือ','อีกกี่วัน'].map(h => <th key={h} className="px-3 py-2 text-left text-amber-700 font-semibold whitespace-nowrap">{h}</th>)}</tr>
-                      </thead>
-                      <tbody className="divide-y divide-amber-50">
-                        {(reportLog.near_expiry_lots ?? []).map(l => (
-                          <tr key={l.lot_id} className="hover:bg-amber-50/50">
-                            <td className="px-3 py-1.5 font-medium text-slate-800">{l.med_showname}</td>
-                            <td className="px-3 py-1.5 font-mono text-slate-600">{l.lot_number || '—'}</td>
-                            <td className="px-3 py-1.5 text-amber-600">{fmtDate(l.exp_date)}</td>
-                            <td className="px-3 py-1.5">{l.quantity}</td>
-                            <td className="px-3 py-1.5 font-semibold text-amber-700">{l.days_remaining} วัน</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>}
+                  <table className="w-full text-xs">
+                    <thead className="bg-amber-50 sticky top-0">
+                      <tr>{['ชื่อยา', 'เลข Lot', 'วันหมดอายุ', 'คงเหลือ', 'อีกกี่วัน'].map(h => <th key={h} className="px-3 py-2 text-left text-amber-700 font-semibold whitespace-nowrap">{h}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-amber-50">
+                      {(reportLog.near_expiry_lots ?? []).map(l => (
+                        <tr key={l.lot_id} className="hover:bg-amber-50/50">
+                          <td className="px-3 py-1.5 font-medium text-slate-800">{l.med_showname}</td>
+                          <td className="px-3 py-1.5 font-mono text-slate-600">{l.lot_number || '—'}</td>
+                          <td className="px-3 py-1.5 text-amber-600">{fmtDate(l.exp_date)}</td>
+                          <td className="px-3 py-1.5">{l.quantity}</td>
+                          <td className="px-3 py-1.5 font-semibold text-amber-700">{l.days_remaining} วัน</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>}
             </div>
 
             {/* Snapshot Details Table */}
             <div>
               <h4 className="text-sm font-semibold text-blue-700 mb-1.5 flex items-center gap-1.5">
-                <Package size={14}/> รายการยาคงคลังทั้งหมด (Snapshot - {reportLog.snapshot_count ?? (reportLog.snapshot_details ?? []).length} รายการ)
+                <Package size={14} /> รายการยาคงคลังทั้งหมด (Snapshot - {reportLog.snapshot_count ?? (reportLog.snapshot_details ?? []).length} รายการ)
               </h4>
               {(reportLog.snapshot_details ?? []).length === 0 && !(reportLog.snapshot_count ?? 0)
                 ? <p className="text-xs text-slate-400 pl-1">ไม่มีข้อมูลยาคงคลัง</p>
                 : <div className="overflow-x-auto rounded-lg border border-blue-100 max-h-64 overflow-y-auto shadow-inner bg-white">
-                    <table className="w-full text-xs">
-                      <thead className="bg-blue-50 sticky top-0 shadow-sm">
-                        <tr>{['ชื่อยา','ยอดคงเหลือ'].map(h => <th key={h} className="px-3 py-2 text-left text-blue-700 font-bold whitespace-nowrap">{h}</th>)}</tr>
-                      </thead>
-                      <tbody className="divide-y divide-blue-50">
-                        {(reportLog.snapshot_details ?? []).map((item, idx) => (
-                          <tr key={idx} className="hover:bg-blue-50/50">
-                            <td className="px-3 py-2 font-medium text-slate-700">{item.med_showname}</td>
-                            <td className="px-3 py-2 font-bold text-slate-900">{item.quantity} {item.unit || 'หน่วย'}</td>
-                          </tr>
-                        ))}
-                        {(reportLog.snapshot_details ?? []).length === 0 && (reportLog.snapshot_count ?? 0) > 0 && (
-                           <tr><td colSpan={2} className="px-3 py-4 text-center text-slate-400 italic">Snapshot ข้อมูลเรียบร้อยแล้ว {reportLog.snapshot_count} รายการ</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>}
+                  <table className="w-full text-xs">
+                    <thead className="bg-blue-50 sticky top-0 shadow-sm">
+                      <tr>{['ชื่อยา', 'ยอดคงเหลือ'].map(h => <th key={h} className="px-3 py-2 text-left text-blue-700 font-bold whitespace-nowrap">{h}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-blue-50">
+                      {(reportLog.snapshot_details ?? []).map((item, idx) => (
+                        <tr key={idx} className="hover:bg-blue-50/50">
+                          <td className="px-3 py-2 font-medium text-slate-700">{item.med_showname}</td>
+                          <td className="px-3 py-2 font-bold text-slate-900">{item.quantity} {item.unit || 'หน่วย'}</td>
+                        </tr>
+                      ))}
+                      {(reportLog.snapshot_details ?? []).length === 0 && (reportLog.snapshot_count ?? 0) > 0 && (
+                        <tr><td colSpan={2} className="px-3 py-4 text-center text-slate-400 italic">Snapshot ข้อมูลเรียบร้อยแล้ว {reportLog.snapshot_count} รายการ</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>}
             </div>
 
             {/* Export buttons */}
             <div className="flex gap-2 justify-end pt-1 border-t border-slate-100">
               <Button variant="secondary" onClick={() => setReportLog(null)}>ปิด</Button>
-              <Button variant="secondary" icon={<FileSpreadsheet size={13}/>}
+              <Button variant="secondary" icon={<FileSpreadsheet size={13} />}
                 loading={exporting === 'csv'} onClick={() => handleExportRunReport(reportLog, 'csv')}>CSV</Button>
-              <Button variant="primary" icon={<FileText size={13}/>}
+              <Button variant="primary" icon={<FileText size={13} />}
                 loading={exporting === 'pdf'} onClick={() => handleExportRunReport(reportLog, 'pdf')}>ออกรายงาน PDF</Button>
             </div>
           </div>
