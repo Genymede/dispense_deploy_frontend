@@ -159,7 +159,7 @@ export default function MedProblemPage() {
             options={[{ value: 'false', label: 'ยังไม่แก้ไข' }, { value: 'true', label: 'แก้ไขแล้ว' }]} />
           <SearchSelect type="user" label="ผู้รายงาน"
             initialDisplay={form.reporter_label} resetKey={resetKey}
-            onSelect={u => { f('reporter_id', u?.uid ?? 0); f('reporter_label', u?.full_name ?? ''); }} />
+            onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
           <Input label="วันที่รายงาน" type="datetime-local"
             value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
           <div className="sm:col-span-2">

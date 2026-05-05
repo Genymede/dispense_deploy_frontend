@@ -131,7 +131,7 @@ export default function OverduePage() {
           <SearchSelect type="patient" label="ผู้ป่วย" initialDisplay={form.patient_label} resetKey={resetKey}
             onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
           <SearchSelect type="user" label="แพทย์" initialDisplay={form.doctor_label} resetKey={resetKey}
-            onSelect={u => { f('doctor_id', u?.uid ?? 0); f('doctor_label', u?.full_name ?? ''); }} />
+            onSelect={u => { f('doctor_id', u?.id ?? null); f('doctor_label', u?.full_name ?? ''); }} />
           <Input label="จำนวน" type="number" min="1" value={form.quantity} onChange={e => f('quantity', e.target.value)} />
         </FormGrid>
       </CrudModal>

@@ -125,7 +125,7 @@ export default function MedInteractionsPage() {
           <div className="col-span-2">
             <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
               initialDisplay={form.recorded_by_label} resetKey={resetKey}
-              onSelect={u => { f('recorded_by_id', u?.uid ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
+              onSelect={u => { f('recorded_by_id', u?.id ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
           </div>
         </div>
       </CrudModal>

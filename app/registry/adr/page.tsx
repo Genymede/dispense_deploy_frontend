@@ -122,7 +122,7 @@ export default function AdrPage() {
             onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
           <SearchSelect type="user" label="ผู้รายงาน"
             initialDisplay={form.reporter_label} resetKey={resetKey}
-            onSelect={u => { f('reporter_id', u?.uid ?? 0); f('reporter_label', u?.full_name ?? ''); }} />
+            onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
           <Input label="วันที่รายงาน" required type="datetime-local"
             value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
           <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}

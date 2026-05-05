@@ -8,49 +8,56 @@ import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { registryApi, crudApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ShieldAlert, UserCircle } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
 
 const SEV = {
-  mild:     { label: 'เล็กน้อย', variant: 'gray'    as const },
+  mild: { label: 'เล็กน้อย', variant: 'gray' as const },
   moderate: { label: 'ปานกลาง', variant: 'warning' as const },
-  severe:   { label: 'รุนแรง',   variant: 'danger'  as const },
+  severe: { label: 'รุนแรง', variant: 'danger' as const },
 };
 
 const emptyForm = {
   patient_id: 0, patient_label: '',
-  med_id: 0,     med_label: '',
+  med_id: 0, med_label: '',
   symptoms: '', description: '', severity: 'mild', reported_at: '',
   recorded_by_id: null as string | null, recorded_by_label: '',
 };
 
 const cols: ColDef[] = [
-  { key: 'patient_name', label: 'ผู้ป่วย',
-    render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></> },
-  { key: 'med_name', label: 'ยาที่แพ้',
-    render: r => <><p className="font-medium">{r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></> },
-  { key: 'symptoms',    label: 'อาการ', className: 'text-sm max-w-[180px] truncate' },
-  { key: 'severity',    label: 'ระดับ',
+  {
+    key: 'patient_name', label: 'ผู้ป่วย',
+    render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>
+  },
+  {
+    key: 'med_name', label: 'ยาที่แพ้',
+    render: r => <><p className="font-medium">{r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></>
+  },
+  { key: 'symptoms', label: 'อาการ', className: 'text-sm max-w-[180px] truncate' },
+  {
+    key: 'severity', label: 'ระดับ',
     render: r => {
       const c = SEV[r.severity as keyof typeof SEV] ?? { label: r.severity, variant: 'gray' as const };
       return <Badge variant={c.variant}>{c.label}</Badge>;
-    }},
-  { key: 'reported_at', label: 'วันที่',
-    render: r => fmtDate(r.reported_at) },
-  { key: 'recorded_by_name', label: 'ผู้บันทึก',
-    render: r => r.recorded_by_name ? <span className="flex items-center gap-1"><UserCircle size={13} className="text-slate-400" />{r.recorded_by_name}</span> : <span className="text-slate-300">—</span> },
+    }
+  },
+  {
+    key: 'reported_at', label: 'วันที่',
+    render: r => fmtDate(r.reported_at)
+  },
+  { key: 'recorded_by_name', label: 'ผู้บันทึก', className: 'text-xs text-slate-500' },
 ];
 
 export default function AllergyPage() {
   const { user } = useAuth();
-  const [form,      setForm]      = useState<typeof emptyForm>(emptyForm);
+  const [form, setForm] = useState<typeof emptyForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [reload,    setReload]    = useState(0);
-  const [resetKey,  setResetKey]  = useState(0);
-  const [drawer,    setDrawer]    = useState<any | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [reload, setReload] = useState(0);
+  const [resetKey, setResetKey] = useState(0);
+  const [drawer, setDrawer] = useState<any | null>(null);
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   const openAdd = () => {
@@ -60,7 +67,7 @@ export default function AllergyPage() {
   const openEdit = (row: any) => {
     setForm({
       patient_id: row.patient_id, patient_label: row.patient_name || '',
-      med_id: row.med_id,         med_label: row.med_name || '',
+      med_id: row.med_id, med_label: row.med_name || '',
       symptoms: row.symptoms || '', description: row.description || '',
       severity: row.severity || 'mild',
       reported_at: row.reported_at ? row.reported_at.slice(0, 10) : '',
@@ -71,18 +78,18 @@ export default function AllergyPage() {
 
   const handleSave = async () => {
     if (!form.patient_id) { toast.error('กรุณาเลือกผู้ป่วย'); return; }
-    if (!form.med_id)     { toast.error('กรุณาเลือกยา');       return; }
-    if (!form.symptoms)   { toast.error('กรุณากรอกอาการ');      return; }
+    if (!form.med_id) { toast.error('กรุณาเลือกยา'); return; }
+    if (!form.symptoms) { toast.error('กรุณากรอกอาการ'); return; }
     setSaving(true);
     try {
       const payload = {
         patient_id: form.patient_id, med_id: form.med_id,
         symptoms: form.symptoms, description: form.description,
         severity: form.severity, reported_at: form.reported_at || null,
-        recorded_by: user?.id || null,
+        recorded_by: form.recorded_by_id || user?.id || null,
       };
       if (editingId) { await crudApi.updateAllergy(editingId, payload); toast.success('แก้ไขเรียบร้อย'); }
-      else           { await crudApi.createAllergy(payload);            toast.success('เพิ่มเรียบร้อย'); }
+      else { await crudApi.createAllergy(payload); toast.success('เพิ่มเรียบร้อย'); }
       setShowModal(false); setReload(r => r + 1);
     } catch (e: any) { toast.error(e.message); }
     finally { setSaving(false); }
@@ -90,7 +97,7 @@ export default function AllergyPage() {
 
   return (
     <MainLayout title="ทะเบียนการแพ้ยา" subtitle="Allergy Registry"
->
+    >
       <DataTable cols={cols}
         fetcher={p => registryApi.getAllergy(p).then(r => r.data)}
         searchPlaceholder="ค้นหาผู้ป่วย, ชื่อยา..."
@@ -129,7 +136,7 @@ export default function AllergyPage() {
           <div className="sm:col-span-2">
             <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
               initialDisplay={form.recorded_by_label} resetKey={resetKey}
-              onSelect={u => { f('recorded_by_id', u?.uid ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
+              onSelect={u => { f('recorded_by_id', u?.id ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
           </div>
         </FormGrid>
       </CrudModal>
@@ -140,12 +147,12 @@ export default function AllergyPage() {
         {drawer && (
           <DrawerSection title="รายละเอียดการแพ้ยา">
             <DrawerGrid items={[
-              { label: 'ผู้ป่วย',      value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number}</p></> },
-              { label: 'ระดับ',        value: <Badge variant={(SEV[drawer.severity as keyof typeof SEV] ?? { variant: 'gray' }).variant}>{SEV[drawer.severity as keyof typeof SEV]?.label ?? drawer.severity}</Badge> },
-              { label: 'ยาที่แพ้',     value: <><p className="font-medium">{drawer.med_name}</p><p className="text-xs text-slate-400">{drawer.med_generic_name}</p></>, span: true },
-              { label: 'หมวดยา',       value: drawer.med_medical_category || '—' },
-              { label: 'อาการ',        value: drawer.symptoms, span: true },
-              { label: 'รายละเอียด',   value: drawer.description || '—', span: true },
+              { label: 'ผู้ป่วย', value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number}</p></> },
+              { label: 'ระดับ', value: <Badge variant={(SEV[drawer.severity as keyof typeof SEV] ?? { variant: 'gray' }).variant}>{SEV[drawer.severity as keyof typeof SEV]?.label ?? drawer.severity}</Badge> },
+              { label: 'ยาที่แพ้', value: <><p className="font-medium">{drawer.med_name}</p><p className="text-xs text-slate-400">{drawer.med_generic_name}</p></>, span: true },
+              { label: 'หมวดยา', value: drawer.med_medical_category || '—' },
+              { label: 'อาการ', value: drawer.symptoms, span: true },
+              { label: 'รายละเอียด', value: drawer.description || '—', span: true },
               { label: 'วันที่รายงาน', value: fmtDate(drawer.reported_at) },
               { label: 'ผู้บันทึก', value: drawer.recorded_by_name || '—' },
               { label: 'วันที่บันทึก', value: fmtDate(drawer.created_at, true), span: true },
