@@ -59,7 +59,7 @@ const reportsGroup: NavGroup = {
     { href: "/reports/med-delivery", label: "การจัดส่งยา", icon: Truck },
     { href: "/reports/overdue-med", label: "ยาค้างจ่าย", icon: Clock },
     { href: "/reports/rad-registry", label: "ยาปฏิชีวนะควบคุม", icon: FileText },
-    { href: "/reports/cut-off-summary", label: "สรุปการตัดรอบ", icon: CalendarClock },
+    //{ href: "/reports/cut-off-summary", label: "สรุปการตัดรอบ", icon: CalendarClock },
     { href: "/transactions", label: "ประวัติเคลื่อนไหวยา", icon: Activity },
   ],
 };
