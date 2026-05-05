@@ -7,7 +7,6 @@ import { Input, Select, Textarea, Badge } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
 import { registryApi, crudApi } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
 import { Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -22,7 +21,6 @@ const STATUS_MAP = {
 const emptyForm = {
   patient_id: 0, patient_label: '', delivery_method: '',
   receiver_name: '', receiver_phone: '', address: '', note: '', status: 'Pending',
-  recorded_by_id: null as string | null, recorded_by_label: '',
 };
 
 const cols: ColDef[] = [
@@ -41,11 +39,9 @@ const cols: ColDef[] = [
     key: 'delivery_date', label: 'วันที่',
     render: r => fmtDate(r.delivery_date)
   },
-  { key: 'recorded_by_name', label: 'ผู้บันทึก', className: 'text-xs text-slate-500' },
 ];
 
 export default function DeliveryPage() {
-  const { user } = useAuth();
   const [form, setForm] = useState<typeof emptyForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -56,7 +52,7 @@ export default function DeliveryPage() {
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   const openAdd = () => {
-    setForm({ ...emptyForm, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
+    setForm(emptyForm);
     setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
   };
   const openEdit = (row: any) => {
@@ -65,7 +61,6 @@ export default function DeliveryPage() {
       delivery_method: row.delivery_method || '', receiver_name: row.receiver_name || '',
       receiver_phone: row.receiver_phone || '', address: row.address || '',
       note: row.note || '', status: row.status || 'Pending',
-      recorded_by_id: row.recorded_by ?? null, recorded_by_label: row.recorded_by_name ?? '',
     });
     setEditingId(row.delivery_id); setResetKey(k => k + 1); setShowModal(true);
   };
@@ -82,7 +77,6 @@ export default function DeliveryPage() {
         patient_id: form.patient_id, delivery_method: form.delivery_method,
         receiver_name: form.receiver_name, receiver_phone: form.receiver_phone,
         address: form.address, note: form.note, status: form.status,
-        recorded_by: form.recorded_by_id || user?.id || null
       };
       if (editingId) { await crudApi.updateDelivery(editingId, payload); toast.success('แก้ไขแล้ว'); }
       else { await crudApi.createDelivery(payload); toast.success('สร้างรายการแล้ว'); }
@@ -127,11 +121,6 @@ export default function DeliveryPage() {
           <div className="sm:col-span-2">
             <Textarea label="หมายเหตุ" value={form.note} onChange={e => f('note', e.target.value)} rows={2} />
           </div>
-          <div className="sm:col-span-2">
-            <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
-              initialDisplay={form.recorded_by_label} resetKey={resetKey}
-              onSelect={u => { f('recorded_by_id', u?.uid ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
-          </div>
         </FormGrid>
       </CrudModal>
 
@@ -148,7 +137,6 @@ export default function DeliveryPage() {
           { label: 'เบอร์โทร', key: 'receiver_phone' },
           { label: 'ที่อยู่',    key: 'address',          span: true },
           { label: 'หมายเหตุ',  key: 'note',              span: true },
-          { label: 'ผู้บันทึก', key: 'recorded_by_name' },
         ]}
       />
     </MainLayout>

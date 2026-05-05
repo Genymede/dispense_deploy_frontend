@@ -19,6 +19,8 @@ const COLS: ColDef[] = [
     exportValue: r => r.med_name??'-' },
   { key:'doctor_name', label:'แพทย์', className:'text-xs text-slate-600' },
   { key:'description', label:'คำอธิบาย', className:'text-xs max-w-[200px] truncate' },
+  { key:'recorded_by_name', label:'ผู้บันทึก', className:'text-xs text-slate-500',
+    exportValue: r => r.recorded_by_name??'-' },
 ];
 
 export default function ErrorMedicationPage() {
@@ -43,6 +45,7 @@ export default function ErrorMedicationPage() {
           { label:'แพทย์',     key:'doctor_name' },
           { label:'คำอธิบาย', key:'description', span:true },
           { label:'วันเวลา',   key:'time', type:'datetime' as const },
+          { label:'ผู้บันทึก', key:'recorded_by_name' },
         ]} />
     </MainLayout>
   );
