@@ -183,7 +183,7 @@ export default function DashboardPage() {
               <DashboardStatCard icon={Users}           label="Queue รอ"         value={stats.queue_waiting}         sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
-            {/* ── Area chart (stock flow) + Queue/Alerts ───────────────────── */}
+            {/* ── Charts section ───────────────────────────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <ChartCard
                 title="กระแสยา 30 วัน"
@@ -290,10 +290,6 @@ export default function DashboardPage() {
                   )}
                 </ChartCard>
               </div>
-            </div>
-
-            {/* ── Stock comparison | Alert donut | Near expiry ─────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* Horizontal bar: current vs minimum */}
               <ChartCard
