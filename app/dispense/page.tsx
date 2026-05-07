@@ -529,13 +529,17 @@ export default function DispensePage() {
 
   // ── Print labels from drawer (dispensed prescription) ───────────────────
   const [printingDrawer, setPrintingDrawer] = useState(false);
-  const handlePrintFromDrawer = async (rx: any, items: any[]) => {
+  const [drawerPrintSelected, setDrawerPrintSelected] = useState<Set<number>>(new Set());
+  const handlePrintFromDrawer = async () => {
     const printerShare = localStorage.getItem('selected_printer_name');
     if (!printerShare) {
       toast.error('ยังไม่ได้เลือกเครื่องพิมพ์ — กรุณาตั้งค่าที่หน้า สติ๊กเกอร์ยา');
       return;
     }
-    if (!items?.length) { toast.error('ไม่มีรายการยา'); return; }
+    const allItems: any[] = drawerFull?.items ?? [];
+    const items = allItems.filter((_: any, i: number) => drawerPrintSelected.has(i));
+    if (!items.length) { toast.error('ไม่ได้เลือกรายการยาสำหรับพิมพ์'); return; }
+    const rx = drawerFull;
     const printedAt = new Date().toLocaleString('th-TH', {
       day: '2-digit', month: '2-digit', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
@@ -605,10 +609,13 @@ export default function DispensePage() {
 
   // ── Open detail drawer ────────────────────────────────────────────────────
   const openDrawer = async (rx: any) => {
-    setDrawerRx(rx); setDrawerFull(null); setDrawerLoad(true);
+    setDrawerRx(rx); setDrawerFull(null); setDrawerLoad(true); setDrawerPrintSelected(new Set());
     try {
       const res = await api.get(`/dispense/${rx.prescription_id}/full`);
       setDrawerFull(res.data);
+      // pre-select all items for printing by default (mirrors dispense modal behaviour)
+      const items = res.data?.items ?? [];
+      setDrawerPrintSelected(new Set(items.map((_: any, i: number) => i)));
     } catch { }
     finally { setDrawerLoad(false); }
   };
@@ -1021,13 +1028,6 @@ export default function DispensePage() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                                <button onClick={async () => {
-                                  const full = (await api.get(`/dispense/${rx.prescription_id}/full`)).data;
-                                  handlePrintFromDrawer(full, full.items);
-                                }}
-                                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary-600 transition-colors" title="พิมพ์ฉลากยา">
-                                  <Printer size={14} />
-                                </button>
                                 <button onClick={() => openReturn(rx)}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 text-xs font-medium transition-colors">
                                   <RotateCcw size={12} /> คืนยา
@@ -1670,48 +1670,93 @@ export default function DispensePage() {
             </DrawerSection>
 
             <DrawerSection title={`รายการยา (${(drawerFull.items || []).length} รายการ)${drawerFull.total_cost > 0 ? ` · ${Number(drawerFull.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : ''}`}>
-              <div className="space-y-2">
-                {(drawerFull.items || []).map((it: any, i: number) => {
-                  const isExpired = it.is_expired || (it.exp_date && new Date(it.exp_date) < new Date());
-                  const isLowStock = it.stock_available < it.quantity;
-                  return (
-                    <div key={i} className={`rounded-xl border px-4 py-3 ${isExpired || isLowStock ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'
-                      }`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-800">{it.med_showname || it.med_name}</p>
-                          <p className="text-xs text-slate-500">{it.med_generic_name} · {it.med_medical_category}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-bold text-slate-800">{it.quantity} {it.unit}</p>
-                          {it.unit_price > 0 && (
-                            <p className="text-xs text-primary-600 font-medium">
-                              {Number(it.unit_price).toFixed(2)} × {it.quantity} = {Number(it.line_total ?? it.unit_price * it.quantity).toFixed(2)} บาท
-                            </p>
-                          )}
-                          <p className={`text-xs ${isExpired || isLowStock ? 'text-red-600 font-medium' : 'text-slate-400'}`}>
-                            {isExpired ? '⛔ หมดอายุ' : `คลัง: ${it.stock_available}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {it.frequency && <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">{it.frequency}</span>}
-                        {it.route && <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{it.route}</span>}
-                        {it.med_severity?.includes('เสพติด') && <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">ยาเสพติด</span>}
-                        {it.med_pregnancy_category === 'X' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Preg Cat X</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {(drawerFull.items || []).length > 0 && (
+                <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500 w-8">
+                          <input type="checkbox" className="rounded accent-primary-600"
+                            checked={drawerPrintSelected.size === (drawerFull.items || []).length && (drawerFull.items || []).length > 0}
+                            onChange={e => setDrawerPrintSelected(e.target.checked
+                              ? new Set((drawerFull.items || []).map((_: any, i: number) => i))
+                              : new Set()
+                            )}
+                          />
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
+                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">จำนวน</th>
+                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">ความถี่</th>
+                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">วิธีใช้ยา</th>
+                        <th className="px-2 py-2 text-right text-xs font-semibold text-slate-500">ราคา</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(drawerFull.items || []).map((it: any, i: number) => {
+                        const isExpired = it.is_expired || (it.exp_date && new Date(it.exp_date) < new Date());
+                        const unitPrice = Number(it.unit_price) || 0;
+                        const qty = Number(it.quantity);
+                        const checked = drawerPrintSelected.has(i);
+                        return (
+                          <tr key={i} className={`cursor-pointer ${isExpired ? 'bg-red-50' : ''}`}
+                            onClick={() => setDrawerPrintSelected(prev => {
+                              const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next;
+                            })}>
+                            <td className="px-2 py-2 text-center">
+                              <input type="checkbox" className="rounded accent-primary-600" checked={checked} readOnly />
+                            </td>
+                            <td className="px-3 py-2">
+                              <p className="text-xs font-medium leading-snug text-slate-800">{it.med_showname || it.med_name}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">{it.med_generic_name}{it.med_medical_category ? ` · ${it.med_medical_category}` : ''}</p>
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {isExpired && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">⛔ หมดอายุ</span>}
+                                {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
+                                {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
+                              </div>
+                            </td>
+                            <td className="px-2 py-2 text-center text-xs font-mono whitespace-nowrap">
+                              {qty} {it.unit}
+                            </td>
+                            <td className="px-2 py-2 text-center">
+                              {it.frequency && <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">{it.frequency}</span>}
+                            </td>
+                            <td className="px-2 py-2 text-center">
+                              {it.route && <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{it.route}</span>}
+                            </td>
+                            <td className="px-2 py-2 text-right whitespace-nowrap">
+                              {unitPrice > 0
+                                ? <p className="text-xs font-semibold text-primary-700">{(unitPrice * qty).toFixed(2)}</p>
+                                : <span className="text-slate-300 text-xs">—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    {(drawerFull.items || []).reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0) > 0 && (
+                      <tfoot>
+                        <tr className="bg-slate-50 border-t border-slate-200">
+                          <td colSpan={5} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
+                          <td className="px-2 py-2 text-right text-sm font-bold text-primary-700">
+                            {(drawerFull.items || []).reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              )}
             </DrawerSection>
 
             {(drawerFull.items || []).length > 0 && (
               <DrawerSection title="">
                 <Button variant="secondary" className="w-full flex items-center justify-center gap-2"
                   loading={printingDrawer}
-                  onClick={() => handlePrintFromDrawer(drawerFull, drawerFull.items)}>
-                  <Printer size={14} /> พิมพ์ฉลากยาทั้งหมด ({(drawerFull.items || []).length} รายการ)
+                  disabled={drawerPrintSelected.size === 0}
+                  onClick={handlePrintFromDrawer}>
+                  <Printer size={14} />
+                  {drawerPrintSelected.size === 0
+                    ? 'เลือกยาที่ต้องการพิมพ์'
+                    : `พิมพ์ฉลากยา ${drawerPrintSelected.size} รายการ`}
                 </Button>
               </DrawerSection>
             )}
