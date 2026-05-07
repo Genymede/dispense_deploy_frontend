@@ -60,7 +60,7 @@ export default function DrugsPage() {
   const [selectedMed, setSelectedMed] = useState<MedTableItem | null>(null);
   const medSearchTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const emptyReceiveForm = { med_sid: 0, med_label: '', quantity: '', lot_number: '', expiry_date: '', mfg_date: '', reference_no: '', note: '' };
+  const emptyReceiveForm = { med_sid: 0, med_label: '', quantity: '', lot_number: '', expiry_date: '', mfg_date: '', reference_no: '', note: '', cost_price: '', unit_price: '' };
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [receiveForm, setReceiveForm] = useState(emptyReceiveForm);
   const [receiveResetKey, setReceiveResetKey] = useState(0);
@@ -80,6 +80,8 @@ export default function DrugsPage() {
         mfg_date: receiveForm.mfg_date || undefined,
         reference_no: receiveForm.reference_no || undefined,
         note: receiveForm.note || undefined,
+        cost_price: receiveForm.cost_price ? Number(receiveForm.cost_price) : undefined,
+        unit_price: receiveForm.unit_price ? Number(receiveForm.unit_price) : undefined,
       });
       setShowReceiveModal(false);
       setReceiveForm(emptyReceiveForm);
@@ -589,6 +591,12 @@ export default function DrugsPage() {
               value={receiveForm.expiry_date} onChange={e => rf('expiry_date', e.target.value)} />
             <Input label="วันผลิต" type="date"
               value={receiveForm.mfg_date} onChange={e => rf('mfg_date', e.target.value)} />
+            <Input label="ราคาทุน/หน่วย (บาท)" type="number" min="0" step="0.01"
+              placeholder="0.00"
+              value={receiveForm.cost_price} onChange={e => rf('cost_price', e.target.value)} />
+            <Input label="ราคาขาย/หน่วย (บาท)" type="number" min="0" step="0.01"
+              placeholder="0.00"
+              value={receiveForm.unit_price} onChange={e => rf('unit_price', e.target.value)} />
           </div>
           <Input label="เลขอ้างอิงใบเบิก" placeholder="เช่น REQ-2025-001"
             value={receiveForm.reference_no} onChange={e => rf('reference_no', e.target.value)} />

@@ -283,6 +283,7 @@ export const stockApi = {
     med_sid: number; quantity: number; lot_number?: string;
     expiry_date?: string; mfg_date?: string;
     reference_no?: string; note?: string;
+    cost_price?: number; unit_price?: number;
   }) => api.post<StockTransaction>('/stock/from-main', data),
 
   getRequisitions: (params?: { status?: string; page?: number; limit?: number }) =>
