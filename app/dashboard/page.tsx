@@ -189,7 +189,7 @@ export default function DashboardPage() {
                 title="กระแสยา 30 วัน"
                 icon={BarChart3}
                 iconColor="text-blue-600"
-                className="lg:col-span-2"
+                className="lg:col-span-2 self-start"
                 toolbar={
                   <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                     <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
@@ -199,10 +199,9 @@ export default function DashboardPage() {
                 }
               >
                 {chartData.length === 0 ? (
-                  <div className="h-full min-h-[240px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
+                  <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
                 ) : (
-                  <div className="h-full min-h-[240px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={280}>
                     <AreaChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
@@ -229,7 +228,6 @@ export default function DashboardPage() {
                       <Area type="monotone" dataKey="คืนยา"   stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
                     </AreaChart>
                   </ResponsiveContainer>
-                  </div>
                 )}
               </ChartCard>
 
