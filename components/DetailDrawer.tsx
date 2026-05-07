@@ -1,10 +1,7 @@
 'use client';
-/**
- * DetailDrawer — Slide-in drawer แสดงรายละเอียดของรายการ
- * ใช้กับทุก registry table เพื่อดูรายละเอียดโดยไม่ต้องเปิดหน้าใหม่
- */
-import { ReactNode, useEffect, useRef } from 'react';
-import { X, ExternalLink } from 'lucide-react';
+import { ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -16,50 +13,32 @@ interface Props {
   footer?: ReactNode;
 }
 
-const WIDTH = {
-  sm: 'w-[380px]',
-  md: 'w-[520px]',
-  lg: 'w-[680px]',
+const MAX_W = {
+  sm: 'max-w-[440px]',
+  md: 'max-w-[580px]',
+  lg: 'max-w-[740px]',
 };
 
 export default function DetailDrawer({
   open, onClose, title, subtitle, children, width = 'md', footer,
 }: Props) {
-  const drawerRef = useRef<HTMLDivElement>(null);
-
-  // Close on Escape
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     if (open) document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
   }, [open, onClose]);
 
-  // Prevent background scroll when open — lock the nearest scroll container (main)
-  useEffect(() => {
-    const el = document.querySelector('main') as HTMLElement | null;
-    if (!el) return;
-    if (open) el.style.overflow = 'hidden';
-    else el.style.overflow = '';
-    return () => { el.style.overflow = ''; };
-  }, [open]);
+  if (!open || typeof window === 'undefined') return null;
 
-  return (
-    <>
-      {/* Backdrop */}
+  return createPortal(
+    <div
+      style={{ left: 'var(--sidebar-w)', top: '56px' }}
+      className="fixed bottom-0 right-0 z-50 flex items-center justify-center p-6 bg-black/30 animate-fade-in"
+      onClick={onClose}
+    >
       <div
-        style={{ left: 'var(--sidebar-w)' }}
-        className={`fixed top-14 bottom-0 right-0 bg-black/25 z-40 transition-opacity duration-200 ${
-          open ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
-      />
-
-      {/* Drawer */}
-      <div
-        ref={drawerRef}
-        className={`fixed top-14 bottom-0 right-0 ${WIDTH[width]} bg-white shadow-2xl z-50 flex flex-col
-          transform transition-transform duration-300 ease-out
-          ${open ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-full`}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-5 border-b border-slate-100 flex items-start gap-3">
@@ -87,13 +66,13 @@ export default function DetailDrawer({
           </div>
         )}
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
 
 // ── Helper sub-components ─────────────────────────────────────────────────────
 
-/** Section header */
 export function DrawerSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
@@ -103,7 +82,6 @@ export function DrawerSection({ title, children }: { title: string; children: Re
   );
 }
 
-/** Key-value grid */
 export function DrawerGrid({ items }: {
   items: Array<{ label: string; value: ReactNode; span?: boolean }>
 }) {
@@ -121,7 +99,6 @@ export function DrawerGrid({ items }: {
   );
 }
 
-/** Inline badge row */
 export function DrawerBadgeRow({ items }: {
   items: Array<{ label: string; color?: string }>
 }) {
