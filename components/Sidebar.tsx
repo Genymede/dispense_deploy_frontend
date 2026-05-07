@@ -82,9 +82,9 @@ function CollapseGroup({ group, isExpanded }: { group: NavGroup; isExpanded?: bo
           isActive ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
         )}
       >
-        <Icon size={16} className={isActive ? "text-blue-600" : "text-slate-400"} />
-        {isExpanded && <span className="flex-1 text-left text-[13px]">{group.label}</span>}
-        {isExpanded && <ChevronDown size={12} className={clsx("text-slate-400 transition-transform duration-200", open && "rotate-180")} />}
+        <Icon size={18} className={isActive ? "text-blue-600" : "text-slate-400"} />
+        {isExpanded && <span className="flex-1 text-left text-sm">{group.label}</span>}
+        {isExpanded && <ChevronDown size={14} className={clsx("text-slate-400 transition-transform duration-200", open && "rotate-180")} />}
       </button>
       {isExpanded && open && (
         <div className="ml-3.5 mt-0.5 border-l border-slate-200 pl-2.5 space-y-0.5">
@@ -93,11 +93,11 @@ function CollapseGroup({ group, isExpanded }: { group: NavGroup; isExpanded?: bo
             return (
               <Link key={href} href={href}
                 className={clsx(
-                  "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all",
+                  "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-all",
                   active ? "bg-blue-50/70 text-blue-700 font-semibold" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                 )}
               >
-                <ItemIcon size={13} className={active ? "text-blue-600" : "text-slate-400"} />
+                <ItemIcon size={15} className={active ? "text-blue-600" : "text-slate-400"} />
                 <span className="flex-1">{label}</span>
                 {active && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
               </Link>
@@ -116,12 +116,12 @@ function NavLink({ href, label, icon: Icon, badge, isExpanded }: NavItem & { bad
     <Link href={href}
       title={!isExpanded ? label : undefined}
       className={clsx(
-        "flex items-center px-3 py-2 rounded-lg text-[13px] transition-all group",
+        "flex items-center px-3 py-2 rounded-lg text-sm transition-all group",
         isExpanded ? "gap-3" : "justify-center relative",
         active ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       )}
     >
-      <Icon size={16} className={active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"} />
+      <Icon size={18} className={active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-500"} />
       {isExpanded && <span className="flex-1">{label}</span>}
       {isExpanded ? (
         badge != null && badge > 0 && (
@@ -137,7 +137,7 @@ function NavLink({ href, label, icon: Icon, badge, isExpanded }: NavItem & { bad
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
         )
       )}
-      {isExpanded && active && <ChevronRight size={13} className="text-blue-600" />}
+      {isExpanded && active && <ChevronRight size={15} className="text-blue-600" />}
     </Link>
   );
 }
@@ -150,7 +150,7 @@ export default function Sidebar({ alertCount = 0, isExpanded = true }: { alertCo
 
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">ทะเบียน & รายงาน</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">ทะเบียน & รายงาน</p>
         </div>
       ) : <div className="h-4" />}
       <CollapseGroup group={registryGroup} isExpanded={isExpanded} />
@@ -158,14 +158,14 @@ export default function Sidebar({ alertCount = 0, isExpanded = true }: { alertCo
 
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">คลังยา</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">คลังยา</p>
         </div>
       ) : <div className="h-4" />}
       <CollapseGroup group={warehouseGroup} isExpanded={isExpanded} />
 
       {isExpanded ? (
         <div className="pt-2 pb-0.5 px-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">อื่นๆ</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">อื่นๆ</p>
         </div>
       ) : <div className="h-4" />}
       <NavLink href="/sticker" label="สติ๊กเกอร์ยา" icon={Tag} isExpanded={isExpanded} />
