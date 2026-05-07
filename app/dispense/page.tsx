@@ -443,7 +443,6 @@ export default function DispensePage() {
           ward: dispenseWard, note: dispenseNote, diagnosis: dispenseDiagnosis,
           doctor_id: dispenseDoctorId,
         });
-        setDispenseMetaChanged(false);
       }
       // บันทึกรายการยาที่แก้ไขก่อนจ่าย
       if (dispenseItemsChanged) {
@@ -453,7 +452,6 @@ export default function DispensePage() {
             frequency: it.frequency || 'OD', route: it.route || 'รับประทาน',
           })),
         });
-        setDispenseItemsChanged(false);
       }
       const overdue_items = dispenseItems
         .filter((it: any) => pendingOverdueIds.has(it.item_id))
@@ -473,6 +471,7 @@ export default function DispensePage() {
         { duration: 6000 }
       );
       setDispenseRx(null); setSafetyResult(null); setPendingOverdueIds(new Set());
+      setDispenseItemsChanged(false); setDispenseMetaChanged(false);
       void Promise.all([loadList(), loadQueue(), loadDispensed()]);
     } catch (e: any) { toast.error(e.message); }
     finally { setDispensing(false); }
