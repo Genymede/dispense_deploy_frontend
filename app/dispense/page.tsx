@@ -239,10 +239,9 @@ export default function DispensePage() {
 
   // ── Live safety check (runs when patient+items change) ─────────────────────
   const runLiveSafety = useCallback(async (pid: number, drugItems: Array<{ med_sid: number; med_id?: number }>) => {
-    if (!pid || !drugItems.length) { setLiveAlerts({}); return; }
-    // สร้าง temp prescription ผ่าน endpoint
-    // ใช้วิธี: เรียก /registry/search เพื่อตรวจ allergy + interaction จาก med_id list
+    if (!pid || !drugItems.length) { setLiveAlerts({}); setLoadingSafety(false); return; }
     clearTimeout(safetyTimer.current);
+    setLoadingSafety(true);
     safetyTimer.current = setTimeout(async () => {
       setLoadingSafety(true);
       try {
@@ -1432,41 +1431,21 @@ export default function DispensePage() {
             {/* ══ 3. Add drug + safety + table ═════════════════════════════ */}
             <div className="space-y-3">
 
-              {/* safety panel */}
+              {/* safety panel — ใช้ live alerts เมื่อรายการยาถูกแก้ไข */}
+              {loadingSafety && dispenseItemsChanged && (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                  <Loader2 size={13} className="animate-spin text-slate-400" />
+                  <span className="text-xs text-slate-500">กำลังตรวจสอบความปลอดภัย...</span>
+                </div>
+              )}
               <SafetyPanel
                 prescriptionId={dispenseRx.prescription_id}
                 onLoaded={r => setSafetyResult(r)}
-                overrideAlerts={filteredSafetyAlerts} />
-
-              {/* live safety (แสดงเมื่อแก้ไขรายการยา) */}
-              {dispenseItemsChanged && (
-                <div className={`rounded-xl border px-4 py-3 ${loadingSafety ? 'bg-slate-50 border-slate-200' :
-                  Object.values(liveAlerts).flat().some((a: any) => a.level === 'critical') ? 'bg-red-50 border-red-200' :
-                    Object.values(liveAlerts).flat().some((a: any) => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
-                      'bg-green-50 border-green-200'
-                  }`}>
-                  <div className="flex items-center gap-2">
-                    {loadingSafety
-                      ? <><Loader2 size={13} className="animate-spin text-slate-400" /><span className="text-xs text-slate-500">ตรวจสอบความปลอดภัย...</span></>
-                      : Object.values(liveAlerts).flat().some((a: any) => a.level === 'critical')
-                        ? <><ShieldX size={14} className="text-red-600" /><span className="text-xs font-semibold text-red-800">⛔ พบปัญหาร้ายแรง {Object.values(liveAlerts).flat().filter((a: any) => a.level === 'critical').length} รายการ</span></>
-                        : Object.values(liveAlerts).flat().some((a: any) => a.level === 'warning')
-                          ? <><ShieldAlert size={14} className="text-amber-600" /><span className="text-xs font-semibold text-amber-800">⚠ พบข้อควรระวัง {Object.values(liveAlerts).flat().length} รายการ</span></>
-                          : <><ShieldCheck size={14} className="text-green-600" /><span className="text-xs font-semibold text-green-800">✓ ผ่านการตรวจความปลอดภัย</span></>
-                    }
-                  </div>
-                  {Object.values(liveAlerts).flat().length > 0 && (
-                    <div className="space-y-1 mt-2 max-h-28 overflow-y-auto">
-                      {Object.values(liveAlerts).flat().map((a: any, i: number) => (
-                        <div key={i} className={`flex items-start gap-2 text-xs rounded-lg px-3 py-1.5 ${a.level === 'critical' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
-                          <span className="shrink-0">{a.level === 'critical' ? '⛔' : '⚠'}</span>
-                          <p className="font-semibold">{a.title}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                overrideAlerts={
+                  dispenseItemsChanged
+                    ? Object.values(liveAlerts).flat() as SafetyAlert[]
+                    : filteredSafetyAlerts
+                } />
 
               {/* หมายเหตุจากแพทย์ banner */}
               {dispenseNote && (
