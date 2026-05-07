@@ -1,7 +1,11 @@
 'use client';
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, createContext, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+
+type DrawerWidth = 'sm' | 'md' | 'lg';
+
+export const DrawerWidthCtx = createContext<DrawerWidth>('md');
 
 interface Props {
   open: boolean;
@@ -9,14 +13,14 @@ interface Props {
   title: ReactNode;
   subtitle?: ReactNode;
   children: ReactNode;
-  width?: 'sm' | 'md' | 'lg';
+  width?: DrawerWidth;
   footer?: ReactNode;
 }
 
-const MAX_W = {
-  sm: 'max-w-[440px]',
-  md: 'max-w-[580px]',
-  lg: 'max-w-[740px]',
+const MAX_W: Record<DrawerWidth, string> = {
+  sm: 'max-w-[580px]',
+  md: 'max-w-[800px]',
+  lg: 'max-w-[1120px]',
 };
 
 export default function DetailDrawer({
@@ -31,42 +35,44 @@ export default function DetailDrawer({
   if (!open || typeof window === 'undefined') return null;
 
   return createPortal(
-    <div
-      style={{ left: 'var(--sidebar-w)', top: '64px' }}
-      className="fixed bottom-0 right-0 z-50 flex items-center justify-center p-6 bg-black/30 animate-fade-in"
-      onClick={onClose}
-    >
+    <DrawerWidthCtx.Provider value={width}>
       <div
-        className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-full`}
-        onClick={e => e.stopPropagation()}
+        style={{ left: 'var(--sidebar-w)', top: '64px' }}
+        className="fixed bottom-0 right-0 z-50 flex items-center justify-center p-6 bg-black/30 animate-fade-in"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="flex-shrink-0 px-6 py-5 border-b border-slate-100 flex items-start gap-3">
-          <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-slate-800 text-base leading-snug">{title}</h2>
-            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        <div
+          className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-[88%]`}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 px-6 py-4 border-b border-slate-100 flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-slate-800 text-base leading-snug">{title}</h2>
+              {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
 
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
-          {children}
-        </div>
-
-        {/* Footer */}
-        {footer && (
-          <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
-            {footer}
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-4">
+            {children}
           </div>
-        )}
+
+          {/* Footer */}
+          {footer && (
+            <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
+              {footer}
+            </div>
+          )}
+        </div>
       </div>
-    </div>,
+    </DrawerWidthCtx.Provider>,
     document.body
   );
 }
@@ -76,7 +82,7 @@ export default function DetailDrawer({
 export function DrawerSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{title}</p>
+      {title && <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{title}</p>}
       {children}
     </div>
   );
@@ -85,10 +91,15 @@ export function DrawerSection({ title, children }: { title: string; children: Re
 export function DrawerGrid({ items }: {
   items: Array<{ label: string; value: ReactNode; span?: boolean }>
 }) {
+  const width = useContext(DrawerWidthCtx);
+  const isLg = width === 'lg';
+  const gridCls = isLg ? 'grid-cols-3' : 'grid-cols-2';
+  const spanCls = isLg ? 'col-span-3' : 'col-span-2';
+
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className={`grid ${gridCls} gap-2`}>
       {items.map(({ label, value, span }, i) => (
-        <div key={i} className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? 'col-span-2' : ''}`}>
+        <div key={i} className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? spanCls : ''}`}>
           <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
           <div className="text-sm font-medium text-slate-800 break-words">
             {value ?? <span className="text-slate-300">—</span>}
