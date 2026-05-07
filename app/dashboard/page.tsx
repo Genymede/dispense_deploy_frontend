@@ -183,19 +183,23 @@ export default function DashboardPage() {
               <DashboardStatCard icon={Users} label="Queue รอ" value={stats.queue_waiting} sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
-            {/* ── Charts section ───────────────────────────────────────────── */}
-            <ChartCard
-              title="กระแสยา 30 วัน"
-              icon={BarChart3}
-              iconColor="text-blue-600"
-              toolbar={
-                <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                  <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
-                  <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
-                  <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
-                </div>
-              }
-            >
+            {/* ── Charts (left) | Queue+Alerts (right) ────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+              {/* LEFT: charts stacked */}
+              <div className="lg:col-span-2 flex flex-col gap-6">
+              <ChartCard
+                title="กระแสยา 30 วัน"
+                icon={BarChart3}
+                iconColor="text-blue-600"
+                toolbar={
+                  <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                    <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
+                    <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
+                    <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
+                  </div>
+                }
+              >
               {chartData.length === 0 ? (
                 <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
               ) : (
@@ -227,9 +231,9 @@ export default function DashboardPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               )}
-            </ChartCard>
+              </ChartCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {/* Horizontal bar: current vs minimum */}
               <ChartCard
                 title="เปรียบเทียบสต็อก — ยาสต็อกต่ำ"
@@ -347,10 +351,11 @@ export default function DashboardPage() {
                   </div>
                 )}
               </ChartCard>
-            </div>
+              </div>
+              </div>{/* end left column */}
 
-            {/* ── Queue + Alerts ───────────────────────────────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* RIGHT: Queue + Alerts */}
+              <div className="flex flex-col gap-6">
               <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
@@ -378,7 +383,6 @@ export default function DashboardPage() {
                 title="การแจ้งเตือน"
                 icon={Bell}
                 iconColor="text-rose-500"
-                className="lg:col-span-2"
                 toolbar={
                   <div className="flex items-center gap-2">
                     {unread > 0 && (
@@ -393,7 +397,7 @@ export default function DashboardPage() {
                     ไม่มีการแจ้งเตือน 🎉
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-2">
                     {displayAlerts.map((a) => {
                       const cfg = ALERT_CFG[a.alert_type] ?? ALERT_CFG.low_stock;
                       return (
@@ -407,7 +411,8 @@ export default function DashboardPage() {
                   </div>
                 )}
               </ChartCard>
-            </div>
+              </div>{/* end right column */}
+            </div>{/* end outer grid */}
 
             {/* ── Recent transactions ─────────────────────────────────────────── */}
             <ChartCard
