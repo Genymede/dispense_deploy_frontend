@@ -527,6 +527,41 @@ export default function DispensePage() {
     }
   };
 
+  // ── Print labels from drawer (dispensed prescription) ───────────────────
+  const [printingDrawer, setPrintingDrawer] = useState(false);
+  const handlePrintFromDrawer = async (rx: any, items: any[]) => {
+    const printerShare = localStorage.getItem('selected_printer_name');
+    if (!printerShare) {
+      toast.error('ยังไม่ได้เลือกเครื่องพิมพ์ — กรุณาตั้งค่าที่หน้า สติ๊กเกอร์ยา');
+      return;
+    }
+    if (!items?.length) { toast.error('ไม่มีรายการยา'); return; }
+    const printedAt = new Date().toLocaleString('th-TH', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Asia/Bangkok',
+    });
+    setPrintingDrawer(true);
+    let failed = 0;
+    for (const it of items) {
+      const label = [
+        `${rx.patient_name || 'ไม่ระบุชื่อ'}`,
+        `HN: ${rx.hn_number || '-'}   ${printedAt}`,
+        `RX: ${rx.prescription_no}`,
+        `--------------------`,
+        `${it.med_showname || it.med_name}`,
+        it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
+        `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
+        `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}`,
+        `แผนก: ${rx.ward || '-'}`,
+      ].filter(Boolean).join('\n');
+      try { await printerApi.print(label, printerShare); } catch { failed++; }
+    }
+    setPrintingDrawer(false);
+    if (failed === 0) toast.success(`พิมพ์ฉลากยา ${items.length} ใบเรียบร้อย`);
+    else toast.error(`พิมพ์สำเร็จ ${items.length - failed}/${items.length} ใบ`);
+  };
+
   // ── Dispense modal inline edit helpers ───────────────────────────────────
   const addDispenseItem = async (drug: any) => {
     if (!drug) return;
@@ -986,6 +1021,13 @@ export default function DispensePage() {
                             </td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                                <button onClick={async () => {
+                                  const full = (await api.get(`/dispense/${rx.prescription_id}/full`)).data;
+                                  handlePrintFromDrawer(full, full.items);
+                                }}
+                                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary-600 transition-colors" title="พิมพ์ฉลากยา">
+                                  <Printer size={14} />
+                                </button>
                                 <button onClick={() => openReturn(rx)}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 text-xs font-medium transition-colors">
                                   <RotateCcw size={12} /> คืนยา
@@ -1664,6 +1706,15 @@ export default function DispensePage() {
               </div>
             </DrawerSection>
 
+            {(drawerFull.items || []).length > 0 && (
+              <DrawerSection title="">
+                <Button variant="secondary" className="w-full flex items-center justify-center gap-2"
+                  loading={printingDrawer}
+                  onClick={() => handlePrintFromDrawer(drawerFull, drawerFull.items)}>
+                  <Printer size={14} /> พิมพ์ฉลากยาทั้งหมด ({(drawerFull.items || []).length} รายการ)
+                </Button>
+              </DrawerSection>
+            )}
             {drawerFull.status === 'pending' && (
               <DrawerSection title="">
                 <Button className="w-full" onClick={() => { setDrawerRx(null); openDispense(drawerFull); }}>
