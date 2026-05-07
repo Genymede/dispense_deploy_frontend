@@ -20,7 +20,7 @@
   --border: #e2e8f0;
   --text: #0f172a;
   --text-muted: #64748b;
-  --sidebar-w: 280px;
+  --sidebar-w: 300px;
 }
 
 html {
@@ -198,7 +198,7 @@ button:focus-visible {
 /* Modal overlay */
 .modal-overlay {
   position: fixed;
-  top: 0;
+  top: 64px;
   right: 0;
   bottom: 0;
   left: var(--sidebar-w);

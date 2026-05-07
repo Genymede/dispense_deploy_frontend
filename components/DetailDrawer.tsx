@@ -32,7 +32,7 @@ export default function DetailDrawer({
 
   return createPortal(
     <div
-      style={{ left: 'var(--sidebar-w)', top: '56px' }}
+      style={{ left: 'var(--sidebar-w)', top: '64px' }}
       className="fixed bottom-0 right-0 z-50 flex items-center justify-center p-6 bg-black/30 animate-fade-in"
       onClick={onClose}
     >

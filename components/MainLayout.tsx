@@ -57,7 +57,7 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
       {/* ── Global Header ──────────────────────────────────────────────────── */}
       <header
-        className="flex-shrink-0 h-14 sm:h-16 w-full z-50 shadow-md flex items-center justify-between px-3 sm:px-6 text-white relative"
+        className="flex-shrink-0 h-16 w-full z-50 shadow-md flex items-center justify-between px-3 sm:px-6 text-white relative"
         style={{ background: "linear-gradient(90deg, #003d82 0%, #00306a 100%)" }}
       >
         {/* Left: Logo + Name */}
@@ -165,7 +165,7 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
             "h-full flex flex-col flex-shrink-0 shadow-xl bg-white border-r border-slate-200 transition-all duration-300 overflow-x-hidden"
           )}
         >
-          <div className={clsx("flex items-center h-14 flex-shrink-0 border-b border-slate-100", isSidebarOpen ? "px-3" : "justify-center")}>
+          <div className={clsx("flex items-center h-16 flex-shrink-0 border-b border-slate-100", isSidebarOpen ? "px-3" : "justify-center")}>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer text-slate-500 hover:text-slate-800"
@@ -181,13 +181,13 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
         {/* Main column */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 animate-fade-in">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in">
 
             {/* Page header */}
-            <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-start justify-between gap-3 mb-5">
               <div className="min-w-0">
-                <h1 className="text-lg font-bold text-slate-800 leading-tight">{title}</h1>
-                {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+                <h1 className="text-xl font-bold text-slate-800 leading-tight">{title}</h1>
+                {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
               </div>
               {actions && (
                 <div className="flex items-center gap-2 flex-shrink-0">
