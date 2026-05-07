@@ -30,10 +30,18 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data: { user }, error } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
 
   // ไม่มี session → เด้งกลับ portal หลัก
   if (error || !user) {
+    // อนุญาตให้ /login แสดงได้ (จะ redirect ไป portal เอง)
+    if (pathname === '/login') return NextResponse.next();
     return NextResponse.redirect(new URL('https://hpk-hms.site', request.url));
+  }
+
+  // มี session + อยู่ที่ / หรือ /login → ไป /dashboard ทันที
+  if (pathname === '/' || pathname === '/login') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // ส่ง user info ผ่าน header เพื่อให้ frontend อ่านได้ (server components)
@@ -45,5 +53,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|login).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'],
 };
