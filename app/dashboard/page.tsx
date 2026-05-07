@@ -184,113 +184,52 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Charts section ───────────────────────────────────────────── */}
+            <ChartCard
+              title="กระแสยา 30 วัน"
+              icon={BarChart3}
+              iconColor="text-blue-600"
+              toolbar={
+                <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
+                  <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
+                  <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
+                </div>
+              }
+            >
+              {chartData.length === 0 ? (
+                <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
+                      </linearGradient>
+                      <linearGradient id="gradOut" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
+                      </linearGradient>
+                      <linearGradient id="gradRet" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
+                        <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+                      interval={Math.floor(chartData.length / 8)} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<AreaTooltip />} />
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
+                    <Area type="monotone" dataKey="รับเข้า" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)" dot={false} activeDot={{ r: 4 }} />
+                    <Area type="monotone" dataKey="จ่ายออก" stroke="#10b981" strokeWidth={2.5} fill="url(#gradOut)" dot={false} activeDot={{ r: 4 }} />
+                    <Area type="monotone" dataKey="คืนยา" stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </ChartCard>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <ChartCard
-                title="กระแสยา 30 วัน"
-                icon={BarChart3}
-                iconColor="text-blue-600"
-                className="lg:col-span-2 self-start"
-                toolbar={
-                  <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                    <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
-                    <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
-                    <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
-                  </div>
-                }
-              >
-                {chartData.length === 0 ? (
-                  <div className="h-full min-h-[240px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <AreaChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
-                        </linearGradient>
-                        <linearGradient id="gradOut" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
-                        </linearGradient>
-                        <linearGradient id="gradRet" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
-                          <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
-                        interval={Math.floor(chartData.length / 8)} />
-                      <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<AreaTooltip />} />
-                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
-                      <Area type="monotone" dataKey="รับเข้า" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)" dot={false} activeDot={{ r: 4 }} />
-                      <Area type="monotone" dataKey="จ่ายออก" stroke="#10b981" strokeWidth={2.5} fill="url(#gradOut)" dot={false} activeDot={{ r: 4 }} />
-                      <Area type="monotone" dataKey="คืนยา" stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </ChartCard>
-
-              {/* Queue + Alerts */}
-              <div className="flex flex-col gap-6">
-                <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
-                      <p className="text-3xl font-black text-amber-600">{stats.queue_waiting}</p>
-                      <p className="text-xs text-amber-700 font-semibold mt-1">รอ</p>
-                    </div>
-                    <div className="py-3 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm">
-                      <p className="text-3xl font-black text-emerald-600">{stats.queue_completed_today}</p>
-                      <p className="text-xs text-emerald-700 font-semibold mt-1">รับยาสำเร็จ</p>
-                    </div>
-                  </div>
-                  {stats.pending_prescriptions > 0 && (
-                    <Link href="/dispense"
-                      className="mt-4 flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <ClipboardCheck size={18} className="text-amber-600" />
-                        <span className="text-sm font-bold text-amber-800">รอจ่ายยา</span>
-                      </div>
-                      <span className="text-lg font-black text-amber-600">{stats.pending_prescriptions} ใบ</span>
-                    </Link>
-                  )}
-                </ChartCard>
-
-                <ChartCard
-                  title="การแจ้งเตือน"
-                  icon={Bell}
-                  iconColor="text-rose-500"
-                  className="flex-1 min-h-0"
-                  toolbar={
-                    <div className="flex items-center gap-2">
-                      {unread > 0 && (
-                        <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] rounded-full font-black">{unread} ใหม่</span>
-                      )}
-                      <Link href="/alerts" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>
-                    </div>
-                  }
-                >
-                  {displayAlerts.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl min-h-[120px]">
-                      ไม่มีการแจ้งเตือน 🎉
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {displayAlerts.map((a) => {
-                        const cfg = ALERT_CFG[a.alert_type] ?? ALERT_CFG.low_stock;
-                        return (
-                          <div key={a.id} className={`p-3 rounded-xl border text-sm ${cfg.bg}`}>
-                            <div className={`flex items-center gap-2 font-bold mb-1 ${cfg.color}`}>{cfg.icon} {cfg.label}</div>
-                            <p className="font-semibold text-slate-800 truncate">{a.drug_name}</p>
-                            <p className="text-slate-500 text-xs mt-1 line-clamp-1">{a.message}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ChartCard>
-              </div>
-
               {/* Horizontal bar: current vs minimum */}
               <ChartCard
                 title="เปรียบเทียบสต็อก — ยาสต็อกต่ำ"
@@ -402,6 +341,66 @@ export default function DashboardPage() {
                             {d.lot_details && <p className="text-[11px] text-slate-400 mt-0.5 truncate">ล็อต: {d.lot_details}</p>}
                           </div>
                           <Badge variant={variant}>{days <= 0 ? 'หมดแล้ว' : `${days} วัน`}</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ChartCard>
+            </div>
+
+            {/* ── Queue + Alerts ───────────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
+                    <p className="text-3xl font-black text-amber-600">{stats.queue_waiting}</p>
+                    <p className="text-xs text-amber-700 font-semibold mt-1">รอ</p>
+                  </div>
+                  <div className="py-3 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm">
+                    <p className="text-3xl font-black text-emerald-600">{stats.queue_completed_today}</p>
+                    <p className="text-xs text-emerald-700 font-semibold mt-1">รับยาสำเร็จ</p>
+                  </div>
+                </div>
+                {stats.pending_prescriptions > 0 && (
+                  <Link href="/dispense"
+                    className="mt-4 flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <ClipboardCheck size={18} className="text-amber-600" />
+                      <span className="text-sm font-bold text-amber-800">รอจ่ายยา</span>
+                    </div>
+                    <span className="text-lg font-black text-amber-600">{stats.pending_prescriptions} ใบ</span>
+                  </Link>
+                )}
+              </ChartCard>
+
+              <ChartCard
+                title="การแจ้งเตือน"
+                icon={Bell}
+                iconColor="text-rose-500"
+                className="lg:col-span-2"
+                toolbar={
+                  <div className="flex items-center gap-2">
+                    {unread > 0 && (
+                      <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] rounded-full font-black">{unread} ใหม่</span>
+                    )}
+                    <Link href="/alerts" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>
+                  </div>
+                }
+              >
+                {displayAlerts.length === 0 ? (
+                  <div className="flex items-center justify-center h-[120px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+                    ไม่มีการแจ้งเตือน 🎉
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {displayAlerts.map((a) => {
+                      const cfg = ALERT_CFG[a.alert_type] ?? ALERT_CFG.low_stock;
+                      return (
+                        <div key={a.id} className={`p-3 rounded-xl border text-sm ${cfg.bg}`}>
+                          <div className={`flex items-center gap-2 font-bold mb-1 ${cfg.color}`}>{cfg.icon} {cfg.label}</div>
+                          <p className="font-semibold text-slate-800 truncate">{a.drug_name}</p>
+                          <p className="text-slate-500 text-xs mt-1 line-clamp-1">{a.message}</p>
                         </div>
                       );
                     })}
