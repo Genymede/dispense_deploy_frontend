@@ -184,7 +184,7 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Charts (left) | Queue+Alerts (right) ────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
               {/* LEFT: charts stacked */}
               <div className="lg:col-span-2 flex flex-col gap-6">
@@ -355,7 +355,7 @@ export default function DashboardPage() {
               </div>{/* end left column */}
 
               {/* RIGHT: Queue + Alerts */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 h-full">
               <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
@@ -383,6 +383,7 @@ export default function DashboardPage() {
                 title="การแจ้งเตือน"
                 icon={Bell}
                 iconColor="text-rose-500"
+                className="flex-1"
                 toolbar={
                   <div className="flex items-center gap-2">
                     {unread > 0 && (
