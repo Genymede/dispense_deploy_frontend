@@ -21,19 +21,19 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const ALERT_CFG: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string; chartColor: string }> = {
-  low_stock:         { icon: <TrendingDown size={13} />, color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-100',   label: 'สต็อกต่ำ',     chartColor: '#f59e0b' },
-  near_expiry:       { icon: <Calendar size={13} />,     color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100', label: 'ใกล้หมดอายุ',  chartColor: '#f97316' },
-  expired:           { icon: <CalendarX size={13} />,    color: 'text-red-600',    bg: 'bg-red-50 border-red-100',       label: 'หมดอายุ',      chartColor: '#ef4444' },
-  overstock:         { icon: <Package size={13} />,      color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-100',     label: 'เกินสต็อก',   chartColor: '#3b82f6' },
-  incomplete_record: { icon: <ClipboardList size={13} />,color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'ข้อมูลไม่ครบ', chartColor: '#8b5cf6' },
+  low_stock: { icon: <TrendingDown size={13} />, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', label: 'สต็อกต่ำ', chartColor: '#f59e0b' },
+  near_expiry: { icon: <Calendar size={13} />, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100', label: 'ใกล้หมดอายุ', chartColor: '#f97316' },
+  expired: { icon: <CalendarX size={13} />, color: 'text-red-600', bg: 'bg-red-50 border-red-100', label: 'หมดอายุ', chartColor: '#ef4444' },
+  overstock: { icon: <Package size={13} />, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100', label: 'เกินสต็อก', chartColor: '#3b82f6' },
+  incomplete_record: { icon: <ClipboardList size={13} />, color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'ข้อมูลไม่ครบ', chartColor: '#8b5cf6' },
 };
 
 const TX_CFG: Record<string, { label: string; icon: React.ReactNode; iconBg: string; qtyColor: string }> = {
-  in:      { label: 'รับเข้า',    icon: <ArrowDownToLine size={13} />,  iconBg: 'bg-blue-50 text-blue-600',     qtyColor: 'text-blue-600' },
-  out:     { label: 'จ่ายออก',   icon: <ArrowUpFromLine size={13} />,  iconBg: 'bg-green-50 text-green-600',   qtyColor: 'text-green-600' },
-  return:  { label: 'คืนยา',     icon: <RotateCcw size={13} />,        iconBg: 'bg-slate-100 text-slate-500',  qtyColor: 'text-slate-500' },
-  adjust:  { label: 'ปรับสต็อก', icon: <SlidersHorizontal size={13} />, iconBg: 'bg-purple-50 text-purple-600', qtyColor: 'text-purple-600' },
-  expired: { label: 'ตัดหมดอายุ', icon: <Trash2 size={13} />,           iconBg: 'bg-red-50 text-red-500',       qtyColor: 'text-red-500' },
+  in: { label: 'รับเข้า', icon: <ArrowDownToLine size={13} />, iconBg: 'bg-blue-50 text-blue-600', qtyColor: 'text-blue-600' },
+  out: { label: 'จ่ายออก', icon: <ArrowUpFromLine size={13} />, iconBg: 'bg-green-50 text-green-600', qtyColor: 'text-green-600' },
+  return: { label: 'คืนยา', icon: <RotateCcw size={13} />, iconBg: 'bg-slate-100 text-slate-500', qtyColor: 'text-slate-500' },
+  adjust: { label: 'ปรับสต็อก', icon: <SlidersHorizontal size={13} />, iconBg: 'bg-purple-50 text-purple-600', qtyColor: 'text-purple-600' },
+  expired: { label: 'ตัดหมดอายุ', icon: <Trash2 size={13} />, iconBg: 'bg-red-50 text-red-500', qtyColor: 'text-red-500' },
 };
 
 function DashboardStatCard({ icon: Icon, label, value, sub, iconBg, valueClass = 'text-gray-900' }: {
@@ -135,10 +135,10 @@ export default function DashboardPage() {
   alerts.forEach(a => { alertCountsFromLog[a.alert_type] = (alertCountsFromLog[a.alert_type] ?? 0) + 1; });
 
   const alertDonutData = stats ? [
-    { name: 'สต็อกต่ำ',     value: stats.low_stock_count ?? 0,               color: ALERT_CFG.low_stock.chartColor },
-    { name: 'ใกล้หมดอายุ',  value: stats.near_expiry_count ?? 0,              color: ALERT_CFG.near_expiry.chartColor },
-    { name: 'หมดอายุ',      value: stats.expired_count ?? 0,                  color: ALERT_CFG.expired.chartColor },
-    { name: 'เกินสต็อก',   value: alertCountsFromLog['overstock'] ?? 0,       color: ALERT_CFG.overstock.chartColor },
+    { name: 'สต็อกต่ำ', value: stats.low_stock_count ?? 0, color: ALERT_CFG.low_stock.chartColor },
+    { name: 'ใกล้หมดอายุ', value: stats.near_expiry_count ?? 0, color: ALERT_CFG.near_expiry.chartColor },
+    { name: 'หมดอายุ', value: stats.expired_count ?? 0, color: ALERT_CFG.expired.chartColor },
+    { name: 'เกินสต็อก', value: alertCountsFromLog['overstock'] ?? 0, color: ALERT_CFG.overstock.chartColor },
     { name: 'ข้อมูลไม่ครบ', value: alertCountsFromLog['incomplete_record'] ?? 0, color: ALERT_CFG.incomplete_record.chartColor },
   ].filter(d => d.value > 0) : [];
 
@@ -173,14 +173,14 @@ export default function DashboardPage() {
           <>
             {/* ── KPI cards ────────────────────────────────────────────────── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <DashboardStatCard icon={Package}         label="รายการยาทั้งหมด"  value={stats.total_drugs}           iconBg="bg-teal-500"    valueClass="text-teal-800" />
-              <DashboardStatCard icon={PackageMinus}    label="ยาสต็อกต่ำ"       value={stats.low_stock_count}       sub="ต้องสั่งเพิ่ม"   iconBg="bg-violet-600"  valueClass="text-violet-900" />
-              <DashboardStatCard icon={CalendarClock}   label="ยาใกล้หมดอายุ"   value={stats.near_expiry_count}     sub="ภายใน 30 วัน"    iconBg="bg-orange-500"  valueClass="text-orange-800" />
-              <DashboardStatCard icon={CalendarX}       label="ยาหมดอายุแล้ว"  value={stats.expired_count}         sub="ต้องดำเนินการ"   iconBg="bg-rose-500"    valueClass="text-rose-800" />
-              <DashboardStatCard icon={ClipboardList}   label="จ่ายยาวันนี้"    value={stats.today_dispense_count}  sub="ใบสั่งยา"         iconBg="bg-blue-500"    valueClass="text-blue-800" />
-              <DashboardStatCard icon={ArrowDownToLine} label="รับยาเข้าวันนี้" value={stats.today_stock_in_count}  sub="ครั้ง"            iconBg="bg-emerald-500" valueClass="text-emerald-800" />
-              <DashboardStatCard icon={ClipboardCheck}  label="รอจ่ายยา"        value={stats.pending_prescriptions} sub="ใบสั่งยา"         iconBg="bg-amber-500"   valueClass="text-amber-800" />
-              <DashboardStatCard icon={Users}           label="Queue รอ"         value={stats.queue_waiting}         sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
+              <DashboardStatCard icon={Package} label="รายการยาทั้งหมด" value={stats.total_drugs} iconBg="bg-teal-500" valueClass="text-teal-800" />
+              <DashboardStatCard icon={PackageMinus} label="ยาสต็อกต่ำ" value={stats.low_stock_count} sub="ต้องสั่งเพิ่ม" iconBg="bg-violet-600" valueClass="text-violet-900" />
+              <DashboardStatCard icon={CalendarClock} label="ยาใกล้หมดอายุ" value={stats.near_expiry_count} sub="ภายใน 30 วัน" iconBg="bg-orange-500" valueClass="text-orange-800" />
+              <DashboardStatCard icon={CalendarX} label="ยาหมดอายุแล้ว" value={stats.expired_count} sub="ต้องดำเนินการ" iconBg="bg-rose-500" valueClass="text-rose-800" />
+              <DashboardStatCard icon={ClipboardList} label="จ่ายยาวันนี้" value={stats.today_dispense_count} sub="ใบสั่งยา" iconBg="bg-blue-500" valueClass="text-blue-800" />
+              <DashboardStatCard icon={ArrowDownToLine} label="รับยาเข้าวันนี้" value={stats.today_stock_in_count} sub="ครั้ง" iconBg="bg-emerald-500" valueClass="text-emerald-800" />
+              <DashboardStatCard icon={ClipboardCheck} label="รอจ่ายยา" value={stats.pending_prescriptions} sub="ใบสั่งยา" iconBg="bg-amber-500" valueClass="text-amber-800" />
+              <DashboardStatCard icon={Users} label="Queue รอ" value={stats.queue_waiting} sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
             {/* ── Charts section ───────────────────────────────────────────── */}
@@ -199,21 +199,21 @@ export default function DashboardPage() {
                 }
               >
                 {chartData.length === 0 ? (
-                  <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
+                  <div className="h-full min-h-[240px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
                 ) : (
                   <ResponsiveContainer width="100%" height={280}>
                     <AreaChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.2} />
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
                           <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
                         </linearGradient>
                         <linearGradient id="gradOut" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor="#10b981" stopOpacity={0.2} />
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                           <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
                         </linearGradient>
                         <linearGradient id="gradRet" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor="#94a3b8" stopOpacity={0.12} />
+                          <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
                           <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
                         </linearGradient>
                       </defs>
@@ -223,9 +223,9 @@ export default function DashboardPage() {
                       <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                       <Tooltip content={<AreaTooltip />} />
                       <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
-                      <Area type="monotone" dataKey="รับเข้า"  stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)"  dot={false} activeDot={{ r: 4 }} />
+                      <Area type="monotone" dataKey="รับเข้า" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)" dot={false} activeDot={{ r: 4 }} />
                       <Area type="monotone" dataKey="จ่ายออก" stroke="#10b981" strokeWidth={2.5} fill="url(#gradOut)" dot={false} activeDot={{ r: 4 }} />
-                      <Area type="monotone" dataKey="คืนยา"   stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
+                      <Area type="monotone" dataKey="คืนยา" stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
