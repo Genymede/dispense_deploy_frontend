@@ -14,7 +14,7 @@ import {
   Plus, Package, Trash2, RefreshCw,
   Shield, ShieldX, ShieldAlert, ShieldCheck, Wand2,
   Eye, AlertTriangle, CheckCircle2, Loader2, Printer,
-  PhoneCall, ClipboardCheck,
+  PhoneCall, ClipboardCheck, RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate, fmtTime } from '@/lib/dateUtils';
@@ -214,6 +214,13 @@ export default function DispensePage() {
   // mock
   const [mockCount, setMockCount] = useState(1);
   const [mocking, setMocking] = useState(false);
+
+  // return prescription
+  const [returnRx, setReturnRx] = useState<any | null>(null);
+  const [returnItems, setReturnItems] = useState<{ med_sid: number; name: string; dispensed_qty: number; return_qty: number }[]>([]);
+  const [returnNote, setReturnNote] = useState('');
+  const [returning, setReturning] = useState(false);
+  const [returnLoading, setReturnLoading] = useState(false);
 
   // ── Load list ──────────────────────────────────────────────────────────────
   const loadList = useCallback(async () => {
@@ -571,6 +578,52 @@ export default function DispensePage() {
     finally { setDrawerLoad(false); }
   };
 
+  // ── Return prescription ───────────────────────────────────────────────────
+  const openReturn = async (rx: any) => {
+    setReturnRx(rx);
+    setReturnNote('');
+    setReturnItems([]);
+    setReturnLoading(true);
+    try {
+      const existing = (drawerFull && drawerRx?.prescription_id === rx.prescription_id)
+        ? drawerFull
+        : (await api.get(`/dispense/${rx.prescription_id}/full`)).data;
+      setReturnItems((existing.items || []).map((it: any) => ({
+        med_sid: it.med_sid,
+        name: it.med_showname || it.med_name,
+        dispensed_qty: Number(it.quantity),
+        return_qty: Number(it.quantity),
+      })));
+    } catch {
+      toast.error('โหลดรายการยาไม่สำเร็จ');
+      setReturnRx(null);
+    } finally { setReturnLoading(false); }
+  };
+
+  const handleReturn = async () => {
+    const toReturn = returnItems.filter(i => i.return_qty > 0);
+    if (!toReturn.length) { toast.error('กรุณาระบุจำนวนที่คืนอย่างน้อย 1 รายการ'); return; }
+    for (const it of toReturn) {
+      if (it.return_qty > it.dispensed_qty) {
+        toast.error(`จำนวนที่คืน "${it.name}" เกินกว่าที่จ่ายออกไป (${it.dispensed_qty} หน่วย)`);
+        return;
+      }
+    }
+    setReturning(true);
+    try {
+      await dispenseApi.returnPrescription(returnRx.prescription_id, {
+        items: toReturn.map(i => ({ med_sid: i.med_sid, quantity: i.return_qty })),
+        note: returnNote || undefined,
+        performed_by: user?.id,
+      });
+      toast.success('คืนยาเรียบร้อย — ยาถูกเพิ่มกลับเข้าคลังในล็อต RET');
+      setReturnRx(null);
+      setDrawerRx(null); setDrawerFull(null);
+      void Promise.all([loadList(), loadDispensed()]);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setReturning(false); }
+  };
+
   // ── Cancel ────────────────────────────────────────────────────────────────
   const handleCancel = async (id: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -848,6 +901,12 @@ export default function DispensePage() {
                                   </button>
                                 </>
                               )}
+                              {rx.status === 'dispensed' && (
+                                <button onClick={e => { e.stopPropagation(); openReturn(rx); }}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 text-xs font-medium transition-colors">
+                                  <RotateCcw size={12} /> คืนยา
+                                </button>
+                              )}
                               {rx.status === 'dispensed' && rxq && (
                                 <button
                                   onClick={e => { e.stopPropagation(); handleQueueCall(rxq); }}
@@ -926,15 +985,21 @@ export default function DispensePage() {
                               {fmtTime(rx.dispensed_at)}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              {dq && (dq.status === 'waiting' || dq.status === 'called') && (
-                                <button
-                                  onClick={e => { e.stopPropagation(); handleQueueCall(dq); }}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition-colors ml-auto"
-                                  title={`เรียกคิว ${dq.queue_number}`}
-                                >
-                                  <PhoneCall size={12} /> เรียกคิว {dq.queue_number}
+                              <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                                <button onClick={() => openReturn(rx)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 text-xs font-medium transition-colors">
+                                  <RotateCcw size={12} /> คืนยา
                                 </button>
-                              )}
+                                {dq && (dq.status === 'waiting' || dq.status === 'called') && (
+                                  <button
+                                    onClick={e => { e.stopPropagation(); handleQueueCall(dq); }}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition-colors"
+                                    title={`เรียกคิว ${dq.queue_number}`}
+                                  >
+                                    <PhoneCall size={12} /> เรียกคิว {dq.queue_number}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1606,11 +1671,92 @@ export default function DispensePage() {
                 </Button>
               </DrawerSection>
             )}
+            {drawerFull.status === 'dispensed' && (
+              <DrawerSection title="">
+                <Button variant="secondary" className="w-full flex items-center justify-center gap-2"
+                  onClick={() => { setDrawerRx(null); setDrawerFull(null); openReturn(drawerFull); }}>
+                  <RotateCcw size={14} /> คืนยา
+                </Button>
+              </DrawerSection>
+            )}
           </>
         ) : (
           drawerRx && <div className="flex justify-center py-12"><Spinner size={24} /></div>
         )}
       </DetailDrawer>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          RETURN PRESCRIPTION MODAL
+      ════════════════════════════════════════════════════════════════════ */}
+      <Modal
+        open={!!returnRx}
+        onClose={() => { if (!returning) setReturnRx(null); }}
+        size="lg"
+        title={`คืนยา — ${returnRx?.prescription_no ?? ''}`}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setReturnRx(null)} disabled={returning}>ยกเลิก</Button>
+            <Button
+              onClick={handleReturn}
+              loading={returning}
+              disabled={returnLoading || returning}
+              variant="warning"
+            >
+              <RotateCcw size={14} className="mr-1" /> ยืนยันคืนยา
+            </Button>
+          </div>
+        }
+      >
+        {returnLoading ? (
+          <div className="flex justify-center py-8"><Spinner size={24} /></div>
+        ) : (
+          <div className="space-y-4">
+            {/* Lot info callout */}
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+              <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+              <span>ยาที่คืนจะสร้างล็อต <strong>RET-…</strong> ไม่มีวันหมดอายุ และถูกเลือกใช้ท้ายสุดตาม FEFO (ไม่กระทบล็อตที่มีวันหมดอายุ)</span>
+            </div>
+
+            {/* Item list */}
+            <div className="space-y-2">
+              {returnItems.map((it, i) => (
+                <div key={it.med_sid} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">{it.name}</p>
+                    <p className="text-xs text-slate-400">จ่ายออกไป {it.dispensed_qty} หน่วย</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-slate-500">คืน</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={it.dispensed_qty}
+                      value={it.return_qty}
+                      onChange={e => {
+                        const v = Math.min(Number(e.target.value), it.dispensed_qty);
+                        setReturnItems(prev => prev.map((x, j) => j === i ? { ...x, return_qty: v < 0 ? 0 : v } : x));
+                      }}
+                      className="w-20 text-center rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    />
+                    <span className="text-xs text-slate-400">หน่วย</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Note */}
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">หมายเหตุ (ไม่บังคับ)</label>
+              <Textarea
+                value={returnNote}
+                onChange={e => setReturnNote(e.target.value)}
+                placeholder="เหตุผลในการคืนยา..."
+                rows={2}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <PatientDrawer
         patientId={patientDrawerId}

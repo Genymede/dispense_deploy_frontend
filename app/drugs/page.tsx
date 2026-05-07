@@ -5,7 +5,8 @@ import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { drugApi, stockApi, api, type Drug, type MedTableItem, type StockLot } from '@/lib/api';
-import { Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine } from 'lucide-react';
+import { Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine, RotateCcw, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 import SearchSelect from '@/components/SearchSelect';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -28,6 +29,7 @@ const emptyForm = {
 };
 
 export default function DrugsPage() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [total, setTotal] = useState(0);
@@ -67,6 +69,14 @@ export default function DrugsPage() {
   const [receiveSaving, setReceiveSaving] = useState(false);
   const rf = (k: string, v: any) => setReceiveForm(p => ({ ...p, [k]: v }));
 
+  // ad-hoc stock return
+  const emptyReturnForm = { med_sid: 0, med_label: '', quantity: '', ward_from: '', reference_no: '', note: '' };
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnForm, setReturnForm] = useState(emptyReturnForm);
+  const [returnResetKey, setReturnResetKey] = useState(0);
+  const [returnSaving, setReturnSaving] = useState(false);
+  const rrf = (k: string, v: any) => setReturnForm(p => ({ ...p, [k]: v }));
+
   const handleReceive = async () => {
     if (!receiveForm.med_sid) { toast.error('กรุณาเลือกยา'); return; }
     if (!receiveForm.quantity || Number(receiveForm.quantity) <= 0) { toast.error('กรุณาระบุจำนวน'); return; }
@@ -96,6 +106,28 @@ export default function DrugsPage() {
       }
     } catch (e: any) { toast.error(e.message); }
     finally { setReceiveSaving(false); }
+  };
+
+  const handleReturnStock = async () => {
+    if (!returnForm.med_sid) { toast.error('กรุณาเลือกยา'); return; }
+    if (!returnForm.quantity || Number(returnForm.quantity) <= 0) { toast.error('กรุณาระบุจำนวน'); return; }
+    setReturnSaving(true);
+    try {
+      await stockApi.returnDrug({
+        med_sid: returnForm.med_sid,
+        quantity: Number(returnForm.quantity),
+        ward_from: returnForm.ward_from || undefined,
+        reference_no: returnForm.reference_no || undefined,
+        performed_by: user?.id,
+        note: returnForm.note || undefined,
+      });
+      toast.success('บันทึกการคืนยาแล้ว — ยาถูกเพิ่มกลับเข้าคลังในล็อต RET');
+      setShowReturnModal(false);
+      setReturnForm(emptyReturnForm);
+      setReturnResetKey(k => k + 1);
+      await loadDrugs();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setReturnSaving(false); }
   };
 
   const loadDrugs = useCallback(async () => {
@@ -362,6 +394,10 @@ export default function DrugsPage() {
                         {/* จัดการ */}
                         <td className="px-4 py-2.5">
                           <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => { rrf('med_sid', d.med_sid); rrf('med_label', d.med_showname || d.med_name || ''); setShowReturnModal(true); }}
+                              className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-colors" title="คืนยา">
+                              <RotateCcw size={15} />
+                            </button>
                             <button onClick={() => setViewDrug(d)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary-600 transition-colors"><Eye size={15} /></button>
                             <button onClick={() => openEdit(d)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-amber-600 transition-colors"><Edit2 size={15} /></button>
                             <button onClick={() => setDeleteId(d.med_sid)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
@@ -602,6 +638,39 @@ export default function DrugsPage() {
             value={receiveForm.reference_no} onChange={e => rf('reference_no', e.target.value)} />
           <Textarea label="หมายเหตุ" rows={2}
             value={receiveForm.note} onChange={e => rf('note', e.target.value)} />
+        </div>
+      </Modal>
+
+      {/* ── RETURN STOCK MODAL ── */}
+      <Modal open={showReturnModal} onClose={() => { if (!returnSaving) setShowReturnModal(false); }}
+        title="คืนยา (ad-hoc)" size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowReturnModal(false)} disabled={returnSaving}>ยกเลิก</Button>
+            <Button variant="warning" onClick={handleReturnStock} loading={returnSaving}>
+              <RotateCcw size={14} className="mr-1" /> ยืนยันคืนยา
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+            <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+            <span>ยาที่คืนจะสร้างล็อต <strong>RET-…</strong> ไม่มีวันหมดอายุ และถูกเลือกใช้ท้ายสุดตาม FEFO</span>
+          </div>
+          <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+            initialDisplay={returnForm.med_label} resetKey={returnResetKey}
+            onSelect={d => { rrf('med_sid', d?.med_sid ?? 0); rrf('med_label', d ? (d.med_showname || d.med_name) : ''); }} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="จำนวนที่คืน" type="number" min="1" required
+              value={returnForm.quantity} onChange={e => rrf('quantity', e.target.value)} />
+            <Input label="แผนก/หอผู้ป่วย" placeholder="เช่น IPD-1"
+              value={returnForm.ward_from} onChange={e => rrf('ward_from', e.target.value)} />
+          </div>
+          <Input label="เลขอ้างอิง" placeholder="เช่น RX-2025-001"
+            value={returnForm.reference_no} onChange={e => rrf('reference_no', e.target.value)} />
+          <Textarea label="หมายเหตุ / เหตุผลการคืน" rows={2}
+            value={returnForm.note} onChange={e => rrf('note', e.target.value)} />
         </div>
       </Modal>
     </MainLayout>
