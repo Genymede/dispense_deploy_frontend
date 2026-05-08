@@ -643,6 +643,8 @@ export const patientApi = {
   getAll: (params?: { search?: string; page?: number; limit?: number }) =>
     api.get<{ data: any[]; total: number }>('/patients', { params }),
   getById: (id: number) => api.get<any>(`/patients/${id}`),
+  updatePregnancy: (id: number, is_pregnant: boolean) =>
+    api.patch(`/patients/${id}/pregnancy`, { is_pregnant }),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

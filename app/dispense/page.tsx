@@ -211,6 +211,8 @@ export default function DispensePage() {
   const [dispenseMetaChanged, setDispenseMetaChanged] = useState(false);
   const [dispenseMetaResetKey, setDispenseMetaResetKey] = useState(0);
 
+  const [updatingPregnancy, setUpdatingPregnancy] = useState(false);
+
   // mock
   const [mockCount, setMockCount] = useState(1);
   const [mocking, setMocking] = useState(false);
@@ -603,6 +605,24 @@ export default function DispensePage() {
     setPrintSelected(new Set(newItems.map((_: any, i: number) => i)));
     setDispenseItemsChanged(true);
     if (dispenseRx) runLiveSafety(dispenseRx.patient_id, newItems);
+  };
+
+  // ── Toggle pregnancy status ───────────────────────────────────────────────
+  const handleTogglePregnancy = async () => {
+    if (!dispenseRx?.patient_id || !dispensePatientDetail || updatingPregnancy) return;
+    const newVal = !dispensePatientDetail.is_pregnant;
+    setDispensePatientDetail((prev: any) => ({ ...prev, is_pregnant: newVal }));
+    setUpdatingPregnancy(true);
+    try {
+      await patientApi.updatePregnancy(dispenseRx.patient_id, newVal);
+      safetyApi.check(dispenseRx.prescription_id).then(r => setSafetyResult(r.data)).catch(() => {});
+      runLiveSafety(dispenseRx.patient_id, dispenseItems);
+    } catch {
+      setDispensePatientDetail((prev: any) => ({ ...prev, is_pregnant: !newVal }));
+      toast.error('ไม่สามารถบันทึกสถานะตั้งครรภ์ได้');
+    } finally {
+      setUpdatingPregnancy(false);
+    }
   };
 
   // ── Open detail drawer ────────────────────────────────────────────────────
@@ -1381,6 +1401,22 @@ export default function DispensePage() {
                     <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel((dispenseRx as any).treatment_right, (dispenseRx as any).treatment_right_note) ?? '—'}</span></div>
                     {dispensePatientDetail.PMH && (
                       <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{dispensePatientDetail.PMH}</span></div>
+                    )}
+                    {dispensePatientDetail.gender === 'F' && (
+                      <div className="col-span-4 flex items-center gap-2 pt-0.5">
+                        <span className="text-slate-400">สถานะตั้งครรภ์:</span>
+                        <button
+                          onClick={handleTogglePregnancy}
+                          disabled={updatingPregnancy}
+                          className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+                            dispensePatientDetail.is_pregnant
+                              ? 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          }`}
+                        >
+                          🤰 {dispensePatientDetail.is_pregnant ? 'ตั้งครรภ์' : 'ไม่ตั้งครรภ์'}
+                        </button>
+                      </div>
                     )}
                   </div>
                   {(dispensePatientDetail.weight || dispensePatientDetail.height || dispensePatientDetail.bmi) && (
