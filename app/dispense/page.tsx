@@ -1619,8 +1619,8 @@ export default function DispensePage() {
               </button>
               <DrawerGrid items={[
                 { label: 'กรุ๊ปเลือด', value: drawerFull.blood_group ?? '—' },
-                { 
-                  label: 'เพศ', 
+                {
+                  label: 'เพศ',
                   value: (() => {
                     const g = String(drawerFull.gender || '').toUpperCase();
                     if (g === 'M') return 'ชาย';
@@ -1631,6 +1631,7 @@ export default function DispensePage() {
                 { label: 'เบอร์โทร', value: drawerFull.phone ?? '—' },
                 { label: 'เลขประจำตัว', value: drawerFull.national_id ?? '—' },
                 { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(drawerFull.treatment_right, drawerFull.treatment_right_note) ?? '—' },
+                { label: 'สถานะใบสั่งยา', value: <span className="font-medium">{STATUS_TH[drawerFull.status] ?? drawerFull.status}</span> },
               ]} />
             </DrawerSection>
 
@@ -1638,11 +1639,11 @@ export default function DispensePage() {
               <DrawerGrid items={[
                 { label: 'แพทย์ผู้สั่งยา', value: drawerFull.doctor_name || '—' },
                 { label: 'แผนกที่สั่งยา', value: drawerFull.ward ?? '—' },
-                { label: 'วินิจฉัย', value: drawerFull.diagnosis ?? '—', span: true },
-                { label: 'PMH', value: drawerFull.PMH ?? '—', span: true },
                 { label: 'วันที่สร้าง', value: fmtDate(drawerFull.created_at, true) },
                 { label: 'จ่ายเมื่อ', value: fmtDate(drawerFull.dispensed_at, true) },
                 { label: 'ผู้จ่ายยา', value: drawerFull.dispensed_by_name || '—' },
+                { label: 'วินิจฉัย', value: drawerFull.diagnosis ?? '—', span: true },
+                { label: 'PMH', value: drawerFull.PMH ?? '—', span: true },
                 { label: 'หมายเหตุ', value: drawerFull.note ?? '—', span: true },
               ]} />
             </DrawerSection>

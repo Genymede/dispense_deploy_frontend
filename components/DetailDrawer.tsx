@@ -97,7 +97,7 @@ export function DrawerGrid({ items }: {
   const spanCls = isLg ? 'col-span-3' : 'col-span-2';
 
   return (
-    <div className={`grid ${gridCls} gap-2`}>
+    <div className={`grid ${gridCls} gap-2`} style={isLg ? { gridAutoFlow: 'dense' } : undefined}>
       {items.map(({ label, value, span }, i) => (
         <div key={i} className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? spanCls : ''}`}>
           <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
