@@ -1391,7 +1391,7 @@ export default function DispensePage() {
 
               {/* demographics + vitals */}
               {dispensePatientDetail && (
-                <div className="px-4 py-3 space-y-3">
+                <div className="px-4 pt-3 space-y-3">
                   <div className="grid grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
                     <div><span className="text-slate-400">เพศ: </span><span className="font-medium">{dispensePatientDetail.gender === 'M' ? 'ชาย' : dispensePatientDetail.gender === 'F' ? 'หญิง' : '—'}</span></div>
                     <div><span className="text-slate-400">อายุ: </span><span className="font-medium">{dispensePatientDetail.age_y ?? '—'} ปี {dispensePatientDetail.age_m ?? ''} เดือน</span></div>
@@ -1428,12 +1428,9 @@ export default function DispensePage() {
                   )}
                 </div>
               )}
-            </div>
 
-            {/* ══ 2. Prescription meta ══════════════════════════════════════ */}
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">ข้อมูลใบสั่งยา</p>
-              <div className="grid grid-cols-2 gap-3">
+              {/* prescription meta — ต่อจาก demographics ในการ์ดเดียวกัน */}
+              <div className="px-4 py-3 border-t border-slate-100 grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-slate-600 block mb-1.5">แพทย์ผู้สั่ง</label>
                   <SearchSelect type="user" label="" resetKey={dispenseMetaResetKey}
@@ -1668,16 +1665,9 @@ export default function DispensePage() {
                 { label: 'เลขประจำตัว', value: drawerFull.national_id ?? '—' },
                 { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(drawerFull.treatment_right, drawerFull.treatment_right_note) ?? '—' },
                 { label: 'สถานะใบสั่งยา', value: <span className="font-medium">{STATUS_TH[drawerFull.status] ?? drawerFull.status}</span> },
-              ]} />
-            </DrawerSection>
-
-            <DrawerSection title="รายละเอียดใบสั่งยา">
-              <DrawerGrid items={[
                 { label: 'แพทย์ผู้สั่งยา', value: drawerFull.doctor_name || '—' },
                 { label: 'แผนกที่สั่งยา', value: drawerFull.ward ?? '—' },
                 { label: 'วันที่สร้าง', value: fmtDate(drawerFull.created_at, true) },
-                { label: 'จ่ายเมื่อ', value: fmtDate(drawerFull.dispensed_at, true) },
-                { label: 'ผู้จ่ายยา', value: drawerFull.dispensed_by_name || '—' },
                 { label: 'วินิจฉัย', value: drawerFull.diagnosis ?? '—', span: true },
                 { label: 'PMH', value: drawerFull.PMH ?? '—', span: true },
                 { label: 'หมายเหตุ', value: drawerFull.note ?? '—', span: true },
