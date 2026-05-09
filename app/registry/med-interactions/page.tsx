@@ -55,11 +55,13 @@ export default function MedInteractionsPage() {
   const [reload,    setReload]    = useState(0);
   const [resetKey,  setResetKey]  = useState(0);
   const [drawer,    setDrawer]    = useState<any | null>(null);
+  const [errors,    setErrors]    = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
 
   const openAdd = () => {
     setForm({ ...emptyForm, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
-    setEditingId(null); setResetKey(k=>k+1); setShowModal(true);
+    setEditingId(null); setResetKey(k=>k+1); setErrors({}); setShowModal(true);
   };
   const openEdit = (row: any) => {
     setForm({ med_id_1: row.med_id_1, drug1_label: row.drug1_name||'',
@@ -68,14 +70,16 @@ export default function MedInteractionsPage() {
       evidence_level: row.evidence_level||'', source_reference: row.source_reference||'',
       interaction_type: row.interaction_type||'unknown',
       recorded_by_id: row.recorded_by ?? null, recorded_by_label: row.recorded_by_name ?? '' });
-    setEditingId(row.interaction_id); setResetKey(k=>k+1); setShowModal(true);
+    setEditingId(row.interaction_id); setResetKey(k=>k+1); setErrors({}); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.med_id_1)    { toast.error('กรุณาเลือกยาตัวที่ 1'); return; }
-    if (!form.med_id_2)    { toast.error('กรุณาเลือกยาตัวที่ 2'); return; }
-    if (form.med_id_1 === form.med_id_2) { toast.error('ต้องเป็นยาคนละชนิด'); return; }
-    if (!form.description) { toast.error('กรุณากรอกคำอธิบาย'); return; }
+    const errs: Record<string,string> = {};
+    if (!form.med_id_1) errs.med_id_1 = 'กรุณาเลือกยาตัวที่ 1';
+    if (!form.med_id_2) errs.med_id_2 = 'กรุณาเลือกยาตัวที่ 2';
+    if (form.med_id_1 && form.med_id_2 && form.med_id_1 === form.med_id_2) errs.med_id_2 = 'ต้องเป็นยาคนละชนิด';
+    if (!form.description.trim()) errs.description = 'กรุณากรอกคำอธิบาย';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = { med_id_1: form.med_id_1, med_id_2: form.med_id_2,
@@ -86,7 +90,10 @@ export default function MedInteractionsPage() {
       if (editingId) { await crudApi.updateInteraction(editingId, payload); toast.success('แก้ไขแล้ว'); }
       else           { await crudApi.createInteraction(payload);            toast.success('เพิ่มแล้ว'); }
       setShowModal(false); setReload(r=>r+1);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      if (!editingId && e.message?.includes('มีอยู่แล้ว')) setErrors({ med_id_2: e.message });
+      else toast.error(e.message);
+    }
     finally { setSaving(false); }
   };
 
@@ -109,16 +116,24 @@ export default function MedInteractionsPage() {
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ปฏิกิริยาระหว่างยา" editingId={editingId} onSave={handleSave} saving={saving}>
         <div className="grid grid-cols-2 gap-4">
-          <SearchSelect type="drug" label="ยา 1" required initialDisplay={form.drug1_label} resetKey={resetKey}
-            onSelect={d => { f('med_id_1', d?.med_id??0); f('drug1_label', d?.med_name??''); }} disabled={!!editingId} />
-          <SearchSelect type="drug" label="ยา 2" required initialDisplay={form.drug2_label} resetKey={resetKey}
-            onSelect={d => { f('med_id_2', d?.med_id??0); f('drug2_label', d?.med_name??''); }} disabled={!!editingId} />
+          <div>
+            <SearchSelect type="drug" label="ยา 1" required initialDisplay={form.drug1_label} resetKey={resetKey}
+              onSelect={d => { f('med_id_1', d?.med_id??0); f('drug1_label', d?.med_name??''); clearErr('med_id_1'); }} disabled={!!editingId} />
+            {errors.med_id_1 && <p className="mt-1 text-xs text-red-500">{errors.med_id_1}</p>}
+          </div>
+          <div>
+            <SearchSelect type="drug" label="ยา 2" required initialDisplay={form.drug2_label} resetKey={resetKey}
+              onSelect={d => { f('med_id_2', d?.med_id??0); f('drug2_label', d?.med_name??''); clearErr('med_id_2'); }} disabled={!!editingId} />
+            {errors.med_id_2 && <p className="mt-1 text-xs text-red-500">{errors.med_id_2}</p>}
+          </div>
           <Select label="ประเภท" value={form.interaction_type} onChange={e => f('interaction_type', e.target.value)}
             options={Object.entries(IT).map(([v,{label}]) => ({value:v,label}))} />
           <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
             placeholder="เลือก" options={['mild','moderate','severe'].map(s=>({value:s,label:s}))} />
           <div className="col-span-2">
-            <Textarea label="คำอธิบาย" required value={form.description} onChange={e => f('description', e.target.value)} rows={3} />
+            <Textarea label="คำอธิบาย" required value={form.description}
+              onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
+              error={errors.description} />
           </div>
           <TextInput label="ระดับหลักฐาน" value={form.evidence_level} onChange={(v: string) => f('evidence_level', v)} placeholder="Level A, RCT..." />
           <TextInput label="แหล่งอ้างอิง" value={form.source_reference} onChange={(v: string) => f('source_reference', v)} placeholder="Lexicomp, Medscape..." />

@@ -50,6 +50,7 @@ export default function DrugsPage() {
   const [viewLots, setViewLots] = useState<StockLot[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string,string>>({});
 
   // form state
   const [form, setForm] = useState(emptyForm);
@@ -67,7 +68,9 @@ export default function DrugsPage() {
   const [receiveForm, setReceiveForm] = useState(emptyReceiveForm);
   const [receiveResetKey, setReceiveResetKey] = useState(0);
   const [receiveSaving, setReceiveSaving] = useState(false);
+  const [receiveErrors, setReceiveErrors] = useState<Record<string,string>>({});
   const rf = (k: string, v: any) => setReceiveForm(p => ({ ...p, [k]: v }));
+  const clearRE = (k: string) => { if (receiveErrors[k]) setReceiveErrors(p => ({ ...p, [k]: '' })); };
 
   // ad-hoc stock return
   const emptyReturnForm = { med_sid: 0, med_label: '', quantity: '', ward_from: '', reference_no: '', note: '' };
@@ -75,11 +78,15 @@ export default function DrugsPage() {
   const [returnForm, setReturnForm] = useState(emptyReturnForm);
   const [returnResetKey, setReturnResetKey] = useState(0);
   const [returnSaving, setReturnSaving] = useState(false);
+  const [returnErrors, setReturnErrors] = useState<Record<string,string>>({});
   const rrf = (k: string, v: any) => setReturnForm(p => ({ ...p, [k]: v }));
+  const clearRRE = (k: string) => { if (returnErrors[k]) setReturnErrors(p => ({ ...p, [k]: '' })); };
 
   const handleReceive = async () => {
-    if (!receiveForm.med_sid) { toast.error('กรุณาเลือกยา'); return; }
-    if (!receiveForm.quantity || Number(receiveForm.quantity) <= 0) { toast.error('กรุณาระบุจำนวน'); return; }
+    const errs: Record<string,string> = {};
+    if (!receiveForm.med_sid) errs.med_sid = 'กรุณาเลือกยา';
+    if (!receiveForm.quantity || Number(receiveForm.quantity) <= 0) errs.quantity = 'กรุณาระบุจำนวนให้มากกว่า 0';
+    if (Object.keys(errs).length) { setReceiveErrors(errs); return; }
     setReceiveSaving(true);
     try {
       const res = await stockApi.receiveFromMain({
@@ -109,8 +116,10 @@ export default function DrugsPage() {
   };
 
   const handleReturnStock = async () => {
-    if (!returnForm.med_sid) { toast.error('กรุณาเลือกยา'); return; }
-    if (!returnForm.quantity || Number(returnForm.quantity) <= 0) { toast.error('กรุณาระบุจำนวน'); return; }
+    const errs: Record<string,string> = {};
+    if (!returnForm.med_sid) errs.med_sid = 'กรุณาเลือกยา';
+    if (!returnForm.quantity || Number(returnForm.quantity) <= 0) errs.quantity = 'กรุณาระบุจำนวนให้มากกว่า 0';
+    if (Object.keys(errs).length) { setReturnErrors(errs); return; }
     setReturnSaving(true);
     try {
       await stockApi.returnDrug({
@@ -218,8 +227,10 @@ export default function DrugsPage() {
   };
 
   const handleSave = async () => {
-    if (!form.packaging_type) { toast.error('กรุณาเลือกรูปแบบบรรจุภัณฑ์'); return; }
-    if (!editingSid && !form.med_id) { toast.error('กรุณาเลือกยาจาก med_table'); return; }
+    const errs: Record<string,string> = {};
+    if (!form.packaging_type) errs.packaging_type = 'กรุณาเลือกรูปแบบบรรจุภัณฑ์';
+    if (!editingSid && !form.med_id) errs.med_id = 'กรุณาเลือกยาจากทะเบียนยา';
+    if (Object.keys(errs).length) { setFormErrors(errs); return; }
     setSaving(true);
     try {
       const payload: any = {
@@ -449,6 +460,7 @@ export default function DrugsPage() {
                   setSelectedMed(d);
                   setSelectedMedLabel(d.med_name);
                   f('med_id', d.med_id);
+                  if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
                   // auto-fill showname if empty
                   if (!form.med_showname) f('med_showname', d.med_name);
                 } else {
@@ -458,11 +470,14 @@ export default function DrugsPage() {
                 }
               }}
             />
+            {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
           </div>
         )}
         <div className="grid grid-cols-2 gap-4">
-          <Select label="รูปแบบบรรจุ" required value={form.packaging_type} onChange={(e) => f('packaging_type', e.target.value)}
-            options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ" />
+          <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
+            onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
+            options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
+            error={formErrors.packaging_type} />
           <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
           <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
           <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
@@ -605,7 +620,7 @@ export default function DrugsPage() {
         message="คุณแน่ใจหรือไม่ที่จะลบรายการยานี้ออกจากคลัง?"
         confirmLabel="ลบ" onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
 
-      <Modal open={showReceiveModal} onClose={() => setShowReceiveModal(false)}
+      <Modal open={showReceiveModal} onClose={() => { setShowReceiveModal(false); setReceiveErrors({}); }}
         title="รับยาจากคลังหลัก" size="md"
         footer={
           <>
@@ -615,12 +630,17 @@ export default function DrugsPage() {
         }
       >
         <div className="space-y-4">
-          <SearchSelect type="subwarehouse" label="ยาในคลัง" required
-            initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
-            onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); }} />
+          <div>
+            <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+              initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
+              onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRE('med_sid'); }} />
+            {receiveErrors.med_sid && <p className="mt-1 text-xs text-red-500">{receiveErrors.med_sid}</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="จำนวนที่รับ" type="number" min="1" required
-              value={receiveForm.quantity} onChange={e => rf('quantity', e.target.value)} />
+              value={receiveForm.quantity}
+              onChange={e => { rf('quantity', e.target.value); clearRE('quantity'); }}
+              error={receiveErrors.quantity} />
             <Input label="เลข Lot" value={receiveForm.lot_number}
               onChange={e => rf('lot_number', e.target.value)} />
             <Input label="วันหมดอายุ" type="date"
@@ -642,7 +662,7 @@ export default function DrugsPage() {
       </Modal>
 
       {/* ── RETURN STOCK MODAL ── */}
-      <Modal open={showReturnModal} onClose={() => { if (!returnSaving) setShowReturnModal(false); }}
+      <Modal open={showReturnModal} onClose={() => { if (!returnSaving) { setShowReturnModal(false); setReturnErrors({}); } }}
         title="คืนยา (ad-hoc)" size="md"
         footer={
           <>
@@ -658,12 +678,17 @@ export default function DrugsPage() {
             <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
             <span>ยาที่คืนจะสร้างล็อต <strong>RET-…</strong> ไม่มีวันหมดอายุ และถูกเลือกใช้ท้ายสุดตาม FEFO</span>
           </div>
-          <SearchSelect type="subwarehouse" label="ยาในคลัง" required
-            initialDisplay={returnForm.med_label} resetKey={returnResetKey}
-            onSelect={d => { rrf('med_sid', d?.med_sid ?? 0); rrf('med_label', d ? (d.med_showname || d.med_name) : ''); }} />
+          <div>
+            <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+              initialDisplay={returnForm.med_label} resetKey={returnResetKey}
+              onSelect={d => { rrf('med_sid', d?.med_sid ?? 0); rrf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRRE('med_sid'); }} />
+            {returnErrors.med_sid && <p className="mt-1 text-xs text-red-500">{returnErrors.med_sid}</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="จำนวนที่คืน" type="number" min="1" required
-              value={returnForm.quantity} onChange={e => rrf('quantity', e.target.value)} />
+              value={returnForm.quantity}
+              onChange={e => { rrf('quantity', e.target.value); clearRRE('quantity'); }}
+              error={returnErrors.quantity} />
             <Input label="แผนก/หอผู้ป่วย" placeholder="เช่น IPD-1"
               value={returnForm.ward_from} onChange={e => rrf('ward_from', e.target.value)} />
           </div>

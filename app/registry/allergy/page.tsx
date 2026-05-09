@@ -58,11 +58,13 @@ export default function AllergyPage() {
   const [reload, setReload] = useState(0);
   const [resetKey, setResetKey] = useState(0);
   const [drawer, setDrawer] = useState<any | null>(null);
+  const [errors, setErrors] = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
 
   const openAdd = () => {
     setForm({ ...emptyForm, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
-    setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
+    setEditingId(null); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
   };
   const openEdit = (row: any) => {
     setForm({
@@ -73,13 +75,15 @@ export default function AllergyPage() {
       reported_at: row.reported_at ? row.reported_at.slice(0, 10) : '',
       recorded_by_id: row.recorded_by ?? null, recorded_by_label: row.recorded_by_name ?? '',
     });
-    setEditingId(row.allr_id); setResetKey(k => k + 1); setShowModal(true);
+    setEditingId(row.allr_id); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.patient_id) { toast.error('กรุณาเลือกผู้ป่วย'); return; }
-    if (!form.med_id) { toast.error('กรุณาเลือกยา'); return; }
-    if (!form.symptoms) { toast.error('กรุณากรอกอาการ'); return; }
+    const errs: Record<string,string> = {};
+    if (!form.patient_id) errs.patient_id = 'กรุณาเลือกผู้ป่วย';
+    if (!form.med_id) errs.med_id = 'กรุณาเลือกยา';
+    if (!form.symptoms.trim()) errs.symptoms = 'กรุณากรอกอาการ';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = {
@@ -91,7 +95,10 @@ export default function AllergyPage() {
       if (editingId) { await crudApi.updateAllergy(editingId, payload); toast.success('แก้ไขเรียบร้อย'); }
       else { await crudApi.createAllergy(payload); toast.success('เพิ่มเรียบร้อย'); }
       setShowModal(false); setReload(r => r + 1);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      if (!editingId && e.message?.includes('มีอยู่แล้ว')) setErrors({ med_id: e.message });
+      else toast.error(e.message);
+    }
     finally { setSaving(false); }
   };
 
@@ -118,14 +125,22 @@ export default function AllergyPage() {
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="รายการแพ้ยา" editingId={editingId} onSave={handleSave} saving={saving}>
         <FormGrid>
-          <SearchSelect type="patient" label="ผู้ป่วย" required
-            initialDisplay={form.patient_label} resetKey={resetKey}
-            onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
-          <SearchSelect type="drug" label="ยาที่แพ้" required
-            initialDisplay={form.med_label} resetKey={resetKey}
-            onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
+          <div>
+            <SearchSelect type="patient" label="ผู้ป่วย" required
+              initialDisplay={form.patient_label} resetKey={resetKey}
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
+            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
+          </div>
+          <div>
+            <SearchSelect type="drug" label="ยาที่แพ้" required
+              initialDisplay={form.med_label} resetKey={resetKey}
+              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+          </div>
           <div className="sm:col-span-2">
-            <Textarea label="อาการ" required value={form.symptoms} onChange={e => f('symptoms', e.target.value)} rows={2} />
+            <Textarea label="อาการ" required value={form.symptoms}
+              onChange={e => { f('symptoms', e.target.value); clearErr('symptoms'); }} rows={2}
+              error={errors.symptoms} />
           </div>
           <div className="sm:col-span-2">
             <Textarea label="รายละเอียด" value={form.description} onChange={e => f('description', e.target.value)} rows={2} />

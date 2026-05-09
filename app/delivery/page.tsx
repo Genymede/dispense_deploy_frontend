@@ -206,6 +206,7 @@ export default function DeliveryPage() {
       unit_price: drug.unit_price ?? 0,
     };
     setForm(p => ({ ...p, medicine_list: [...p.medicine_list, item] }));
+    if (errors.medicine_list) setErrors(p => ({ ...p, medicine_list: '' }));
   };
 
   const removeDrug = (med_sid: number) =>
@@ -217,10 +218,12 @@ export default function DeliveryPage() {
     setForm(p => ({ ...p, medicine_list: p.medicine_list.map(m => m.med_sid === med_sid ? { ...m, quantity: Math.max(1, qty) } : m) }));
   };
 
+  const [errors, setErrors] = useState<Record<string,string>>({});
+
   const openAdd = () => {
     setForm(emptyForm); setEditingId(null); setResetKey(k => k + 1);
     setDrugSearch(''); setDrugResults([]); setPatientAllergies([]);
-    setShowModal(true);
+    setErrors({}); setShowModal(true);
   };
 
   const openEdit = (row: any) => {
@@ -240,19 +243,19 @@ export default function DeliveryPage() {
     setEditingId(row.delivery_id); setResetKey(k => k + 1);
     setDrugSearch(''); setDrugResults([]);
     loadAllergies(row.patient_id);
-    setShowModal(true);
+    setErrors({}); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.patient_id) { toast.error('กรุณาเลือกผู้ป่วย'); return; }
-    if (!form.delivery_method) { toast.error('กรุณาเลือกวิธีจัดส่ง'); return; }
-    if (!form.receiver_name) { toast.error('กรุณากรอกชื่อผู้รับ'); return; }
-    if (!form.receiver_phone) { toast.error('กรุณากรอกเบอร์โทร'); return; }
-    if (!/^0\d{8,9}$/.test(form.receiver_phone.replace(/[-\s]/g, ''))) {
-      toast.error('เบอร์โทรไม่ถูกต้อง (ตัวอย่าง: 0812345678)'); return;
-    }
-    if (!form.address) { toast.error('กรุณากรอกที่อยู่'); return; }
-    if (!form.medicine_list || form.medicine_list.length === 0) { toast.error('กรุณาเพิ่มรายการยาอย่างน้อย 1 รายการ'); return; }
+    const errs: Record<string,string> = {};
+    if (!form.patient_id) errs.patient_id = 'กรุณาเลือกผู้ป่วย';
+    if (!form.delivery_method) errs.delivery_method = 'กรุณาเลือกวิธีจัดส่ง';
+    if (!form.receiver_name.trim()) errs.receiver_name = 'กรุณากรอกชื่อผู้รับ';
+    if (!form.receiver_phone) errs.receiver_phone = 'กรุณากรอกเบอร์โทร';
+    else if (!/^0\d{8,9}$/.test(form.receiver_phone.replace(/[-\s]/g, ''))) errs.receiver_phone = 'เบอร์โทรไม่ถูกต้อง (ตัวอย่าง: 0812345678)';
+    if (!form.address.trim()) errs.address = 'กรุณากรอกที่อยู่';
+    if (!form.medicine_list || form.medicine_list.length === 0) errs.medicine_list = 'กรุณาเพิ่มรายการยาอย่างน้อย 1 รายการ';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setSaving(true);
     try {
@@ -323,25 +326,32 @@ export default function DeliveryPage() {
           <div className="sm:col-span-2">
             <SearchSelect type="patient" label="ผู้ป่วย" required
               initialDisplay={form.patient_label} resetKey={resetKey}
-              onSelect={handleSelectPatient}
+              onSelect={p => { handleSelectPatient(p); if (errors.patient_id) setErrors(prev => ({ ...prev, patient_id: '' })); }}
               disabled={!!editingId} />
+            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
           </div>
 
           {/* Delivery info */}
           <Select label="วิธีจัดส่ง" required value={form.delivery_method}
-            onChange={e => f('delivery_method', e.target.value)}
+            onChange={e => { f('delivery_method', e.target.value); if (errors.delivery_method) setErrors(p => ({ ...p, delivery_method: '' })); }}
             placeholder="เลือกวิธี"
-            options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))} />
+            options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))}
+            error={errors.delivery_method} />
           {editingId && (
             <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
               options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />
           )}
 
-          <Input label="ชื่อผู้รับ" required value={form.receiver_name} onChange={e => f('receiver_name', e.target.value)} />
-          <Input label="เบอร์โทรผู้รับ" required value={form.receiver_phone} onChange={e => f('receiver_phone', e.target.value)} />
+          <Input label="ชื่อผู้รับ" required value={form.receiver_name}
+            onChange={e => { f('receiver_name', e.target.value); if (errors.receiver_name) setErrors(p => ({ ...p, receiver_name: '' })); }}
+            error={errors.receiver_name} />
+          <Input label="เบอร์โทรผู้รับ" required value={form.receiver_phone}
+            onChange={e => { f('receiver_phone', e.target.value); if (errors.receiver_phone) setErrors(p => ({ ...p, receiver_phone: '' })); }}
+            error={errors.receiver_phone} />
           <div className="sm:col-span-2">
             <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
-              onChange={e => f('address', e.target.value)} rows={2} />
+              onChange={e => { f('address', e.target.value); if (errors.address) setErrors(p => ({ ...p, address: '' })); }}
+              rows={2} error={errors.address} />
           </div>
 
           {/* ผู้จัดส่ง — ซ่อนเมื่อมารับด้วยตนเอง */}
@@ -357,6 +367,7 @@ export default function DeliveryPage() {
           {/* Medicine List */}
           <div className="sm:col-span-2">
             <p className="text-sm font-medium text-slate-700 mb-2">รายการยา</p>
+            {errors.medicine_list && <p className="mb-2 text-xs text-red-500">{errors.medicine_list}</p>}
 
             {/* Drug search */}
             <div ref={searchRef} className="relative mb-3">

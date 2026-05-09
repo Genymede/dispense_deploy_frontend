@@ -46,7 +46,9 @@ export default function AdrPage() {
   const [reload,    setReload]    = useState(0);
   const [resetKey,  setResetKey]  = useState(0);
   const [drawer,    setDrawer]    = useState<any | null>(null);
+  const [errors,    setErrors]    = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
 
   const openAdd = () => {
     setForm({
@@ -54,7 +56,7 @@ export default function AdrPage() {
       reporter_id: user?.id ?? null,
       reporter_label: user?.email ?? '',
     });
-    setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
+    setEditingId(null); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
   };
 
   const openEdit = (row: any) => {
@@ -67,14 +69,17 @@ export default function AdrPage() {
       severity: row.severity || '', outcome: row.outcome || '',
       symptoms: row.symptoms || '', notes: row.notes || '',
     });
-    setEditingId(row.adr_id); setResetKey(k => k + 1); setShowModal(true);
+    setEditingId(row.adr_id); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.patient_id)  { toast.error('กรุณาเลือกผู้ป่วย'); return; }
-    if (!form.med_id)      { toast.error('กรุณาเลือกยา');       return; }
-    if (!form.description) { toast.error('กรุณากรอกคำอธิบาย');  return; }
-    if (!form.reported_at) { toast.error('กรุณาระบุวันที่');     return; }
+    const errs: Record<string,string> = {};
+    if (!form.patient_id) errs.patient_id = 'กรุณาเลือกผู้ป่วย';
+    if (!form.med_id) errs.med_id = 'กรุณาเลือกยา';
+    if (!form.description.trim()) errs.description = 'กรุณากรอกคำอธิบาย';
+    if (!form.reported_at) errs.reported_at = 'กรุณาระบุวันที่';
+    else if (new Date(form.reported_at) > new Date()) errs.reported_at = 'วันที่รายงานต้องไม่เกินวันปัจจุบัน';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = {
@@ -114,23 +119,32 @@ export default function AdrPage() {
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ADR" editingId={editingId} onSave={handleSave} saving={saving} size="lg">
         <FormGrid>
-          <SearchSelect type="patient" label="ผู้ป่วย" required
-            initialDisplay={form.patient_label} resetKey={resetKey}
-            onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
-          <SearchSelect type="drug" label="ยาที่เกิด ADR" required
-            initialDisplay={form.med_label} resetKey={resetKey}
-            onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
+          <div>
+            <SearchSelect type="patient" label="ผู้ป่วย" required
+              initialDisplay={form.patient_label} resetKey={resetKey}
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
+            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
+          </div>
+          <div>
+            <SearchSelect type="drug" label="ยาที่เกิด ADR" required
+              initialDisplay={form.med_label} resetKey={resetKey}
+              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+          </div>
           <SearchSelect type="user" label="ผู้รายงาน"
             initialDisplay={form.reporter_label} resetKey={resetKey}
             onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
           <Input label="วันที่รายงาน" required type="datetime-local"
-            value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
+            value={form.reported_at} onChange={e => { f('reported_at', e.target.value); clearErr('reported_at'); }}
+            error={errors.reported_at} />
           <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
             placeholder="เลือก" options={['mild','moderate','severe'].map(s => ({ value: s, label: s }))} />
           <Input label="ผลลัพธ์" value={form.outcome} onChange={e => f('outcome', e.target.value)}
             placeholder="recovered, not recovered..." />
           <div className="sm:col-span-2">
-            <Textarea label="คำอธิบาย" required value={form.description} onChange={e => f('description', e.target.value)} rows={3} />
+            <Textarea label="คำอธิบาย" required value={form.description}
+              onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
+              error={errors.description} />
           </div>
           <Textarea label="อาการ" value={form.symptoms} onChange={e => f('symptoms', e.target.value)} rows={2} />
           <Textarea label="หมายเหตุ" value={form.notes} onChange={e => f('notes', e.target.value)} rows={2} />
