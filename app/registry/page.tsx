@@ -52,6 +52,7 @@ export default function RegistryPage() {
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reload, setReload] = useState(0);
+  const [errors, setErrors] = useState<Record<string,string>>({});
 
   // Detail drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -68,7 +69,7 @@ export default function RegistryPage() {
   };
 
   const openCreate = () => {
-    setForm(empty);
+    setForm(empty); setErrors({});
     setEditingId(null); setShowModal(true);
   };
   const openEdit = (row: MedRegistryItem) => {
@@ -85,13 +86,16 @@ export default function RegistryPage() {
       med_mfg: row.med_mfg ? row.med_mfg.slice(0, 10) : '',
       med_exp: row.med_exp ? row.med_exp.slice(0, 10) : '',
     });
+    setErrors({});
     setEditingId(row.med_id); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.med_name || !form.med_counting_unit || !form.med_marketing_name) {
-      toast.error('กรุณากรอกชื่อยา, หน่วย, ชื่อการค้า'); return;
-    }
+    const errs: Record<string,string> = {};
+    if (!form.med_name.trim()) errs.med_name = 'กรุณากรอกชื่อยา';
+    if (!form.med_counting_unit) errs.med_counting_unit = 'กรุณาเลือกหน่วยนับ';
+    if (!form.med_marketing_name.trim()) errs.med_marketing_name = 'กรุณากรอกชื่อการค้า';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = {
@@ -142,16 +146,22 @@ export default function RegistryPage() {
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ทะเบียนยา" editingId={editingId} onSave={handleSave} saving={saving} size="xl">
         <FormGrid cols={2}>
-          <FormSpan><Input label="ชื่อยา (Trade name)" required value={form.med_name} onChange={e => f('med_name', e.target.value)} /></FormSpan>
+          <FormSpan><Input label="ชื่อยา (Trade name)" required value={form.med_name}
+            onChange={e => { f('med_name', e.target.value); if (errors.med_name) setErrors(p => ({ ...p, med_name: '' })); }}
+            error={errors.med_name} /></FormSpan>
           <Input label="ชื่อสามัญ (Generic name)" value={form.med_generic_name} onChange={e => f('med_generic_name', e.target.value)} />
-          <Input label="ชื่อการค้า" required value={form.med_marketing_name} onChange={e => f('med_marketing_name', e.target.value)} />
+          <Input label="ชื่อการค้า" required value={form.med_marketing_name}
+            onChange={e => { f('med_marketing_name', e.target.value); if (errors.med_marketing_name) setErrors(p => ({ ...p, med_marketing_name: '' })); }}
+            error={errors.med_marketing_name} />
           <Input label="ชื่อภาษาไทย" value={form.med_thai_name} onChange={e => f('med_thai_name', e.target.value)} />
           <Select label="หมวดหมู่" value={form.med_medical_category} onChange={e => f('med_medical_category', e.target.value)}
             options={CATEGORIES.map(c => ({ value: c, label: c }))} placeholder="เลือกหมวดหมู่" />
           <Select label="รูปแบบยา" value={form.med_dosage_form} onChange={e => f('med_dosage_form', e.target.value)}
             options={['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Ointment', 'Inhaler', 'Powder', 'Solution', 'Suppository'].map(d => ({ value: d, label: d }))} placeholder="เลือกรูปแบบ" />
-          <Select label="หน่วยนับ" required value={form.med_counting_unit} onChange={e => f('med_counting_unit', e.target.value)}
-            options={drugUnits.map(u => ({ value: u, label: u }))} />
+          <Select label="หน่วยนับ" required value={form.med_counting_unit}
+            onChange={e => { f('med_counting_unit', e.target.value); if (errors.med_counting_unit) setErrors(p => ({ ...p, med_counting_unit: '' })); }}
+            options={drugUnits.map(u => ({ value: u, label: u }))}
+            error={errors.med_counting_unit} />
           <Select label="ระดับยา" value={form.med_severity} onChange={e => f('med_severity', e.target.value)}
             options={SEVERITIES.map(s => ({ value: s, label: s }))} />
           <Input label="ราคาต้นทุน (บาท)" type="number" step="0.01" value={form.med_cost_price} onChange={e => f('med_cost_price', e.target.value)} />

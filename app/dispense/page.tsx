@@ -166,6 +166,7 @@ export default function DispensePage() {
   const [items, setItems] = useState<DrugItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const [formErrors, setFormErrors] = useState<Record<string,string>>({});
 
   // create form — patient demographics panel
   const [createPatientDetail, setCreatePatientDetail] = useState<any | null>(null);
@@ -304,7 +305,7 @@ export default function DispensePage() {
     setPatientId(0); setPatientLabel('');
     setDoctorId(null); setDoctorLabel('');
     setWard(''); setNote(''); setDiagnosis(''); setItems([]);
-    setEditingRxId(null); setLiveAlerts({});
+    setEditingRxId(null); setLiveAlerts({}); setFormErrors({});
     setPatientTreatmentRight(null); setPatientTreatmentRightNote(null);
     setCreatePatientDetail(null); setCreateAllergies([]);
     setCreateVitals({ temp: '', bp: '' }); setAddToQueue(false);
@@ -318,8 +319,10 @@ export default function DispensePage() {
 
   // ── Save (create or edit) ──────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!items.length) { toast.error('กรุณาเพิ่มยาอย่างน้อย 1 รายการ'); return; }
-    if (!ward) { toast.error('กรุณาระบุแผนก'); return; }
+    const errs: Record<string,string> = {};
+    if (!items.length) errs.items = 'กรุณาเพิ่มยาอย่างน้อย 1 รายการ';
+    if (!ward.trim()) errs.ward = 'กรุณาระบุแผนก';
+    if (Object.keys(errs).length) { setFormErrors(errs); return; }
     // Block on allergy or interaction alerts (ทุกระดับความรุนแรง)
     const blockingAlerts = Object.values(liveAlerts).flat().filter(a => a.type === 'allergy' || a.type === 'interaction');
     if (blockingAlerts.length > 0) {
@@ -1134,9 +1137,10 @@ export default function DispensePage() {
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">
                   แผนก <span className="text-red-400">*</span>
                 </label>
-                <input value={ward} onChange={e => setWard(e.target.value)}
+                <input value={ward} onChange={e => { setWard(e.target.value); if (formErrors.ward) setFormErrors(p => ({ ...p, ward: '' })); }}
                   placeholder="OPD, IPD, ER, ICU..."
-                  className="w-full h-9 border border-slate-200 rounded-lg text-sm px-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+                  className={`w-full h-9 border rounded-lg text-sm px-3 outline-none focus:ring-2 focus:ring-primary-100 ${formErrors.ward ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-primary-500'}`} />
+                {formErrors.ward && <p className="mt-1 text-xs text-red-500">{formErrors.ward}</p>}
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">คำวินิจฉัย</label>
@@ -1237,8 +1241,9 @@ export default function DispensePage() {
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">รายการยา</p>
             <SearchSelect type="subwarehouse" label="" resetKey={resetKey}
-              initialDisplay="" onSelect={d => { if (d) addItem(d); }}
+              initialDisplay="" onSelect={d => { if (d) { addItem(d); if (formErrors.items) setFormErrors(p => ({ ...p, items: '' })); } }}
               placeholder="พิมพ์ชื่อยาเพื่อเพิ่มในรายการ..." />
+            {formErrors.items && <p className="mt-1.5 text-xs text-red-500">{formErrors.items}</p>}
           </div>
 
           {/* ─── Safety check ──────────────────────────────────────── */}

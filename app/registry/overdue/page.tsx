@@ -51,10 +51,11 @@ export default function OverduePage() {
   const [reload, setReload] = useState(0);
   const [resetKey, setResetKey] = useState(0);
   const [drawer, setDrawer] = useState<any | null>(null);
+  const [errors, setErrors] = useState<Record<string,string>>({});
   const { confirm: alertDialog, dialogProps: alertDialogProps } = useConfirm();
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
-  const openAdd = () => { setForm(emptyForm); setEditingId(null); setResetKey(k => k + 1); setShowModal(true); };
+  const openAdd = () => { setForm(emptyForm); setErrors({}); setEditingId(null); setResetKey(k => k + 1); setShowModal(true); };
   const openEdit = (row: any) => {
     setForm({
       med_id: row.med_id, med_label: row.med_name || '',
@@ -63,11 +64,12 @@ export default function OverduePage() {
       med_sid: row.med_sid || 0, drug_sub_label: row.sub_drug_name || '',
       quantity: row.quantity ? String(row.quantity) : ''
     });
+    setErrors({});
     setEditingId(row.overdue_id); setResetKey(k => k + 1); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.med_id) { toast.error('กรุณาเลือกยา'); return; }
+    if (!form.med_id) { setErrors({ med_id: 'กรุณาเลือกยา' }); return; }
     setSaving(true);
     try {
       const payload = {
@@ -124,8 +126,11 @@ export default function OverduePage() {
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ยาค้างจ่าย" editingId={editingId} onSave={handleSave} saving={saving}>
         <FormGrid>
-          <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required initialDisplay={form.med_label} resetKey={resetKey}
-            onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
+          <div>
+            <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required initialDisplay={form.med_label} resetKey={resetKey}
+              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); if (errors.med_id) setErrors(p => ({ ...p, med_id: '' })); }} />
+            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+          </div>
           <SearchSelect type="subwarehouse" label="ยาในคลัง" initialDisplay={form.drug_sub_label} resetKey={resetKey}
             onSelect={s => { f('med_sid', s?.med_sid ?? 0); f('drug_sub_label', s ? (s.med_showname || s.med_name) : ''); }} />
           <SearchSelect type="patient" label="ผู้ป่วย" initialDisplay={form.patient_label} resetKey={resetKey}

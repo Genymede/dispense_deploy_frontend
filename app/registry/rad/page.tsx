@@ -64,11 +64,13 @@ export default function RadPage() {
   const [resetKey, setResetKey] = useState(0);
   const [row, setRow] = useState<any>(null);
   const [confirm, setConfirm] = useState<{ type: 'approve' | 'reject'; row: any } | null>(null);
+  const [errors, setErrors] = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
 
   const openAdd = () => {
     setForm({ ...emptyForm, requested_by: user?.id ?? '', req_label: user?.email ?? '' });
-    setEditId(null); setResetKey(k => k + 1); setShowModal(true);
+    setErrors({}); setEditId(null); setResetKey(k => k + 1); setShowModal(true);
   };
 
   const openEdit = (r: any) => {
@@ -88,7 +90,7 @@ export default function RadPage() {
       status: r.status,
       note: r.note || '',
     });
-    setEditId(r.rad_id); setResetKey(k => k + 1); setShowModal(true);
+    setErrors({}); setEditId(r.rad_id); setResetKey(k => k + 1); setShowModal(true);
   };
 
   const handleConfirm = async () => {
@@ -108,11 +110,13 @@ export default function RadPage() {
   };
 
   const handleSave = async () => {
-    if (!form.med_id)                { toast.error('กรุณาเลือกยา');                return; }
-    if (!form.quantity)              { toast.error('กรุณากรอกจำนวน');              return; }
-    if (!form.diagnosis)             { toast.error('กรุณากรอกการวินิจฉัย');        return; }
-    if (!form.clinical_indication)   { toast.error('กรุณากรอกเหตุผลทางคลินิก');   return; }
-    if (!form.requested_by)           { toast.error('กรุณาเลือกผู้ขอ');             return; }
+    const errs: Record<string,string> = {};
+    if (!form.med_id) errs.med_id = 'กรุณาเลือกยา';
+    if (!form.quantity) errs.quantity = 'กรุณากรอกจำนวน';
+    if (!form.diagnosis.trim()) errs.diagnosis = 'กรุณากรอกการวินิจฉัย';
+    if (!form.clinical_indication.trim()) errs.clinical_indication = 'กรุณากรอกเหตุผลทางคลินิก';
+    if (!form.requested_by) errs.requested_by = 'กรุณาเลือกผู้ขอ';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = {
@@ -182,10 +186,12 @@ export default function RadPage() {
           <div className="sm:col-span-2">
             <SearchSelect type="drug" label="ยาปฏิชีวนะที่ต้องการ" required
               initialDisplay={form.med_label} resetKey={resetKey}
-              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
+              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
           </div>
           <Input label="จำนวน" required type="number" min="1"
-            value={form.quantity} onChange={e => f('quantity', e.target.value)} />
+            value={form.quantity} onChange={e => { f('quantity', e.target.value); clearErr('quantity'); }}
+            error={errors.quantity} />
           <Input label="หน่วย" required
             value={form.unit} onChange={e => f('unit', e.target.value)} />
 
@@ -199,8 +205,8 @@ export default function RadPage() {
           {/* ข้อมูลทางคลินิก */}
           <div className="sm:col-span-2">
             <Input label="การวินิจฉัย" required
-              value={form.diagnosis} onChange={e => f('diagnosis', e.target.value)}
-              placeholder="เช่น Pneumonia, UTI, Sepsis" />
+              value={form.diagnosis} onChange={e => { f('diagnosis', e.target.value); clearErr('diagnosis'); }}
+              placeholder="เช่น Pneumonia, UTI, Sepsis" error={errors.diagnosis} />
           </div>
           <Input label="ตำแหน่งที่ติดเชื้อ"
             value={form.infection_site} onChange={e => f('infection_site', e.target.value)}
@@ -210,8 +216,10 @@ export default function RadPage() {
             options={CULTURE_OPTIONS} />
           <div className="sm:col-span-2">
             <Textarea label="เหตุผลทางคลินิก" required rows={2}
-              value={form.clinical_indication} onChange={e => f('clinical_indication', e.target.value)}
-              placeholder="ระบุเหตุผลที่จำเป็นต้องใช้ยาปฏิชีวนะควบคุมนี้" />
+              value={form.clinical_indication}
+              onChange={e => { f('clinical_indication', e.target.value); clearErr('clinical_indication'); }}
+              placeholder="ระบุเหตุผลที่จำเป็นต้องใช้ยาปฏิชีวนะควบคุมนี้"
+              error={errors.clinical_indication} />
           </div>
           <Input label="ระยะเวลาที่ใช้ยา (วัน)" type="number" min="1"
             value={form.duration_days} onChange={e => f('duration_days', e.target.value)} />
@@ -219,9 +227,12 @@ export default function RadPage() {
             value={form.prescriber_name} onChange={e => f('prescriber_name', e.target.value)} />
 
           {/* บุคลากร */}
-          <SearchSelect type="user" label="ผู้ขอ" required
-            initialDisplay={form.req_label} resetKey={resetKey}
-            onSelect={u => { f('requested_by', u?.id ?? ''); f('req_label', u?.full_name ?? u?.email ?? ''); }} />
+          <div>
+            <SearchSelect type="user" label="ผู้ขอ" required
+              initialDisplay={form.req_label} resetKey={resetKey}
+              onSelect={u => { f('requested_by', u?.id ?? ''); f('req_label', u?.full_name ?? u?.email ?? ''); clearErr('requested_by'); }} />
+            {errors.requested_by && <p className="mt-1 text-xs text-red-500">{errors.requested_by}</p>}
+          </div>
           {editId ? (
             <>
               <SearchSelect type="user" label="ผู้อนุมัติ"

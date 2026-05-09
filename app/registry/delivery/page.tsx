@@ -7,6 +7,7 @@ import { Input, Select, Textarea, Badge } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
 import { registryApi, crudApi } from '@/lib/api';
+import { phone as validatePhone } from '@/lib/validate';
 import { Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -49,10 +50,12 @@ export default function DeliveryPage() {
   const [reload, setReload] = useState(0);
   const [resetKey, setResetKey] = useState(0);
   const [drawer, setDrawer] = useState<any | null>(null);
+  const [errors, setErrors] = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
 
   const openAdd = () => {
-    setForm(emptyForm);
+    setForm(emptyForm); setErrors({});
     setEditingId(null); setResetKey(k => k + 1); setShowModal(true);
   };
   const openEdit = (row: any) => {
@@ -62,15 +65,19 @@ export default function DeliveryPage() {
       receiver_phone: row.receiver_phone || '', address: row.address || '',
       note: row.note || '', status: row.status || 'Pending',
     });
+    setErrors({});
     setEditingId(row.delivery_id); setResetKey(k => k + 1); setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.patient_id) { toast.error('กรุณาเลือกผู้ป่วย'); return; }
-    if (!form.delivery_method) { toast.error('กรุณาเลือกวิธีจัดส่ง'); return; }
-    if (!form.receiver_name) { toast.error('กรุณากรอกชื่อผู้รับ'); return; }
-    if (!form.receiver_phone) { toast.error('กรุณากรอกเบอร์โทร'); return; }
-    if (!form.address) { toast.error('กรุณากรอกที่อยู่'); return; }
+    const errs: Record<string,string> = {};
+    if (!form.patient_id) errs.patient_id = 'กรุณาเลือกผู้ป่วย';
+    if (!form.delivery_method) errs.delivery_method = 'กรุณาเลือกวิธีจัดส่ง';
+    if (!form.receiver_name.trim()) errs.receiver_name = 'กรุณากรอกชื่อผู้รับ';
+    if (!form.receiver_phone.trim()) errs.receiver_phone = 'กรุณากรอกเบอร์โทร';
+    else { const e = validatePhone(form.receiver_phone); if (e) errs.receiver_phone = e; }
+    if (!form.address.trim()) errs.address = 'กรุณากรอกที่อยู่';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
       const payload = {
@@ -107,16 +114,27 @@ export default function DeliveryPage() {
         <FormGrid>
           <div className="sm:col-span-2">
             <SearchSelect type="patient" label="ผู้ป่วย" required initialDisplay={form.patient_label} resetKey={resetKey}
-              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} disabled={!!editingId} />
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} disabled={!!editingId} />
+            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
           </div>
-          <Select label="วิธีจัดส่ง" required value={form.delivery_method} onChange={e => f('delivery_method', e.target.value)}
-            placeholder="เลือกวิธี" options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))} />
+          <div>
+            <Select label="วิธีจัดส่ง" required value={form.delivery_method}
+              onChange={e => { f('delivery_method', e.target.value); clearErr('delivery_method'); }}
+              placeholder="เลือกวิธี" options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))}
+              error={errors.delivery_method} />
+          </div>
           {editingId && <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
             options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />}
-          <Input label="ชื่อผู้รับ" required value={form.receiver_name} onChange={e => f('receiver_name', e.target.value)} />
-          <Input label="เบอร์โทร" required value={form.receiver_phone} onChange={e => f('receiver_phone', e.target.value)} />
+          <Input label="ชื่อผู้รับ" required value={form.receiver_name}
+            onChange={e => { f('receiver_name', e.target.value); clearErr('receiver_name'); }}
+            error={errors.receiver_name} />
+          <Input label="เบอร์โทร" required value={form.receiver_phone}
+            onChange={e => { f('receiver_phone', e.target.value); clearErr('receiver_phone'); }}
+            error={errors.receiver_phone} />
           <div className="sm:col-span-2">
-            <Textarea label="ที่อยู่จัดส่ง" required value={form.address} onChange={e => f('address', e.target.value)} rows={2} />
+            <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
+              onChange={e => { f('address', e.target.value); clearErr('address'); }}
+              rows={2} error={errors.address} />
           </div>
           <div className="sm:col-span-2">
             <Textarea label="หมายเหตุ" value={form.note} onChange={e => f('note', e.target.value)} rows={2} />
