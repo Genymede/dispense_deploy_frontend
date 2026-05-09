@@ -151,6 +151,18 @@ export interface Patient {
   full_name: string;
   national_id: string;
   phone: string | null;
+  gender: string | null;
+  birthdate: string | null;
+  blood_group: string | null;
+  treatment_right: string | null;
+  treatment_right_note: string | null;
+  house_number: string | null;
+  village_number: number | null;
+  road: string | null;
+  sub_district: string | null;
+  district: string | null;
+  province: string | null;
+  postal_code: string | null;
 }
 
 export interface Alert {

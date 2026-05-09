@@ -95,7 +95,7 @@ export default function PatientsPage() {
                   { label: 'วันเกิด',   value: p.birthdate ? new Date(p.birthdate).toLocaleDateString('th-TH') : null },
                   { label: 'กรุ๊ปเลือด', value: p.blood_group },
                   { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(p.treatment_right, p.treatment_right_note) },
-                  { label: 'ที่อยู่',   value: [p.address, p.sub_district, p.district, p.province, p.postal_code].filter(Boolean).join(' ') || null },
+                  { label: 'ที่อยู่',   value: [p.house_number, p.village_number ? `หมู่ ${p.village_number}` : null, p.road ? `ถนน${p.road}` : null, p.sub_district ? `ต.${p.sub_district}` : null, p.district ? `อ.${p.district}` : null, p.province ? `จ.${p.province}` : null, p.postal_code].filter(Boolean).join(' ') || null },
                 ].map(({ label, value }) =>
                   value ? (
                     <div key={label} className="bg-slate-50 rounded-lg px-3 py-2">
