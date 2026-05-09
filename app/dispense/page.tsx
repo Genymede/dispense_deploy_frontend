@@ -320,6 +320,7 @@ export default function DispensePage() {
   // ── Save (create or edit) ──────────────────────────────────────────────────
   const handleSave = async () => {
     const errs: Record<string,string> = {};
+    if (!patientId) errs.patient_id = 'กรุณาเลือกผู้ป่วย';
     if (!items.length) errs.items = 'กรุณาเพิ่มยาอย่างน้อย 1 รายการ';
     if (!ward.trim()) errs.ward = 'กรุณาระบุแผนก';
     if (Object.keys(errs).length) { setFormErrors(errs); return; }
@@ -1127,9 +1128,12 @@ export default function DispensePage() {
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">ข้อมูลผู้ป่วย</p>
             <div className="grid grid-cols-2 gap-3">
-              <SearchSelect type="patient" label="ผู้ป่วย"
-                initialDisplay={patientLabel} resetKey={resetKey}
-                onSelect={p => { setPatientId(p?.patient_id ?? 0); setPatientLabel(p?.full_name ?? ''); setPatientTreatmentRight(p?.treatment_right ?? null); setPatientTreatmentRightNote(p?.treatment_right_note ?? null); }} />
+              <div>
+                <SearchSelect type="patient" label="ผู้ป่วย" required
+                  initialDisplay={patientLabel} resetKey={resetKey}
+                  onSelect={p => { setPatientId(p?.patient_id ?? 0); setPatientLabel(p?.full_name ?? ''); setPatientTreatmentRight(p?.treatment_right ?? null); setPatientTreatmentRightNote(p?.treatment_right_note ?? null); if (formErrors.patient_id) setFormErrors(prev => ({ ...prev, patient_id: '' })); }} />
+                {formErrors.patient_id && <p className="mt-1 text-xs text-red-500">{formErrors.patient_id}</p>}
+              </div>
               <SearchSelect type="user" label="แพทย์ผู้สั่ง"
                 initialDisplay={doctorLabel} resetKey={resetKey}
                 onSelect={u => { setDoctorId(u?.uid ?? 0); setDoctorLabel(u?.full_name ?? ''); }} />
