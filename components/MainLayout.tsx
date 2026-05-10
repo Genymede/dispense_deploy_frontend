@@ -201,7 +201,7 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
 
           <footer className="flex-shrink-0 px-4 py-1.5 border-t border-slate-100 bg-white
                              text-center text-xs text-slate-400">
-            PharmSub — ระบบบริหารคลังยาย่อย
+            ระบบบริหารการจ่ายยาและคลังยาย่อย
           </footer>
         </div>
       </div>
