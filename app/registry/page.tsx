@@ -22,7 +22,7 @@ const empty = {
   med_medium_price: '', med_dosage_form: '', med_medical_category: '',
   med_essential_med_list: '', med_pregnancy_category: '',
   med_TMT_code: '', med_TPU_code: '', med_out_of_stock: false,
-  med_mfg: '', med_exp: '',
+  med_mfg: '', med_exp: '', med_indication: '',
 };
 
 const cols: ColDef[] = [
@@ -85,6 +85,7 @@ export default function RegistryPage() {
       med_out_of_stock: row.med_out_of_stock,
       med_mfg: row.med_mfg ? row.med_mfg.slice(0, 10) : '',
       med_exp: row.med_exp ? row.med_exp.slice(0, 10) : '',
+      med_indication: row.med_indication || '',
     });
     setErrors({});
     setEditingId(row.med_id); setShowModal(true);
@@ -174,6 +175,8 @@ export default function RegistryPage() {
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
           <Input label="วันผลิต (ทะเบียน)" type="date" value={form.med_mfg} onChange={e => f('med_mfg', e.target.value)} />
           <Input label="วันหมดอายุ (ทะเบียน)" type="date" value={form.med_exp} onChange={e => f('med_exp', e.target.value)} />
+          <FormSpan><Textarea label="ข้อบ่งใช้ (Indication)" value={form.med_indication} onChange={e => f('med_indication', e.target.value)}
+            placeholder="เช่น บรรเทาอาการแพ้, ลดอาการภูมิแพ้อากาศ..." rows={2} /></FormSpan>
           <div className="flex items-center gap-2 pt-1">
             <input type="checkbox" id="oos" checked={form.med_out_of_stock} onChange={e => f('med_out_of_stock', e.target.checked)} className="w-4 h-4" />
             <label htmlFor="oos" className="text-sm text-slate-700">หมดสต็อก (Out of Stock)</label>
@@ -199,6 +202,7 @@ export default function RegistryPage() {
                 { label: 'ชื่อการค้า', value: med.med_marketing_name || '—' },
                 { label: 'ชื่อภาษาไทย', value: med.med_thai_name || '—' },
                 { label: 'หมวดหมู่', value: med.med_medical_category || '—' },
+                { label: 'ข้อบ่งใช้', value: med.med_indication || '—' },
                 { label: 'รูปแบบ', value: med.med_dosage_form || '—' },
                 { label: 'หน่วยนับ', value: med.med_counting_unit },
                 { label: 'ระดับยา', value: <Badge variant={med.med_severity?.includes('เสพติด') ? 'danger' : med.med_severity?.includes('อันตราย') ? 'warning' : 'gray'}>{med.med_severity || '—'}</Badge> },

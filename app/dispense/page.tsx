@@ -575,6 +575,8 @@ export default function DispensePage() {
         `--------------------`,
         `${it.med_showname || it.med_name}`,
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
+        it.med_medical_category ? `หมวดหมู่: ${it.med_medical_category}` : '',
+        it.med_indication ? `ข้อบ่งใช้: ${it.med_indication}` : '',
         `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
         `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''} ${it.route || ''} ${it.frequency || ''}${it.meal_relation ? ` ${it.meal_relation}` : ''}${it.meal_sessions ? ` (${it.meal_sessions.split(',').join(' ')})` : ''}`.trim(),
         `แผนก: ${rx.ward || '-'}`,
