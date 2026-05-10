@@ -1066,7 +1066,7 @@ export default function DispensePage() {
             </div>
           </div>
         }>
-        <div className="grid grid-cols-[1fr_3fr] gap-6 min-h-0">
+        <div className="grid grid-cols-[2fr_5fr] gap-6 min-h-0">
 
           {/* ══ LEFT: ข้อมูลผู้ป่วย ══════════════════════════════════ */}
           <div className="space-y-4 overflow-y-auto pr-1">
@@ -1271,7 +1271,7 @@ export default function DispensePage() {
               </div>
             </div>
           }>
-          <div className="grid grid-cols-[1fr_3fr] gap-6 min-h-0">
+          <div className="grid grid-cols-[2fr_5fr] gap-6 min-h-0">
 
             {/* ══ LEFT: Patient card ════════════════════════════════════════ */}
             <div className="space-y-0 overflow-y-auto pr-1">
