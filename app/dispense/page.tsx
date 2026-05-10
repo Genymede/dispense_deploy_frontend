@@ -318,6 +318,8 @@ export default function DispensePage() {
     ]).finally(() => setCreateAllergyLoading(false));
   }, [patientId, showCreate]);
 
+  console.log('createPatientDetail', createPatientDetail);
+
   // ── Items ──────────────────────────────────────────────────────────────────
   const addItem = async (drug: any) => {
     if (!drug) return;
@@ -1131,7 +1133,7 @@ export default function DispensePage() {
                   <div className="px-4 py-3 space-y-3">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                       <div><span className="text-slate-400">HN: </span><span className="font-mono font-semibold text-slate-700">{createPatientDetail.hn_number}</span></div>
-                      <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender === 'M' ? 'ชาย' : createPatientDetail.gender === 'F' ? 'หญิง' : '—'}</span></div>
+                      <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender}</span></div>
                       <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
                       <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
                       <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
