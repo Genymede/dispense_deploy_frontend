@@ -1329,7 +1329,7 @@ export default function DispensePage() {
                 {dispensePatientDetail && (
                   <div className="px-4 pt-3 space-y-3">
                     <div className="grid grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
-                      <div><span className="text-slate-400">เพศ: </span><span className="font-medium">{(dispensePatientDetail.gender || (dispenseRx as any)?.gender) === 'M' ? 'ชาย' : (dispensePatientDetail.gender || (dispenseRx as any)?.gender) === 'F' ? 'หญิง' : '—'}</span></div>
+                      <div><span className="text-slate-400">เพศ: </span><span className="font-medium">{dispensePatientDetail.gender || '—'}</span></div>
                       <div><span className="text-slate-400">อายุ: </span><span className="font-medium">{dispensePatientDetail.age_y ?? '—'} ปี {dispensePatientDetail.age_m ?? ''} เดือน</span></div>
                       <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-bold text-red-700">{dispensePatientDetail.blood_group?.trim() || '—'}</span></div>
                       <div><span className="text-slate-400">โทร: </span><span>{dispensePatientDetail.phone || '—'}</span></div>
