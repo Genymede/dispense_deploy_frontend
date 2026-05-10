@@ -54,7 +54,7 @@ export default function DrugsPage() {
   const [formErrors, setFormErrors] = useState<Record<string,string>>({});
   const [lotsReloadKey, setLotsReloadKey] = useState(0);
   const [writingOff, setWritingOff] = useState(false);
-  const [writeOffConfirm, setWriteOffConfirm] = useState<{ type: 'lot'; lot: StockLot } | { type: 'all' } | null>(null);
+  const [writeOffConfirm, setWriteOffConfirm] = useState<{ lot: StockLot } | null>(null);
 
   // form state
   const [form, setForm] = useState(emptyForm);
@@ -279,8 +279,7 @@ export default function DrugsPage() {
     if (!writeOffConfirm || !viewDrug) return;
     setWritingOff(true);
     try {
-      const payload: { med_sid: number; lot_id?: number } = { med_sid: viewDrug.med_sid };
-      if (writeOffConfirm.type === 'lot') payload.lot_id = writeOffConfirm.lot.lot_id;
+      const payload: { med_sid: number; lot_id?: number } = { med_sid: viewDrug.med_sid, lot_id: writeOffConfirm.lot.lot_id };
       const res = await stockApi.writeOff(payload);
       toast.success(res.data.message);
       setWriteOffConfirm(null);
@@ -554,7 +553,7 @@ export default function DrugsPage() {
                             <td className="px-3 py-2">
                               {isExpired && lot.quantity > 0 && (
                                 <button
-                                  onClick={() => setWriteOffConfirm({ type: 'lot', lot })}
+                                  onClick={() => setWriteOffConfirm({ lot })}
                                   className="p-1 rounded hover:bg-red-100 text-slate-300 hover:text-red-600 transition-colors"
                                   title="ตัดออก"
                                 >
@@ -643,14 +642,7 @@ export default function DrugsPage() {
             </DrawerSection>
 
             <DrawerSection title="">
-              <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
-                {viewLots.some(l => l.exp_date && new Date(l.exp_date) < new Date() && l.quantity > 0) && (
-                  <Button variant="danger" icon={<Trash2 size={14} />} onClick={() => setWriteOffConfirm({ type: 'all' })}>
-                    ตัดออกทั้งหมด
-                  </Button>
-                )}
-              </div>
+              <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
             </DrawerSection>
           </>
         )}
@@ -664,26 +656,14 @@ export default function DrugsPage() {
               <Trash2 size={22} className="text-red-600" />
               <h3 className="font-bold text-base text-slate-800">ยืนยันการตัดออก</h3>
             </div>
-            {writeOffConfirm.type === 'lot' ? (
-              <>
-                <p className="text-sm text-slate-600 mb-1">
-                  ตัดล็อต <span className="font-mono font-semibold">{writeOffConfirm.lot.lot_number || '—'}</span> ของ
-                </p>
-                <p className="font-semibold text-slate-800 mb-1">{viewDrug.med_showname || viewDrug.med_name}</p>
-                <p className="text-sm text-slate-500 mb-5">
-                  จำนวน <span className="font-semibold text-red-600">{writeOffConfirm.lot.quantity.toLocaleString()} {viewDrug.unit}</span> ออกจากคลัง
-                  <br /><span className="text-xs">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-slate-600 mb-1">ตัดล็อตยาหมดอายุทั้งหมดของ</p>
-                <p className="font-semibold text-slate-800 mb-1">{viewDrug.med_showname || viewDrug.med_name}</p>
-                <p className="text-sm text-slate-500 mb-5">
-                  <span className="text-xs">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
-                </p>
-              </>
-            )}
+            <p className="text-sm text-slate-600 mb-1">
+              ตัดล็อต <span className="font-mono font-semibold">{writeOffConfirm.lot.lot_number || '—'}</span> ของ
+            </p>
+            <p className="font-semibold text-slate-800 mb-1">{viewDrug.med_showname || viewDrug.med_name}</p>
+            <p className="text-sm text-slate-500 mb-5">
+              จำนวน <span className="font-semibold text-red-600">{writeOffConfirm.lot.quantity.toLocaleString()} {viewDrug.unit}</span> ออกจากคลัง
+              <br /><span className="text-xs">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
+            </p>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setWriteOffConfirm(null)} disabled={writingOff}
                 className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50">
