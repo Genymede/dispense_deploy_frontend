@@ -101,7 +101,7 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-1 mt-1.5">
-          <input type="number" min="0.25" step="0.25" value={item.dose_qty ?? 1}
+          <input type="number" min="0.25" step="0.25" value={item.dose_qty || 1}
             onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
             className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
           <select value={item.dose_unit || ''} onChange={e => onUpdate('dose_unit', e.target.value)}
@@ -1457,7 +1457,7 @@ export default function DispensePage() {
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
                               </div>
                               <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                                <input type="number" min="0.25" step="0.25" value={it.dose_qty ?? 1}
+                                <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
                                   onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
                                   className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
                                 <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
