@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Card, Badge, Button, EmptyState, Spinner } from '@/components/ui';
 import { alertApi, type Alert } from '@/lib/api';
-import { Bell, AlertTriangle, Calendar, TrendingDown, Package, CheckCheck, Eye, ClipboardList } from 'lucide-react';
+import { Bell, AlertTriangle, Calendar, TrendingDown, Package, CheckCheck, Eye, ClipboardList, Scissors } from 'lucide-react';
 import { fmtDate } from '@/lib/dateUtils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ const ALERT_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: s
   expired:           { icon: <AlertTriangle size={16} />,  color: 'text-red-600',    bg: 'bg-red-50 border-red-100',       label: 'หมดอายุ' },
   overstock:         { icon: <Package size={16} />,        color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-100',     label: 'เกินสต็อก' },
   incomplete_record: { icon: <ClipboardList size={16} />,  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'ข้อมูลยาไม่ครบ' },
+  cut_off:           { icon: <Scissors size={16} />,       color: 'text-cyan-600',   bg: 'bg-cyan-50 border-cyan-100',    label: 'ใกล้ตัดรอบ' },
 };
 
 export default function AlertsPage() {
@@ -117,12 +118,18 @@ export default function AlertsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <Link href={a.alert_type === 'incomplete_record' ? `/drugs?edit=${a.med_sid}` : `/drugs?view=${a.med_sid}`}>
-                        <Button variant="secondary" size="xs" icon={<Eye size={12} />}>
-                          {a.alert_type === 'incomplete_record' ? 'เพิ่มข้อมูลยา' : 'ดูรายละเอียด'}
-                        </Button>
-                      </Link>
-                      {!a.is_read && (
+                      {a.alert_type === 'cut_off' ? (
+                        <Link href="/reports/cut-off">
+                          <Button variant="secondary" size="xs" icon={<Eye size={12} />}>ดูรอบตัดยา</Button>
+                        </Link>
+                      ) : (
+                        <Link href={a.alert_type === 'incomplete_record' ? `/drugs?edit=${a.med_sid}` : `/drugs?view=${a.med_sid}`}>
+                          <Button variant="secondary" size="xs" icon={<Eye size={12} />}>
+                            {a.alert_type === 'incomplete_record' ? 'เพิ่มข้อมูลยา' : 'ดูรายละเอียด'}
+                          </Button>
+                        </Link>
+                      )}
+                      {!a.is_read && a.alert_type !== 'cut_off' && (
                         <Button variant="ghost" size="xs" onClick={() => handleMarkRead(a)}>อ่านแล้ว</Button>
                       )}
                     </div>
