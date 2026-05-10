@@ -183,7 +183,7 @@ export default function StickerPage() {
             value={textToPrint}
             onChange={(e) => setTextToPrint(e.target.value)}
             placeholder="ป้อนข้อความสำหรับทดสอบการพิมพ์ (หลายบรรทัดได้)"
-            rows={20}
+            rows={12}
             className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 transition"
           />
           <p className="text-xs text-slate-400 mt-2">
