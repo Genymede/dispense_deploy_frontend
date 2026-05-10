@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormSection, FormGrid, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
@@ -124,36 +124,40 @@ export default function AllergyPage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="รายการแพ้ยา" editingId={editingId} onSave={handleSave} saving={saving}>
-        <FormGrid>
-          <div>
-            <SearchSelect type="patient" label="ผู้ป่วย" required
-              initialDisplay={form.patient_label} resetKey={resetKey}
-              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
-            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
-          </div>
-          <div>
-            <SearchSelect type="drug" label="ยาที่แพ้" required
-              initialDisplay={form.med_label} resetKey={resetKey}
-              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
-            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
-          </div>
-          <div className="sm:col-span-2">
-            <Textarea label="อาการ" required value={form.symptoms}
-              onChange={e => { f('symptoms', e.target.value); clearErr('symptoms'); }} rows={2}
-              error={errors.symptoms} />
-          </div>
-          <div className="sm:col-span-2">
-            <Textarea label="รายละเอียด" value={form.description} onChange={e => f('description', e.target.value)} rows={2} />
-          </div>
-          <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
-            options={Object.entries(SEV).map(([v, { label }]) => ({ value: v, label }))} />
-          <Input label="วันที่รายงาน" type="date" value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
-          <div className="sm:col-span-2">
+        <div className="flex flex-col gap-4">
+          <FormSection title="ข้อมูลผู้ป่วยและยา">
+            <div>
+              <SearchSelect type="patient" label="ผู้ป่วย" required
+                initialDisplay={form.patient_label} resetKey={resetKey}
+                onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
+              {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
+            </div>
+            <div>
+              <SearchSelect type="drug" label="ยาที่แพ้" required
+                initialDisplay={form.med_label} resetKey={resetKey}
+                onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+              {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+            </div>
+          </FormSection>
+          <FormSection title="รายละเอียดอาการ">
+            <div className="sm:col-span-2">
+              <Textarea label="อาการ" required value={form.symptoms}
+                onChange={e => { f('symptoms', e.target.value); clearErr('symptoms'); }} rows={2}
+                error={errors.symptoms} />
+            </div>
+            <div className="sm:col-span-2">
+              <Textarea label="รายละเอียดเพิ่มเติม" value={form.description} onChange={e => f('description', e.target.value)} rows={2} />
+            </div>
+            <Select label="ระดับความรุนแรง" value={form.severity} onChange={e => f('severity', e.target.value)}
+              options={Object.entries(SEV).map(([v, { label }]) => ({ value: v, label }))} />
+            <Input label="วันที่รายงาน" type="date" value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
+          </FormSection>
+          <FormGrid cols={1}>
             <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
               initialDisplay={form.recorded_by_label} resetKey={resetKey}
               onSelect={u => { f('recorded_by_id', u?.id ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
-          </div>
-        </FormGrid>
+          </FormGrid>
+        </div>
       </CrudModal>
 
       <DetailDrawer open={!!drawer} onClose={() => setDrawer(null)}

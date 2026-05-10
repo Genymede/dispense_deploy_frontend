@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormSection, RowActions } from '@/components/CrudModal';
 import { Select, Textarea, Badge } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
@@ -115,33 +115,35 @@ export default function MedInteractionsPage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ปฏิกิริยาระหว่างยา" editingId={editingId} onSave={handleSave} saving={saving}>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <SearchSelect type="drug" label="ยา 1" required initialDisplay={form.drug1_label} resetKey={resetKey}
-              onSelect={d => { f('med_id_1', d?.med_id??0); f('drug1_label', d?.med_name??''); clearErr('med_id_1'); }} disabled={!!editingId} />
-            {errors.med_id_1 && <p className="mt-1 text-xs text-red-500">{errors.med_id_1}</p>}
-          </div>
-          <div>
-            <SearchSelect type="drug" label="ยา 2" required initialDisplay={form.drug2_label} resetKey={resetKey}
-              onSelect={d => { f('med_id_2', d?.med_id??0); f('drug2_label', d?.med_name??''); clearErr('med_id_2'); }} disabled={!!editingId} />
-            {errors.med_id_2 && <p className="mt-1 text-xs text-red-500">{errors.med_id_2}</p>}
-          </div>
-          <Select label="ประเภท" value={form.interaction_type} onChange={e => f('interaction_type', e.target.value)}
-            options={Object.entries(IT).map(([v,{label}]) => ({value:v,label}))} />
-          <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
-            placeholder="เลือก" options={['mild','moderate','severe'].map(s=>({value:s,label:s}))} />
-          <div className="col-span-2">
-            <Textarea label="คำอธิบาย" required value={form.description}
-              onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
-              error={errors.description} />
-          </div>
-          <TextInput label="ระดับหลักฐาน" value={form.evidence_level} onChange={(v: string) => f('evidence_level', v)} placeholder="Level A, RCT..." />
-          <TextInput label="แหล่งอ้างอิง" value={form.source_reference} onChange={(v: string) => f('source_reference', v)} placeholder="Lexicomp, Medscape..." />
-          <div className="col-span-2">
-            <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
-              initialDisplay={form.recorded_by_label} resetKey={resetKey}
-              onSelect={u => { f('recorded_by_id', u?.id ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
-          </div>
+        <div className="flex flex-col gap-4">
+          <FormSection title="คู่ยาที่มีปฏิกิริยา">
+            <div>
+              <SearchSelect type="drug" label="ยา 1" required initialDisplay={form.drug1_label} resetKey={resetKey}
+                onSelect={d => { f('med_id_1', d?.med_id??0); f('drug1_label', d?.med_name??''); clearErr('med_id_1'); }} disabled={!!editingId} />
+              {errors.med_id_1 && <p className="mt-1 text-xs text-red-500">{errors.med_id_1}</p>}
+            </div>
+            <div>
+              <SearchSelect type="drug" label="ยา 2" required initialDisplay={form.drug2_label} resetKey={resetKey}
+                onSelect={d => { f('med_id_2', d?.med_id??0); f('drug2_label', d?.med_name??''); clearErr('med_id_2'); }} disabled={!!editingId} />
+              {errors.med_id_2 && <p className="mt-1 text-xs text-red-500">{errors.med_id_2}</p>}
+            </div>
+          </FormSection>
+          <FormSection title="รายละเอียดปฏิกิริยา">
+            <Select label="ประเภท" value={form.interaction_type} onChange={e => f('interaction_type', e.target.value)}
+              options={Object.entries(IT).map(([v,{label}]) => ({value:v,label}))} />
+            <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
+              placeholder="เลือก" options={['mild','moderate','severe'].map(s=>({value:s,label:s}))} />
+            <div className="sm:col-span-2">
+              <Textarea label="คำอธิบาย" required value={form.description}
+                onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
+                error={errors.description} />
+            </div>
+            <TextInput label="ระดับหลักฐาน" value={form.evidence_level} onChange={(v: string) => f('evidence_level', v)} placeholder="Level A, RCT..." />
+            <TextInput label="แหล่งอ้างอิง" value={form.source_reference} onChange={(v: string) => f('source_reference', v)} placeholder="Lexicomp, Medscape..." />
+          </FormSection>
+          <SearchSelect type="user" label="ผู้บันทึกข้อมูล"
+            initialDisplay={form.recorded_by_label} resetKey={resetKey}
+            onSelect={u => { f('recorded_by_id', u?.id ?? null); f('recorded_by_label', u?.full_name ?? ''); }} />
         </div>
       </CrudModal>
 

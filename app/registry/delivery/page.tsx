@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
@@ -111,35 +111,39 @@ export default function DeliveryPage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="การจัดส่งยา" editingId={editingId} onSave={handleSave} saving={saving}>
-        <FormGrid>
-          <div className="sm:col-span-2">
-            <SearchSelect type="patient" label="ผู้ป่วย" required initialDisplay={form.patient_label} resetKey={resetKey}
-              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} disabled={!!editingId} />
-            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
-          </div>
-          <div>
+        <div className="flex flex-col gap-4">
+          <FormSection title="ข้อมูลผู้ป่วย" cols={1}>
+            <div>
+              <SearchSelect type="patient" label="ผู้ป่วย" required initialDisplay={form.patient_label} resetKey={resetKey}
+                onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} disabled={!!editingId} />
+              {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
+            </div>
+          </FormSection>
+          <FormSection title="รายละเอียดการจัดส่ง">
             <Select label="วิธีจัดส่ง" required value={form.delivery_method}
               onChange={e => { f('delivery_method', e.target.value); clearErr('delivery_method'); }}
               placeholder="เลือกวิธี" options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))}
               error={errors.delivery_method} />
-          </div>
-          {editingId && <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
-            options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />}
-          <Input label="ชื่อผู้รับ" required value={form.receiver_name}
-            onChange={e => { f('receiver_name', e.target.value); clearErr('receiver_name'); }}
-            error={errors.receiver_name} />
-          <Input label="เบอร์โทร" required value={form.receiver_phone}
-            onChange={e => { f('receiver_phone', e.target.value); clearErr('receiver_phone'); }}
-            error={errors.receiver_phone} />
-          <div className="sm:col-span-2">
-            <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
-              onChange={e => { f('address', e.target.value); clearErr('address'); }}
-              rows={2} error={errors.address} />
-          </div>
-          <div className="sm:col-span-2">
-            <Textarea label="หมายเหตุ" value={form.note} onChange={e => f('note', e.target.value)} rows={2} />
-          </div>
-        </FormGrid>
+            {editingId
+              ? <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
+                  options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />
+              : <div />}
+            <Input label="ชื่อผู้รับ" required value={form.receiver_name}
+              onChange={e => { f('receiver_name', e.target.value); clearErr('receiver_name'); }}
+              error={errors.receiver_name} />
+            <Input label="เบอร์โทร" required value={form.receiver_phone}
+              onChange={e => { f('receiver_phone', e.target.value); clearErr('receiver_phone'); }}
+              error={errors.receiver_phone} />
+            <div className="sm:col-span-2">
+              <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
+                onChange={e => { f('address', e.target.value); clearErr('address'); }}
+                rows={2} error={errors.address} />
+            </div>
+            <div className="sm:col-span-2">
+              <Textarea label="หมายเหตุ" value={form.note} onChange={e => f('note', e.target.value)} rows={2} />
+            </div>
+          </FormSection>
+        </div>
       </CrudModal>
 
       <RegistryDrawer

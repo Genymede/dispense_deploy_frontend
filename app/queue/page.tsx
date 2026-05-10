@@ -4,7 +4,7 @@ import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import DetailDrawer from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
-import { CrudModal, FormGrid, FormSpan, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormGrid, FormSpan, FormSection, RowActions } from '@/components/CrudModal';
 import SearchSelect from '@/components/SearchSelect';
 import { Badge, Button, ConfirmDialog } from '@/components/ui';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -257,41 +257,43 @@ export default function QueuePage() {
         saving={saving}
         size="md"
       >
-        <FormGrid cols={1}>
-          <SearchSelect
-            key={modalKey}
-            type="patient"
-            label="ผู้ป่วย (ไม่บังคับ)"
-            onSelect={(id) => setPatientId(id as number | null)}
-          />
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">แผนก</label>
-            <select
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
-              value={ward}
-              onChange={e => setWard(e.target.value)}
-            >
-              <option value="">-- ไม่ระบุ (A) --</option>
-              <option value="OPD">OPD — ผู้ป่วยนอก (O)</option>
-              <option value="IPD">IPD — ผู้ป่วยใน (I)</option>
-              <option value="ER">ER — ฉุกเฉิน (E)</option>
-              <option value="ICU">ICU — วิกฤต (C)</option>
-              <option value="OR">OR — ห้องผ่าตัด (R)</option>
-              <option value="ANC">ANC — ฝากครรภ์ (N)</option>
-              <option value="LR">LR — ห้องคลอด (L)</option>
-            </select>
-          </div>
-          <FormSpan>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">หมายเหตุ</label>
-            <textarea
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
-              rows={3}
-              placeholder="หมายเหตุ (ไม่บังคับ)"
-              value={note}
-              onChange={e => setNote(e.target.value)}
+        <div className="flex flex-col gap-4">
+          <FormSection title="ข้อมูลคิว" cols={1}>
+            <SearchSelect
+              key={modalKey}
+              type="patient"
+              label="ผู้ป่วย (ไม่บังคับ)"
+              onSelect={(id) => setPatientId(id as number | null)}
             />
-          </FormSpan>
-        </FormGrid>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 tracking-wide block mb-1.5">แผนก</label>
+              <select
+                className="w-full h-9 border border-slate-200 rounded-lg px-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 bg-white"
+                value={ward}
+                onChange={e => setWard(e.target.value)}
+              >
+                <option value="">-- ไม่ระบุ (A) --</option>
+                <option value="OPD">OPD — ผู้ป่วยนอก (O)</option>
+                <option value="IPD">IPD — ผู้ป่วยใน (I)</option>
+                <option value="ER">ER — ฉุกเฉิน (E)</option>
+                <option value="ICU">ICU — วิกฤต (C)</option>
+                <option value="OR">OR — ห้องผ่าตัด (R)</option>
+                <option value="ANC">ANC — ฝากครรภ์ (N)</option>
+                <option value="LR">LR — ห้องคลอด (L)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 tracking-wide block mb-1.5">หมายเหตุ</label>
+              <textarea
+                className="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 resize-none"
+                rows={3}
+                placeholder="หมายเหตุ (ไม่บังคับ)"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+              />
+            </div>
+          </FormSection>
+        </div>
       </CrudModal>
 
       {/* Detail Drawer */}

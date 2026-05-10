@@ -72,9 +72,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export function Input({ label, error, icon, suffix, className, ...props }: InputProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-xs font-medium text-slate-700">
+        <label className="text-xs font-semibold text-slate-600 tracking-wide">
           {label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -114,9 +114,9 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export function Select({ label, error, options, placeholder, className, ...props }: SelectProps) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-xs font-medium text-slate-700">
+        <label className="text-xs font-semibold text-slate-600 tracking-wide">
           {label}
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -306,8 +306,8 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export function Textarea({ label, error, className, ...props }: TextareaProps) {
   return (
-    <div className="flex flex-col gap-1">
-      {label && <label className="text-xs font-medium text-slate-700">{label}</label>}
+    <div className="flex flex-col gap-1.5">
+      {label && <label className="text-xs font-semibold text-slate-600 tracking-wide">{label}</label>}
       <textarea
         className={clsx(
           "w-full rounded-lg border text-sm bg-white text-slate-800 placeholder:text-slate-400 transition-colors p-3 outline-none resize-none",

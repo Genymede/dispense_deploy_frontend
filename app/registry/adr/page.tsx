@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
@@ -118,37 +118,41 @@ export default function AdrPage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ADR" editingId={editingId} onSave={handleSave} saving={saving} size="lg">
-        <FormGrid>
-          <div>
-            <SearchSelect type="patient" label="ผู้ป่วย" required
-              initialDisplay={form.patient_label} resetKey={resetKey}
-              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
-            {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
-          </div>
-          <div>
-            <SearchSelect type="drug" label="ยาที่เกิด ADR" required
-              initialDisplay={form.med_label} resetKey={resetKey}
-              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
-            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
-          </div>
-          <SearchSelect type="user" label="ผู้รายงาน"
-            initialDisplay={form.reporter_label} resetKey={resetKey}
-            onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
-          <Input label="วันที่รายงาน" required type="datetime-local"
-            value={form.reported_at} onChange={e => { f('reported_at', e.target.value); clearErr('reported_at'); }}
-            error={errors.reported_at} />
-          <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
-            placeholder="เลือก" options={['mild','moderate','severe'].map(s => ({ value: s, label: s }))} />
-          <Input label="ผลลัพธ์" value={form.outcome} onChange={e => f('outcome', e.target.value)}
-            placeholder="recovered, not recovered..." />
-          <div className="sm:col-span-2">
-            <Textarea label="คำอธิบาย" required value={form.description}
-              onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
-              error={errors.description} />
-          </div>
-          <Textarea label="อาการ" value={form.symptoms} onChange={e => f('symptoms', e.target.value)} rows={2} />
-          <Textarea label="หมายเหตุ" value={form.notes} onChange={e => f('notes', e.target.value)} rows={2} />
-        </FormGrid>
+        <div className="flex flex-col gap-4">
+          <FormSection title="ข้อมูลผู้ป่วยและยา">
+            <div>
+              <SearchSelect type="patient" label="ผู้ป่วย" required
+                initialDisplay={form.patient_label} resetKey={resetKey}
+                onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); clearErr('patient_id'); }} />
+              {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
+            </div>
+            <div>
+              <SearchSelect type="drug" label="ยาที่เกิด ADR" required
+                initialDisplay={form.med_label} resetKey={resetKey}
+                onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+              {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+            </div>
+            <SearchSelect type="user" label="ผู้รายงาน"
+              initialDisplay={form.reporter_label} resetKey={resetKey}
+              onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
+            <Input label="วันที่รายงาน" required type="datetime-local"
+              value={form.reported_at} onChange={e => { f('reported_at', e.target.value); clearErr('reported_at'); }}
+              error={errors.reported_at} />
+          </FormSection>
+          <FormSection title="รายละเอียดปฏิกิริยา">
+            <Select label="ระดับ" value={form.severity} onChange={e => f('severity', e.target.value)}
+              placeholder="เลือก" options={['mild','moderate','severe'].map(s => ({ value: s, label: s }))} />
+            <Input label="ผลลัพธ์" value={form.outcome} onChange={e => f('outcome', e.target.value)}
+              placeholder="recovered, not recovered..." />
+            <div className="sm:col-span-2">
+              <Textarea label="คำอธิบาย" required value={form.description}
+                onChange={e => { f('description', e.target.value); clearErr('description'); }} rows={3}
+                error={errors.description} />
+            </div>
+            <Textarea label="อาการ" value={form.symptoms} onChange={e => f('symptoms', e.target.value)} rows={2} />
+            <Textarea label="หมายเหตุ" value={form.notes} onChange={e => f('notes', e.target.value)} rows={2} />
+          </FormSection>
+        </div>
       </CrudModal>
 
       <DetailDrawer open={!!drawer} onClose={() => setDrawer(null)}

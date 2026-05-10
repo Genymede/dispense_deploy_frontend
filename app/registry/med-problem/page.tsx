@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
@@ -144,29 +144,33 @@ export default function MedProblemPage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ปัญหาการใช้ยา" editingId={editingId} onSave={handleSave} saving={saving} size="lg">
-        <FormGrid>
-          <SearchSelect type="patient" label="ผู้ป่วย" required
-            initialDisplay={form.patient_label} resetKey={resetKey}
-            onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
-          <SearchSelect type="drug" label="ยา" required
-            initialDisplay={form.med_label} resetKey={resetKey}
-            onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
-          <Select label="ประเภทปัญหา" required value={form.problem_type}
-            onChange={e => f('problem_type', e.target.value)}
-            placeholder="เลือกประเภท" options={PROBLEM_TYPES} />
-          <Select label="สถานะ" value={String(form.is_resolved)}
-            onChange={e => f('is_resolved', e.target.value === 'true')}
-            options={[{ value: 'false', label: 'ยังไม่แก้ไข' }, { value: 'true', label: 'แก้ไขแล้ว' }]} />
-          <SearchSelect type="user" label="ผู้รายงาน"
-            initialDisplay={form.reporter_label} resetKey={resetKey}
-            onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
-          <Input label="วันที่รายงาน" type="datetime-local"
-            value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
-          <div className="sm:col-span-2">
-            <Textarea label="คำอธิบาย" required value={form.description}
-              onChange={e => f('description', e.target.value)} rows={4} />
-          </div>
-        </FormGrid>
+        <div className="flex flex-col gap-4">
+          <FormSection title="ข้อมูลผู้ป่วยและยา">
+            <SearchSelect type="patient" label="ผู้ป่วย" required
+              initialDisplay={form.patient_label} resetKey={resetKey}
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
+            <SearchSelect type="drug" label="ยา" required
+              initialDisplay={form.med_label} resetKey={resetKey}
+              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); }} />
+          </FormSection>
+          <FormSection title="รายละเอียดปัญหา">
+            <Select label="ประเภทปัญหา" required value={form.problem_type}
+              onChange={e => f('problem_type', e.target.value)}
+              placeholder="เลือกประเภท" options={PROBLEM_TYPES} />
+            <Select label="สถานะ" value={String(form.is_resolved)}
+              onChange={e => f('is_resolved', e.target.value === 'true')}
+              options={[{ value: 'false', label: 'ยังไม่แก้ไข' }, { value: 'true', label: 'แก้ไขแล้ว' }]} />
+            <SearchSelect type="user" label="ผู้รายงาน"
+              initialDisplay={form.reporter_label} resetKey={resetKey}
+              onSelect={u => { f('reporter_id', u?.id ?? null); f('reporter_label', u?.full_name ?? ''); }} />
+            <Input label="วันที่รายงาน" type="datetime-local"
+              value={form.reported_at} onChange={e => f('reported_at', e.target.value)} />
+            <div className="sm:col-span-2">
+              <Textarea label="คำอธิบาย" required value={form.description}
+                onChange={e => f('description', e.target.value)} rows={4} />
+            </div>
+          </FormSection>
+        </div>
       </CrudModal>
 
       <DetailDrawer open={!!drawer} onClose={() => setDrawer(null)}

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Badge, ConfirmDialog } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
@@ -125,20 +125,24 @@ export default function OverduePage() {
 
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="ยาค้างจ่าย" editingId={editingId} onSave={handleSave} saving={saving}>
-        <FormGrid>
-          <div>
-            <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required initialDisplay={form.med_label} resetKey={resetKey}
-              onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); if (errors.med_id) setErrors(p => ({ ...p, med_id: '' })); }} />
-            {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
-          </div>
-          <SearchSelect type="subwarehouse" label="ยาในคลัง" initialDisplay={form.drug_sub_label} resetKey={resetKey}
-            onSelect={s => { f('med_sid', s?.med_sid ?? 0); f('drug_sub_label', s ? (s.med_showname || s.med_name) : ''); }} />
-          <SearchSelect type="patient" label="ผู้ป่วย" initialDisplay={form.patient_label} resetKey={resetKey}
-            onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
-          <SearchSelect type="user" label="แพทย์" initialDisplay={form.doctor_label} resetKey={resetKey}
-            onSelect={u => { f('doctor_id', u?.id ?? null); f('doctor_label', u?.full_name ?? ''); }} />
-          <Input label="จำนวน" type="number" min="1" value={form.quantity} onChange={e => f('quantity', e.target.value)} />
-        </FormGrid>
+        <div className="flex flex-col gap-4">
+          <FormSection title="ยาและผู้ป่วย">
+            <div>
+              <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required initialDisplay={form.med_label} resetKey={resetKey}
+                onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); if (errors.med_id) setErrors(p => ({ ...p, med_id: '' })); }} />
+              {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+            </div>
+            <SearchSelect type="subwarehouse" label="ยาในคลัง" initialDisplay={form.drug_sub_label} resetKey={resetKey}
+              onSelect={s => { f('med_sid', s?.med_sid ?? 0); f('drug_sub_label', s ? (s.med_showname || s.med_name) : ''); }} />
+            <SearchSelect type="patient" label="ผู้ป่วย" initialDisplay={form.patient_label} resetKey={resetKey}
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
+            <SearchSelect type="user" label="แพทย์" initialDisplay={form.doctor_label} resetKey={resetKey}
+              onSelect={u => { f('doctor_id', u?.id ?? null); f('doctor_label', u?.full_name ?? ''); }} />
+          </FormSection>
+          <FormGrid cols={1}>
+            <Input label="จำนวน" type="number" min="1" value={form.quantity} onChange={e => f('quantity', e.target.value)} />
+          </FormGrid>
+        </div>
       </CrudModal>
 
       <ConfirmDialog {...alertDialogProps} />
