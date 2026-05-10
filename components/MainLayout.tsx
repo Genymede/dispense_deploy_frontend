@@ -74,11 +74,11 @@ export default function MainLayout({ children, title, subtitle, actions }: MainL
                 โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม
               </h2>
               <p className="text-[11px] text-blue-100 font-medium truncate">
-                PharmSub — ระบบบริหารคลังยาย่อย
+                ระบบบริหารการจ่ายยาและคลังยาย่อย
               </p>
             </div>
             <div className="block md:hidden min-w-0">
-              <h2 className="font-bold text-sm leading-tight truncate">PharmSub</h2>
+              <h2 className="font-bold text-sm leading-tight truncate">ระบบบริหารการจ่ายยาและคลังยาย่อย</h2>
               <p className="text-[10px] text-blue-100 truncate">ระบบจ่ายยา</p>
             </div>
           </div>
