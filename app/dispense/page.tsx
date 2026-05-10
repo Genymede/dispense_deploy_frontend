@@ -7,7 +7,7 @@ import SafetyPanel from '@/components/SafetyPanel';
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
 import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, drugApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
-import { validateDrugLots } from '@/lib/drugUtils';
+import { validateDrugLots, fmtFreq } from '@/lib/drugUtils';
 import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
@@ -433,7 +433,7 @@ export default function DispensePage() {
             const parts = (it.dose || '').trim().split(/\s+/);
             const dose_qty = parseFloat(parts[0]) || 1;
             const dose_unit = parts.slice(1).join(' ') || drugUnits[0] || 'เม็ด';
-            return { ...it, dose_qty, dose_unit };
+            return { ...it, dose_qty, dose_unit, frequency: fmtFreq(it.frequency) };
           });
           setDispenseItems(items);
           setPrintSelected(new Set(items.map((_: any, i: number) => i)));
