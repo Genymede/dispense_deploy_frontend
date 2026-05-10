@@ -102,21 +102,6 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
           </div>
         )}
       </td>
-      {/* ขนาดยา */}
-      <td className="px-3 py-2 whitespace-nowrap">
-        <div className="flex items-center gap-1">
-          <input type="number" min="0.25" step="0.25" value={item.dose_qty || 1}
-            onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
-            className="w-14 h-7 border border-slate-200 rounded-lg text-xs px-2 outline-none focus:border-primary-500 text-center" />
-          <select value={item.dose_unit || ''} onChange={e => onUpdate('dose_unit', e.target.value)}
-            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
-            {drugUnits.length === 0
-              ? <option value="เม็ด">เม็ด</option>
-              : drugUnits.map(u => <option key={u} value={u}>{u}</option>)
-            }
-          </select>
-        </div>
-      </td>
       {/* จำนวน */}
       <td className="px-3 py-2 whitespace-nowrap">
         <div className="flex items-center gap-1">
@@ -129,6 +114,19 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
       {/* วิธีใช้ */}
       <td className="px-3 py-2">
         <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <input type="number" min="0.25" step="0.25" value={item.dose_qty || 1}
+              onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
+              className="w-14 h-7 border border-slate-200 rounded-lg text-xs px-2 outline-none focus:border-primary-500 text-center" />
+            <select value={item.dose_unit || ''} onChange={e => onUpdate('dose_unit', e.target.value)}
+              className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
+              {drugUnits.length === 0
+                ? <option value="เม็ด">เม็ด</option>
+                : drugUnits.map(u => <option key={u} value={u}>{u}</option>)
+              }
+            </select>
+            <span className="text-xs text-slate-400">/ครั้ง</span>
+          </div>
           <select value={item.route} onChange={e => onUpdate('route', e.target.value)}
             className="w-full h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
             {ROUTE.map(o => <option key={o}>{o}</option>)}
@@ -1205,7 +1203,7 @@ export default function DispensePage() {
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2.5 text-center font-semibold text-slate-500 w-6">#</th>
-                      {['ชื่อยา', 'ขนาดยา', 'จำนวน', 'วิธีใช้', 'ราคา (บาท)', ''].map(h => (
+                      {['ชื่อยา', 'จำนวน', 'วิธีใช้', 'ราคา (บาท)', ''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-500">{h}</th>
                       ))}
                     </tr>
@@ -1424,7 +1422,6 @@ export default function DispensePage() {
                           />
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
-                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">ขนาดยา</th>
                         <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">จำนวน</th>
                         <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">วิธีใช้</th>
                         <th className="px-2 py-2 text-right text-xs font-semibold text-slate-500">ราคา</th>
@@ -1481,21 +1478,6 @@ export default function DispensePage() {
                                 </div>
                               )}
                             </td>
-                            {/* ขนาดยา */}
-                            <td className="px-2 py-2 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
-                                  onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
-                                  className="w-14 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
-                                <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
-                                  className="h-7 border border-slate-200 rounded text-xs px-1 bg-white outline-none focus:border-primary-500">
-                                  {drugUnits.length === 0
-                                    ? <option value="เม็ด">เม็ด</option>
-                                    : drugUnits.map((u: string) => <option key={u} value={u}>{u}</option>)
-                                  }
-                                </select>
-                              </div>
-                            </td>
                             {/* จำนวน */}
                             <td className="px-2 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
@@ -1508,6 +1490,19 @@ export default function DispensePage() {
                             {/* วิธีใช้ */}
                             <td className="px-2 py-2">
                               <div className="space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
+                                    onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
+                                    className="w-14 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
+                                  <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
+                                    className="h-7 border border-slate-200 rounded text-xs px-1 bg-white outline-none focus:border-primary-500">
+                                    {drugUnits.length === 0
+                                      ? <option value="เม็ด">เม็ด</option>
+                                      : drugUnits.map((u: string) => <option key={u} value={u}>{u}</option>)
+                                    }
+                                  </select>
+                                  <span className="text-xs text-slate-400">/ครั้ง</span>
+                                </div>
                                 <select value={it.route || 'รับประทาน'} onChange={e => updateDispenseItem(i, 'route', e.target.value)}
                                   className="w-full h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
                                   {ROUTE.map(o => <option key={o}>{o}</option>)}
@@ -1558,7 +1553,7 @@ export default function DispensePage() {
                     {dispenseItems.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0) > 0 && (
                       <tfoot>
                         <tr className="bg-slate-50 border-t border-slate-200">
-                          <td colSpan={6} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
+                          <td colSpan={4} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
                           <td className="px-2 py-2 text-right text-sm font-bold text-primary-700">
                             {dispenseItems.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                           </td>
