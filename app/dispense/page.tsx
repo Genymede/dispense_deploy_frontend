@@ -1435,14 +1435,27 @@ export default function DispensePage() {
                         </button>
                       </div>
                     )}
+                    {(dispensePatientDetail.weight || dispensePatientDetail.height || dispensePatientDetail.bmi) && (
+                      <div className="col-span-4 flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span className="text-slate-400 mr-0.5">Vitals:</span>
+                        {dispensePatientDetail.weight && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            น้ำหนัก <strong>{dispensePatientDetail.weight}</strong> kg
+                          </span>
+                        )}
+                        {dispensePatientDetail.height && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            ส่วนสูง <strong>{dispensePatientDetail.height}</strong> cm
+                          </span>
+                        )}
+                        {dispensePatientDetail.bmi && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            BMI <strong>{Number(dispensePatientDetail.bmi).toFixed(1)}</strong>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {(dispensePatientDetail.weight || dispensePatientDetail.height || dispensePatientDetail.bmi) && (
-                    <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 text-center text-xs">
-                      <div className="py-1.5"><p className="text-slate-400">น้ำหนัก</p><p className="font-semibold">{dispensePatientDetail.weight ?? '—'} <span className="text-slate-400 font-normal">kg</span></p></div>
-                      <div className="py-1.5"><p className="text-slate-400">ส่วนสูง</p><p className="font-semibold">{dispensePatientDetail.height ?? '—'} <span className="text-slate-400 font-normal">cm</span></p></div>
-                      <div className="py-1.5"><p className="text-slate-400">BMI</p><p className="font-semibold">{dispensePatientDetail.bmi ? Number(dispensePatientDetail.bmi).toFixed(1) : '—'}</p></div>
-                    </div>
-                  )}
                 </div>
               )}
 
