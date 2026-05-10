@@ -456,7 +456,7 @@ export default function DispensePage() {
               prev ? { ...prev, ...detail, gender: detail.gender || prev.gender } : detail
             );
           })
-          .catch(() => { })
+          .catch((e) => { console.error('[patientApi.getById] error:', e); })
         : Promise.resolve(),
     ]);
   };
