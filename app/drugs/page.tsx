@@ -55,6 +55,8 @@ export default function DrugsPage() {
   const [lotsReloadKey, setLotsReloadKey] = useState(0);
   const [writingOff, setWritingOff] = useState(false);
   const [writeOffConfirm, setWriteOffConfirm] = useState<{ lot: StockLot } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // form state
   const [form, setForm] = useState(emptyForm);
@@ -658,7 +660,7 @@ export default function DrugsPage() {
       </DetailDrawer>
 
       {/* Write-off Confirm Dialog — portal so it stacks above DetailDrawer */}
-      {writeOffConfirm && viewDrug && typeof window !== 'undefined' && createPortal(
+      {mounted && writeOffConfirm && viewDrug && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-3">
