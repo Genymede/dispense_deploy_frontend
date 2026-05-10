@@ -51,7 +51,8 @@ const ROUTE = ['รับประทาน', 'ฉีดเข้ากล้า
 
 interface DrugItem {
   med_sid: number; med_id?: number; med_showname: string; med_name: string;
-  quantity: number; frequency: string; route: string; unit: string;
+  quantity: number; dose_qty?: number; dose_unit?: string;
+  frequency: string; route: string; unit: string;
   unit_price: number; meal_relation?: string; meal_sessions?: string;
 }
 
@@ -73,11 +74,12 @@ function InlineSafetyBadge({ alerts }: { alerts: any[] }) {
 }
 
 // ─── Drug row in edit/create form ─────────────────────────────────────────────
-function DrugRow({ item, idx, onUpdate, onRemove, alerts }: {
+function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
   item: DrugItem; idx: number;
   onUpdate: (k: keyof DrugItem, v: any) => void;
   onRemove: () => void;
   alerts: any[];
+  drugUnits: string[];
 }) {
   const hasCrit = alerts.some(a => a.level === 'critical');
   const hasWarn = alerts.some(a => a.level === 'warning');
@@ -99,6 +101,18 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts }: {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-1 mt-1.5">
+          <input type="number" min="0.25" step="0.25" value={item.dose_qty ?? 1}
+            onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
+            className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
+          <select value={item.dose_unit || ''} onChange={e => onUpdate('dose_unit', e.target.value)}
+            className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+            {drugUnits.length === 0
+              ? <option value="เม็ด">เม็ด</option>
+              : drugUnits.map(u => <option key={u} value={u}>{u}</option>)
+            }
+          </select>
+          <span className="text-[10px] text-slate-400">/ครั้ง</span>
+          <span className="text-[10px] text-slate-300">·</span>
           <select value={item.meal_relation || ''} onChange={e => onUpdate('meal_relation', e.target.value)}
             className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
             <option value="">ไม่ระบุเวลา</option>
@@ -236,6 +250,14 @@ export default function DispensePage() {
   const [mockCount, setMockCount] = useState(1);
   const [mocking, setMocking] = useState(false);
 
+  // drug units from settings
+  const [drugUnits, setDrugUnits] = useState<string[]>([]);
+  useEffect(() => {
+    api.get('/settings').then(r => {
+      if (r.data.drug_units) try { setDrugUnits(JSON.parse(r.data.drug_units)); } catch { }
+    }).catch(() => { });
+  }, []);
+
   // ── Load list ──────────────────────────────────────────────────────────────
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -301,7 +323,9 @@ export default function DispensePage() {
     setItems(prev => [...prev, {
       med_sid: drug.med_sid, med_id: drug.med_id,
       med_showname: drug.med_showname || drug.med_name,
-      med_name: drug.med_name, quantity: 1, frequency: 'วันละ 1 ครั้ง',
+      med_name: drug.med_name, quantity: 1,
+      dose_qty: 1, dose_unit: drugUnits[0] || 'เม็ด',
+      frequency: 'วันละ 1 ครั้ง',
       route: 'รับประทาน', unit: drug.unit || 'เม็ด',
       unit_price: Number(drug.unit_price) || Number(drug.list_selling_price) || 0,
       meal_relation: '', meal_sessions: '',
@@ -349,6 +373,7 @@ export default function DispensePage() {
         await api.put(`/dispense/${editingRxId}/items`, {
           items: items.map(it => ({
             med_sid: it.med_sid, quantity: it.quantity,
+            dose: `${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(),
             frequency: it.frequency, route: it.route,
             meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
@@ -363,6 +388,7 @@ export default function DispensePage() {
           ward, note,
           items: items.map(it => ({
             med_sid: it.med_sid, quantity: it.quantity,
+            dose: `${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(),
             frequency: it.frequency, route: it.route,
             meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
@@ -396,7 +422,12 @@ export default function DispensePage() {
         .catch(() => { }),
       api.get(`/dispense/${rx.prescription_id}/full`)
         .then(r => {
-          const items = r.data.items ?? [];
+          const items = (r.data.items ?? []).map((it: any) => {
+            const parts = (it.dose || '').trim().split(/\s+/);
+            const dose_qty = parseFloat(parts[0]) || 1;
+            const dose_unit = parts.slice(1).join(' ') || drugUnits[0] || 'เม็ด';
+            return { ...it, dose_qty, dose_unit };
+          });
           setDispenseItems(items);
           setPrintSelected(new Set(items.map((_: any, i: number) => i)));
         })
@@ -469,6 +500,7 @@ export default function DispensePage() {
         await api.put(`/dispense/${dispenseRx.prescription_id}/items`, {
           items: dispenseItems.map((it: any) => ({
             med_sid: it.med_sid, quantity: it.quantity,
+            dose: `${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(),
             frequency: it.frequency || '', route: it.route || 'รับประทาน',
             meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
@@ -527,7 +559,7 @@ export default function DispensePage() {
         `${it.med_showname || it.med_name}`,
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
         `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
-        `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}${it.meal_relation ? ` ${it.meal_relation}` : ''}${it.meal_sessions ? ` (${it.meal_sessions.split(',').join(' ')})` : ''}`,
+        `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''} ${it.route || ''} ${it.frequency || ''}${it.meal_relation ? ` ${it.meal_relation}` : ''}${it.meal_sessions ? ` (${it.meal_sessions.split(',').join(' ')})` : ''}`.trim(),
         `แผนก: ${rx.ward || '-'}`,
       ].filter(Boolean).join('\n');
 
@@ -559,7 +591,9 @@ export default function DispensePage() {
       item_id: undefined,
       med_sid: drug.med_sid, med_id: drug.med_id,
       med_showname: drug.med_showname || drug.med_name,
-      med_name: drug.med_name, quantity: 1, frequency: 'วันละ 1 ครั้ง',
+      med_name: drug.med_name, quantity: 1,
+      dose_qty: 1, dose_unit: drugUnits[0] || 'เม็ด',
+      frequency: 'วันละ 1 ครั้ง',
       route: 'รับประทาน', unit: drug.unit || 'เม็ด',
       unit_price: Number(drug.unit_price) || Number(drug.list_selling_price) || 0,
       stock_available: available,
@@ -1172,6 +1206,7 @@ export default function DispensePage() {
                   <tbody>
                     {items.map((it, idx) => (
                       <DrugRow key={idx} item={it} idx={idx}
+                        drugUnits={drugUnits}
                         alerts={liveAlerts[it.med_sid] ?? []}
                         onUpdate={(k, v) => updateItem(idx, k, v)}
                         onRemove={() => removeItem(idx)} />
@@ -1422,6 +1457,18 @@ export default function DispensePage() {
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
                               </div>
                               <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                                <input type="number" min="0.25" step="0.25" value={it.dose_qty ?? 1}
+                                  onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
+                                  className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
+                                <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
+                                  className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+                                  {drugUnits.length === 0
+                                    ? <option value="เม็ด">เม็ด</option>
+                                    : drugUnits.map((u: string) => <option key={u} value={u}>{u}</option>)
+                                  }
+                                </select>
+                                <span className="text-[10px] text-slate-400">/ครั้ง</span>
+                                <span className="text-[10px] text-slate-300">·</span>
                                 <select value={it.meal_relation || ''} onChange={e => updateDispenseItem(i, 'meal_relation', e.target.value)}
                                   className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
                                   <option value="">ไม่ระบุเวลา</option>
