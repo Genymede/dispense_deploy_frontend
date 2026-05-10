@@ -1200,27 +1200,35 @@ export default function DispensePage() {
                     <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
                     <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
                     <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
-                    <div><span className="text-slate-400">เบอร์โทรศัพท์: </span><span>{createPatientDetail.phone || '—'}</span></div>
+                    <div><span className="text-slate-400">เบอร์โทร: </span><span>{createPatientDetail.phone || '—'}</span></div>
                     <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}</span></div>
                     {createPatientDetail.PMH && (
                       <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
                     )}
+                    {(createPatientDetail.weight || createPatientDetail.height || createPatientDetail.bmi) && (
+                      <div className="col-span-4 flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span className="text-slate-400 mr-0.5">Vitals:</span>
+                        {createPatientDetail.weight && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            น้ำหนัก <strong>{createPatientDetail.weight}</strong> kg
+                          </span>
+                        )}
+                        {createPatientDetail.height && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            ส่วนสูง <strong>{createPatientDetail.height}</strong> cm
+                          </span>
+                        )}
+                        {createPatientDetail.bmi && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                            BMI <strong>{Number(createPatientDetail.bmi).toFixed(1)}</strong>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Vitals */}
-                  <div className="grid grid-cols-5 gap-3 pt-2 border-t border-slate-100">
-                    <div className="text-xs">
-                      <span className="text-slate-400 block mb-1">น้ำหนัก (kg)</span>
-                      <span className="font-medium">{createPatientDetail.weight ?? '—'}</span>
-                    </div>
-                    <div className="text-xs">
-                      <span className="text-slate-400 block mb-1">ส่วนสูง (cm)</span>
-                      <span className="font-medium">{createPatientDetail.height ?? '—'}</span>
-                    </div>
-                    <div className="text-xs">
-                      <span className="text-slate-400 block mb-1">BMI</span>
-                      <span className="font-medium">{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span>
-                    </div>
+                  {/* Vitals inputs */}
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                     <div className="text-xs">
                       <label className="text-slate-400 block mb-1">Temp (°C)</label>
                       <input value={createVitals.temp} onChange={e => setCreateVitals(v => ({ ...v, temp: e.target.value }))}
