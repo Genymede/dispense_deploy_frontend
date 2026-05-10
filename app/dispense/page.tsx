@@ -1056,12 +1056,12 @@ export default function DispensePage() {
             </div>
           </div>
         }>
-        <div className="space-y-6">
+        <div className="grid grid-cols-[2fr_3fr] gap-6 min-h-0">
 
-          {/* ─── ข้อมูลผู้ป่วย ─────────────────────────────────────── */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">ข้อมูลผู้ป่วย</p>
-            <div className="grid grid-cols-2 gap-3">
+          {/* ══ LEFT: ข้อมูลผู้ป่วย ══════════════════════════════════ */}
+          <div className="space-y-4 overflow-y-auto pr-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">ข้อมูลผู้ป่วย</p>
+            <div className="space-y-3">
               <div>
                 <SearchSelect type="patient" label="ผู้ป่วย" required
                   initialDisplay={patientLabel} resetKey={resetKey}
@@ -1072,9 +1072,7 @@ export default function DispensePage() {
                 initialDisplay={doctorLabel} resetKey={resetKey}
                 onSelect={u => { setDoctorId(u?.uid ?? 0); setDoctorLabel(u?.full_name ?? ''); }} />
               <div>
-                <label className="text-xs font-medium text-slate-600 block mb-1.5">
-                  แผนก <span className="text-red-400">*</span>
-                </label>
+                <label className="text-xs font-medium text-slate-600 block mb-1.5">แผนก <span className="text-red-400">*</span></label>
                 <input value={ward} onChange={e => { setWard(e.target.value); if (formErrors.ward) setFormErrors(p => ({ ...p, ward: '' })); }}
                   placeholder="OPD, IPD, ER, ICU..."
                   className={`w-full h-9 border rounded-lg text-sm px-3 outline-none focus:ring-2 focus:ring-primary-100 ${formErrors.ward ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-primary-500'}`} />
@@ -1086,164 +1084,143 @@ export default function DispensePage() {
                   placeholder="เช่น J06.9, HT, DM Type 2..."
                   className="w-full h-9 border border-slate-200 rounded-lg text-sm px-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
               </div>
-              <div className="col-span-2">
+              <div>
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">หมายเหตุจากแพทย์</label>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
                   placeholder="เช่น อาการแพ้ยาที่ยังไม่ยืนยัน, กำลังตั้งครรภ์..."
                   className="w-full border border-slate-200 rounded-lg text-sm px-3 py-2 outline-none focus:border-primary-500 resize-none" />
               </div>
             </div>
+
+            {/* Patient Demographics Panel */}
+            {patientId > 0 && (
+              <div className="rounded-xl border border-slate-200 overflow-hidden">
+                {createAllergyLoading ? (
+                  <div className="px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs text-slate-400">
+                    <Loader2 size={12} className="animate-spin" /> กำลังตรวจสอบแพ้ยา...
+                  </div>
+                ) : createAllergies.length > 0 ? (
+                  <div className="px-4 py-2.5 bg-red-500 text-white flex items-start gap-2">
+                    <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-sm font-bold">แพ้ยา: </span>
+                      <span className="text-sm">{createAllergies.map(a => a.med_name || a.drug_name || '').filter(Boolean).join(' · ')}</span>
+                      {createAllergies.some(a => a.symptoms) && (
+                        <p className="text-xs mt-0.5 text-red-100">อาการ: {createAllergies.map(a => a.symptoms).filter(Boolean).join('; ')}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-4 py-2 bg-green-50 flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-green-500" />
+                    <span className="text-xs text-green-700 font-medium">ไม่มีประวัติแพ้ยา</span>
+                  </div>
+                )}
+                {createPatientDetail && (
+                  <div className="px-4 py-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <div><span className="text-slate-400">HN: </span><span className="font-mono font-semibold text-slate-700">{createPatientDetail.hn_number}</span></div>
+                      <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender === 'M' ? 'ชาย' : createPatientDetail.gender === 'F' ? 'หญิง' : '—'}</span></div>
+                      <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
+                      <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
+                      <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
+                      <div><span className="text-slate-400">เบอร์โทร: </span><span>{createPatientDetail.phone || '—'}</span></div>
+                      <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}</span></div>
+                      {createPatientDetail.PMH && (
+                        <div className="col-span-2"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
+                      )}
+                      <div><span className="text-slate-400">น้ำหนัก: </span><span>{createPatientDetail.weight ? `${createPatientDetail.weight} kg` : '—'}</span></div>
+                      <div><span className="text-slate-400">ส่วนสูง: </span><span>{createPatientDetail.height ? `${createPatientDetail.height} cm` : '—'}</span></div>
+                      <div><span className="text-slate-400">BMI: </span><span>{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                      <div className="text-xs">
+                        <label className="text-slate-400 block mb-1">Temp (°C)</label>
+                        <input value={createVitals.temp} onChange={e => setCreateVitals(v => ({ ...v, temp: e.target.value }))}
+                          placeholder="36.5" className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
+                      </div>
+                      <div className="text-xs">
+                        <label className="text-slate-400 block mb-1">BP (mmHg)</label>
+                        <input value={createVitals.bp} onChange={e => setCreateVitals(v => ({ ...v, bp: e.target.value }))}
+                          placeholder="120/80" className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* ─── Patient Demographics Panel ────────────────────────── */}
-          {patientId > 0 && (
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              {/* Allergy banner */}
-              {createAllergyLoading ? (
-                <div className="px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs text-slate-400">
-                  <Loader2 size={12} className="animate-spin" /> กำลังตรวจสอบแพ้ยา...
-                </div>
-              ) : createAllergies.length > 0 ? (
-                <div className="px-4 py-2.5 bg-red-500 text-white flex items-start gap-2">
-                  <AlertTriangle size={15} className="shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-sm font-bold">แพ้ยา: </span>
-                    <span className="text-sm">
-                      {createAllergies.map(a => a.med_name || a.drug_name || '').filter(Boolean).join(' · ')}
-                    </span>
-                    {createAllergies.some(a => a.symptoms) && (
-                      <p className="text-xs mt-0.5 text-red-100">
-                        อาการ: {createAllergies.map(a => a.symptoms).filter(Boolean).join('; ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="px-4 py-2 bg-green-50 flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-green-500" />
-                  <span className="text-xs text-green-700 font-medium">ไม่มีประวัติแพ้ยา</span>
-                </div>
-              )}
-
-              {/* Demographics + treatment right */}
-              {createPatientDetail && (
-                <div className="px-4 py-3 space-y-3">
-                  <div className="grid grid-cols-4 gap-x-4 gap-y-1.5 text-xs">
-                    <div><span className="text-slate-400">HN: </span><span className="font-mono font-semibold text-slate-700">{createPatientDetail.hn_number}</span></div>
-                    <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender === 'M' ? 'ชาย' : createPatientDetail.gender === 'F' ? 'หญิง' : '—'}</span></div>
-                    <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
-                    <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
-                    <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
-                    <div><span className="text-slate-400">เบอร์โทร: </span><span>{createPatientDetail.phone || '—'}</span></div>
-                    <div className="col-span-2"><span className="text-slate-400">สิทธิ์: </span><span className="font-medium">{treatmentRightLabel(patientTreatmentRight, patientTreatmentRightNote) ?? '—'}</span></div>
-                    {createPatientDetail.PMH && (
-                      <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
-                    )}
-                    <div><span className="text-slate-400">น้ำหนัก: </span><span>{createPatientDetail.weight ? `${createPatientDetail.weight} kg` : '—'}</span></div>
-                    <div><span className="text-slate-400">ส่วนสูง: </span><span>{createPatientDetail.height ? `${createPatientDetail.height} cm` : '—'}</span></div>
-                    <div><span className="text-slate-400">BMI: </span><span>{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span></div>
-                  </div>
-
-                  {/* Vitals inputs */}
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                    <div className="text-xs">
-                      <label className="text-slate-400 block mb-1">Temp (°C)</label>
-                      <input value={createVitals.temp} onChange={e => setCreateVitals(v => ({ ...v, temp: e.target.value }))}
-                        placeholder="36.5"
-                        className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
-                    </div>
-                    <div className="text-xs">
-                      <label className="text-slate-400 block mb-1">BP (mmHg)</label>
-                      <input value={createVitals.bp} onChange={e => setCreateVitals(v => ({ ...v, bp: e.target.value }))}
-                        placeholder="120/80"
-                        className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="border-t border-slate-100" />
-
-          {/* ─── เพิ่มยา ───────────────────────────────────────────── */}
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">รายการยา</p>
+          {/* ══ RIGHT: รายการยา ══════════════════════════════════════ */}
+          <div className="space-y-4 overflow-y-auto pl-1 border-l border-slate-100">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">รายการยา</p>
             <SearchSelect type="subwarehouse" label="" resetKey={resetKey}
               initialDisplay="" onSelect={d => { if (d) { addItem(d); if (formErrors.items) setFormErrors(p => ({ ...p, items: '' })); } }}
               placeholder="พิมพ์ชื่อยาเพื่อเพิ่มในรายการ..." />
             {formErrors.items && <p className="mt-1.5 text-xs text-red-500">{formErrors.items}</p>}
-          </div>
 
-          {/* ─── Safety check ──────────────────────────────────────── */}
-          {items.length > 0 && (
-            <div className={`rounded-xl border px-4 py-3 ${loadingSafety ? 'bg-slate-50 border-slate-200' :
-              allLiveAlerts.some(a => a.level === 'critical') ? 'bg-red-50 border-red-200' :
-                allLiveAlerts.some(a => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
-                  'bg-green-50 border-green-200'
-              }`}>
-              {/* ── header ── */}
-              <div className="flex items-center gap-2 mb-1">
-                {loadingSafety
-                  ? <><Loader2 size={13} className="animate-spin text-slate-400" /><span className="text-xs text-slate-500">กำลังตรวจสอบความปลอดภัย...</span></>
-                  : allLiveAlerts.some(a => a.level === 'critical')
-                    ? <><ShieldX size={14} className="text-red-600" /><span className="text-xs font-semibold text-red-800">⛔ พบปัญหาร้ายแรง {allLiveAlerts.filter(a => a.level === 'critical').length} รายการ</span></>
-                    : allLiveAlerts.some(a => a.level === 'warning')
-                      ? <><ShieldAlert size={14} className="text-amber-600" /><span className="text-xs font-semibold text-amber-800">⚠ พบข้อควรระวัง {allLiveAlerts.length} รายการ</span></>
-                      : <><ShieldCheck size={14} className="text-green-600" /><span className="text-xs font-semibold text-green-800">✓ ผ่านการตรวจความปลอดภัย</span></>
-                }
-                {!patientId && !loadingSafety && (
-                  <span className="text-[11px] text-slate-400 ml-auto">* ยังไม่ได้เลือกผู้ป่วย — ยังไม่ตรวจแพ้ยา / ADR</span>
+            {items.length > 0 && (
+              <div className={`rounded-xl border px-4 py-3 ${loadingSafety ? 'bg-slate-50 border-slate-200' :
+                allLiveAlerts.some(a => a.level === 'critical') ? 'bg-red-50 border-red-200' :
+                  allLiveAlerts.some(a => a.level === 'warning') ? 'bg-amber-50 border-amber-200' :
+                    'bg-green-50 border-green-200'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  {loadingSafety
+                    ? <><Loader2 size={13} className="animate-spin text-slate-400" /><span className="text-xs text-slate-500">กำลังตรวจสอบความปลอดภัย...</span></>
+                    : allLiveAlerts.some(a => a.level === 'critical')
+                      ? <><ShieldX size={14} className="text-red-600" /><span className="text-xs font-semibold text-red-800">⛔ พบปัญหาร้ายแรง {allLiveAlerts.filter(a => a.level === 'critical').length} รายการ</span></>
+                      : allLiveAlerts.some(a => a.level === 'warning')
+                        ? <><ShieldAlert size={14} className="text-amber-600" /><span className="text-xs font-semibold text-amber-800">⚠ พบข้อควรระวัง {allLiveAlerts.length} รายการ</span></>
+                        : <><ShieldCheck size={14} className="text-green-600" /><span className="text-xs font-semibold text-green-800">✓ ผ่านการตรวจความปลอดภัย</span></>
+                  }
+                  {!patientId && !loadingSafety && (
+                    <span className="text-[11px] text-slate-400 ml-auto">* ยังไม่ได้เลือกผู้ป่วย</span>
+                  )}
+                </div>
+                {allLiveAlerts.length > 0 && (
+                  <div className="space-y-1.5 mt-2.5 max-h-32 overflow-y-auto">
+                    {allLiveAlerts.map((a, i) => (
+                      <div key={i} className={`flex items-start gap-2 text-xs rounded-lg px-3 py-2 ${a.level === 'critical' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                        <span className="shrink-0 mt-0.5">{a.level === 'critical' ? '⛔' : '⚠'}</span>
+                        <div><p className="font-semibold">{a.title}</p>{a.detail && <p className="opacity-75 mt-0.5">{a.detail}</p>}</div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-              {/* ── alert list ── */}
-              {allLiveAlerts.length > 0 && (
-                <div className="space-y-1.5 mt-2.5 max-h-40 overflow-y-auto">
-                  {allLiveAlerts.map((a, i) => (
-                    <div key={i} className={`flex items-start gap-2 text-xs rounded-lg px-3 py-2 ${a.level === 'critical' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
-                      <span className="shrink-0 mt-0.5">{a.level === 'critical' ? '⛔' : '⚠'}</span>
-                      <div>
-                        <p className="font-semibold">{a.title}</p>
-                        {a.detail && <p className="opacity-75 mt-0.5">{a.detail}</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* ─── ตารางยา ───────────────────────────────────────────── */}
-          {items.length > 0 && (
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                  <tr>
-                    <th className="px-3 py-2.5 text-left font-semibold text-slate-500 w-6 text-center">#</th>
-                    {['ชื่อยา', 'จำนวน', 'ความถี่', 'วิธีใช้งาน', 'ราคา (บาท)', ''].map(h => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-500">{h}</th>
+            {items.length > 0 && (
+              <div className="rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-3 py-2.5 text-center font-semibold text-slate-500 w-6">#</th>
+                      {['ชื่อยา', 'จำนวน', 'ความถี่', 'วิธีใช้งาน', 'ราคา (บาท)', ''].map(h => (
+                        <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-500">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((it, idx) => (
+                      <DrugRow key={idx} item={it} idx={idx}
+                        alerts={liveAlerts[it.med_sid] ?? []}
+                        onUpdate={(k, v) => updateItem(idx, k, v)}
+                        onRemove={() => removeItem(idx)} />
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((it, idx) => (
-                    <DrugRow key={idx} item={it} idx={idx}
-                      alerts={liveAlerts[it.med_sid] ?? []}
-                      onUpdate={(k, v) => updateItem(idx, k, v)}
-                      onRemove={() => removeItem(idx)} />
-                  ))}
-                </tbody>
-              </table>
-              {items.some(it => it.unit_price > 0) && (
-                <div className="flex justify-end items-center gap-2 px-4 py-2.5 border-t border-slate-100 bg-slate-50">
-                  <span className="text-xs text-slate-500">ยอดรวม</span>
-                  <span className="text-sm font-bold text-primary-700">
-                    {items.reduce((s, it) => s + it.unit_price * it.quantity, 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+                  </tbody>
+                </table>
+                {items.some(it => it.unit_price > 0) && (
+                  <div className="flex justify-end items-center gap-2 px-4 py-2.5 border-t border-slate-100 bg-slate-50">
+                    <span className="text-xs text-slate-500">ยอดรวม</span>
+                    <span className="text-sm font-bold text-primary-700">
+                      {items.reduce((s, it) => s + it.unit_price * it.quantity, 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
         </div>
       </Modal>
@@ -1283,9 +1260,10 @@ export default function DispensePage() {
               </div>
             </div>
           }>
-          <div className="space-y-5">
+          <div className="grid grid-cols-[2fr_3fr] gap-6 min-h-0">
 
-            {/* ══ 1. Patient card ═══════════════════════════════════════════ */}
+            {/* ══ LEFT: Patient card ════════════════════════════════════════ */}
+            <div className="space-y-0 overflow-y-auto pr-1">
             <div className="rounded-xl border border-slate-200 overflow-hidden">
 
               {/* identity row */}
@@ -1387,11 +1365,10 @@ export default function DispensePage() {
                 </div>
               </div>
             </div>
+            </div>
 
-            <div className="border-t border-slate-100" />
-
-            {/* ══ 3. Add drug + safety + table ═════════════════════════════ */}
-            <div className="space-y-3">
+            {/* ══ RIGHT: รายการยา ══════════════════════════════════════════ */}
+            <div className="space-y-3 overflow-y-auto pl-1 border-l border-slate-100">
 
               {/* safety panel — ใช้ live alerts เมื่อรายการยาถูกแก้ไข */}
               {loadingSafety && dispenseItemsChanged && (
@@ -1543,6 +1520,7 @@ export default function DispensePage() {
               )}
 
             </div>
+
           </div>
 
         </Modal>
