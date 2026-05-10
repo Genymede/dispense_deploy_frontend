@@ -279,7 +279,7 @@ export const stockApi = {
     performed_by?: string; note?: string;
   }) => api.post<StockTransaction>('/stock/expired', data),
 
-  writeOff: (data: { med_sid: number; note?: string }) =>
+  writeOff: (data: { med_sid: number; lot_id?: number; note?: string }) =>
     api.post<{ message: string; lots: number; quantity: number; balance_after: number }>('/stock/write-off', data),
 
   getLotsReport: (params: { type: 'expired' | 'near_expiry' | 'low_stock' | 'all'; days?: number }) =>

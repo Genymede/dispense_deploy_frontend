@@ -51,6 +51,9 @@ export default function DrugsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string,string>>({});
+  const [lotsReloadKey, setLotsReloadKey] = useState(0);
+  const [writingOff, setWritingOff] = useState(false);
+  const [writeOffConfirm, setWriteOffConfirm] = useState<{ type: 'lot'; lot: StockLot } | { type: 'all' } | null>(null);
 
   // form state
   const [form, setForm] = useState(emptyForm);
@@ -186,7 +189,7 @@ export default function DrugsPage() {
     drugApi.getLots(viewDrug.med_sid)
       .then(r => setViewLots(r.data))
       .catch(() => setViewLots([]));
-  }, [viewDrug?.med_sid]);
+  }, [viewDrug?.med_sid, lotsReloadKey]);
 
   // med_table search debounce
   useEffect(() => {
@@ -268,6 +271,24 @@ export default function DrugsPage() {
       loadDrugs();
     } catch (err: any) {
       toast.error(err.message);
+    }
+  };
+
+  const handleWriteOff = async () => {
+    if (!writeOffConfirm || !viewDrug) return;
+    setWritingOff(true);
+    try {
+      const payload: { med_sid: number; lot_id?: number } = { med_sid: viewDrug.med_sid };
+      if (writeOffConfirm.type === 'lot') payload.lot_id = writeOffConfirm.lot.lot_id;
+      const res = await stockApi.writeOff(payload);
+      toast.success(res.data.message);
+      setWriteOffConfirm(null);
+      setLotsReloadKey(k => k + 1);
+      loadDrugs();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setWritingOff(false);
     }
   };
 
@@ -513,7 +534,7 @@ export default function DrugsPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50">
                       <tr>
-                        {['Lot Number', 'จำนวน', 'วันหมดอายุ'].map(h => (
+                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', ''].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -528,6 +549,17 @@ export default function DrugsPage() {
                             <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
                             <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
                               {fmtDate(lot.exp_date)}
+                            </td>
+                            <td className="px-3 py-2">
+                              {isExpired && lot.quantity > 0 && (
+                                <button
+                                  onClick={() => setWriteOffConfirm({ type: 'lot', lot })}
+                                  className="p-1 rounded hover:bg-red-100 text-slate-300 hover:text-red-600 transition-colors"
+                                  title="ตัดออก"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -610,11 +642,60 @@ export default function DrugsPage() {
             </DrawerSection>
 
             <DrawerSection title="">
-              <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
+                {viewLots.some(l => l.exp_date && new Date(l.exp_date) < new Date() && l.quantity > 0) && (
+                  <Button variant="danger" icon={<Trash2 size={14} />} onClick={() => setWriteOffConfirm({ type: 'all' })}>
+                    ตัดออกทั้งหมด
+                  </Button>
+                )}
+              </div>
             </DrawerSection>
           </>
         )}
       </DetailDrawer>
+
+      {/* Write-off Confirm Dialog */}
+      {writeOffConfirm && viewDrug && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Trash2 size={22} className="text-red-600" />
+              <h3 className="font-bold text-base text-slate-800">ยืนยันการตัดออก</h3>
+            </div>
+            {writeOffConfirm.type === 'lot' ? (
+              <>
+                <p className="text-sm text-slate-600 mb-1">
+                  ตัดล็อต <span className="font-mono font-semibold">{writeOffConfirm.lot.lot_number || '—'}</span> ของ
+                </p>
+                <p className="font-semibold text-slate-800 mb-1">{viewDrug.med_showname || viewDrug.med_name}</p>
+                <p className="text-sm text-slate-500 mb-5">
+                  จำนวน <span className="font-semibold text-red-600">{writeOffConfirm.lot.quantity.toLocaleString()} {viewDrug.unit}</span> ออกจากคลัง
+                  <br /><span className="text-xs">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600 mb-1">ตัดล็อตยาหมดอายุทั้งหมดของ</p>
+                <p className="font-semibold text-slate-800 mb-1">{viewDrug.med_showname || viewDrug.med_name}</p>
+                <p className="text-sm text-slate-500 mb-5">
+                  <span className="text-xs">การกระทำนี้ไม่สามารถย้อนกลับได้</span>
+                </p>
+              </>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setWriteOffConfirm(null)} disabled={writingOff}
+                className="px-4 py-2 rounded-lg text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+                ยกเลิก
+              </button>
+              <button onClick={handleWriteOff} disabled={writingOff}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
+                {writingOff ? 'กำลังตัดออก...' : 'ยืนยันตัดออก'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog open={!!deleteId} title="ลบรายการยา"
         message="คุณแน่ใจหรือไม่ที่จะลบรายการยานี้ออกจากคลัง?"
