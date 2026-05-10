@@ -526,8 +526,8 @@ export default function DrugsPage() {
         {viewDrug && (
           <>
             {/* 1. รายละเอียด Lot — สำคัญที่สุด */}
-            <DrawerSection title={`รายละเอียด Lot (${viewLots.length} lot)`}>
-              {viewLots.length === 0 ? (
+            <DrawerSection title={`รายละเอียด Lot (${viewLots.filter(l => l.quantity > 0).length} lot)`}>
+              {viewLots.filter(l => l.quantity > 0).length === 0 ? (
                 <p className="text-xs text-slate-400">ยังไม่มี lot ในคลัง</p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1">
@@ -540,7 +540,7 @@ export default function DrugsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {viewLots.map(lot => {
+                      {viewLots.filter(l => l.quantity > 0).map(lot => {
                         const isExpired = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
                         const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + nearExpiryDays * 86400_000) : false;
                         return (
@@ -568,7 +568,7 @@ export default function DrugsPage() {
                     <tfoot className="bg-slate-50 border-t border-slate-100">
                       <tr>
                         <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
-                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
+                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.filter(l => l.quantity > 0).reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
                         <td />
                       </tr>
                     </tfoot>
