@@ -429,6 +429,7 @@ export default function DispensePage() {
         .catch(() => { }),
       api.get(`/dispense/${rx.prescription_id}/full`)
         .then(r => {
+          console.log('[dispense/full] r.data:', r.data);
           const items = (r.data.items ?? []).map((it: any) => {
             const parts = (it.dose || '').trim().split(/\s+/);
             const dose_qty = parseFloat(parts[0]) || 1;
@@ -451,12 +452,14 @@ export default function DispensePage() {
       rx.patient_id
         ? patientApi.getById(rx.patient_id)
           .then(r => {
+            console.log('[patientApi.getById] r.data:', r.data);
             const detail = r.data.patient ?? r.data;
+            console.log('[patientApi.getById] detail (will set as dispensePatientDetail):', detail);
             setDispensePatientDetail((prev: any) =>
               prev ? { ...prev, ...detail, gender: detail.gender || prev.gender } : detail
             );
           })
-          .catch(() => { })
+          .catch((e) => { console.error('[patientApi.getById] error:', e); })
         : Promise.resolve(),
     ]);
   };
