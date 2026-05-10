@@ -294,9 +294,15 @@ export default function DispensePage() {
     }, 600);
   }, []);
 
+  // only re-run when drug identity (which drugs) changes, not when quantity/dose/วิธีใช้ changes
+  const itemDrugKeys = useMemo(
+    () => items.map(it => `${it.med_sid}:${it.med_id ?? ''}`).join(','),
+    [items]
+  );
   useEffect(() => {
     if (showCreate) runLiveSafety(patientId, items);
-  }, [patientId, items, showCreate, runLiveSafety]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId, itemDrugKeys, showCreate]);
 
   // Fetch full patient detail + allergies when patient selected in create form
   useEffect(() => {
@@ -608,11 +614,12 @@ export default function DispensePage() {
     if (dispenseRx) runLiveSafety(dispenseRx.patient_id, newItems);
   };
 
+  const SKIP_SAFETY_KEYS = new Set(['quantity', 'dose_qty', 'dose_unit', 'frequency', 'route', 'meal_relation', 'meal_sessions']);
   const updateDispenseItem = (idx: number, k: string, v: any) => {
     const newItems = dispenseItems.map((it: any, i: number) => i === idx ? { ...it, [k]: v } : it);
     setDispenseItems(newItems);
     setDispenseItemsChanged(true);
-    if (dispenseRx) runLiveSafety(dispenseRx.patient_id, newItems);
+    if (dispenseRx && !SKIP_SAFETY_KEYS.has(k)) runLiveSafety(dispenseRx.patient_id, newItems);
   };
 
   const removeDispenseItem = (idx: number) => {
