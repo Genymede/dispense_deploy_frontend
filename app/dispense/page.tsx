@@ -318,8 +318,6 @@ export default function DispensePage() {
     ]).finally(() => setCreateAllergyLoading(false));
   }, [patientId, showCreate]);
 
-  console.log('createPatientDetail', createPatientDetail);
-
   // ── Items ──────────────────────────────────────────────────────────────────
   const addItem = async (drug: any) => {
     if (!drug) return;
@@ -439,6 +437,10 @@ export default function DispensePage() {
           });
           setDispenseItems(items);
           setPrintSelected(new Set(items.map((_: any, i: number) => i)));
+          // patch gender/phone/national_id from full detail if patient detail not yet loaded
+          setDispensePatientDetail((prev: any) =>
+            prev ? { ...prev, gender: prev.gender || r.data.gender } : { gender: r.data.gender, phone: r.data.phone, national_id: r.data.national_id }
+          );
         })
         .catch(() => { }),
       rx.patient_id
@@ -448,7 +450,12 @@ export default function DispensePage() {
         : Promise.resolve(),
       rx.patient_id
         ? patientApi.getById(rx.patient_id)
-          .then(r => setDispensePatientDetail(r.data.patient ?? r.data))
+          .then(r => {
+            const detail = r.data.patient ?? r.data;
+            setDispensePatientDetail((prev: any) =>
+              prev ? { ...prev, ...detail, gender: detail.gender || prev.gender } : detail
+            );
+          })
           .catch(() => { })
         : Promise.resolve(),
     ]);
@@ -1133,7 +1140,7 @@ export default function DispensePage() {
                   <div className="px-4 py-3 space-y-3">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                       <div><span className="text-slate-400">HN: </span><span className="font-mono font-semibold text-slate-700">{createPatientDetail.hn_number}</span></div>
-                      <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender}</span></div>
+                      <div><span className="text-slate-400">เพศ: </span><span>{createPatientDetail.gender == 'M' ? 'ชาย' : createPatientDetail.gender == 'F' ? 'หญิง' : '—'}</span></div>
                       <div><span className="text-slate-400">อายุ: </span><span>{createPatientDetail.age_y ?? '—'} ปี {createPatientDetail.age_m ?? ''} เดือน</span></div>
                       <div><span className="text-slate-400">หมู่เลือด: </span><span className="font-semibold">{createPatientDetail.blood_group?.trim() || '—'}</span></div>
                       <div><span className="text-slate-400">บัตรปชช.: </span><span className="font-mono">{createPatientDetail.national_id || '—'}</span></div>
