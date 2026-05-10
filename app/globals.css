@@ -111,6 +111,17 @@ aside ::-webkit-scrollbar-thumb:hover {
   }
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.25s ease-out both;
 }
@@ -199,7 +210,9 @@ button:focus-visible {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -210,12 +223,15 @@ button:focus-visible {
 
 .modal-box {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 32px 80px rgba(0, 0, 0, 0.16);
   width: 100%;
   max-height: 99vh;
   overflow-y: auto;
-  animation: fadeIn 0.2s ease-out;
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Bump tiny fixed-pixel text up */
