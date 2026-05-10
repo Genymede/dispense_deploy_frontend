@@ -1205,26 +1205,9 @@ export default function DispensePage() {
                     {createPatientDetail.PMH && (
                       <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{createPatientDetail.PMH}</span></div>
                     )}
-                    {(createPatientDetail.weight || createPatientDetail.height || createPatientDetail.bmi) && (
-                      <div className="col-span-4 flex items-center gap-1.5 flex-wrap pt-0.5">
-                        <span className="text-slate-400 mr-0.5">Vitals:</span>
-                        {createPatientDetail.weight && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            น้ำหนัก <strong>{createPatientDetail.weight}</strong> kg
-                          </span>
-                        )}
-                        {createPatientDetail.height && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            ส่วนสูง <strong>{createPatientDetail.height}</strong> cm
-                          </span>
-                        )}
-                        {createPatientDetail.bmi && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            BMI <strong>{Number(createPatientDetail.bmi).toFixed(1)}</strong>
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <div><span className="text-slate-400">น้ำหนัก: </span><span>{createPatientDetail.weight ? `${createPatientDetail.weight} kg` : '—'}</span></div>
+                    <div><span className="text-slate-400">ส่วนสูง: </span><span>{createPatientDetail.height ? `${createPatientDetail.height} cm` : '—'}</span></div>
+                    <div><span className="text-slate-400">BMI: </span><span>{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span></div>
                   </div>
 
                   {/* Vitals inputs */}
@@ -1435,26 +1418,9 @@ export default function DispensePage() {
                         </button>
                       </div>
                     )}
-                    {(dispensePatientDetail.weight || dispensePatientDetail.height || dispensePatientDetail.bmi) && (
-                      <div className="col-span-4 flex items-center gap-1.5 flex-wrap pt-0.5">
-                        <span className="text-slate-400 mr-0.5">Vitals:</span>
-                        {dispensePatientDetail.weight && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            น้ำหนัก <strong>{dispensePatientDetail.weight}</strong> kg
-                          </span>
-                        )}
-                        {dispensePatientDetail.height && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            ส่วนสูง <strong>{dispensePatientDetail.height}</strong> cm
-                          </span>
-                        )}
-                        {dispensePatientDetail.bmi && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                            BMI <strong>{Number(dispensePatientDetail.bmi).toFixed(1)}</strong>
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    <div><span className="text-slate-400">น้ำหนัก: </span><span>{dispensePatientDetail.weight ? `${dispensePatientDetail.weight} kg` : '—'}</span></div>
+                    <div><span className="text-slate-400">ส่วนสูง: </span><span>{dispensePatientDetail.height ? `${dispensePatientDetail.height} cm` : '—'}</span></div>
+                    <div><span className="text-slate-400">BMI: </span><span>{dispensePatientDetail.bmi ? Number(dispensePatientDetail.bmi).toFixed(1) : '—'}</span></div>
                   </div>
                 </div>
               )}
