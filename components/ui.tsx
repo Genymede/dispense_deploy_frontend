@@ -188,16 +188,17 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   footer?: ReactNode;
 }
 
 const modalSizes = {
-  sm:  "max-w-xl",
-  md:  "max-w-3xl",
-  lg:  "max-w-5xl",
-  xl:  "max-w-6xl",
+  sm:   "max-w-xl",
+  md:   "max-w-3xl",
+  lg:   "max-w-5xl",
+  xl:   "max-w-6xl",
   "2xl": "max-w-7xl",
+  full: "max-w-[99vw]",
 };
 
 export function Modal({ open, onClose, title, children, size = "md", footer }: ModalProps) {

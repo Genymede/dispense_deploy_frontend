@@ -89,8 +89,8 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
     <tr className={`border-b border-slate-50 ${rowCls}`}>
       <td className="px-3 py-2.5 text-center text-slate-300 font-medium w-6">{idx + 1}</td>
       <td className="px-3 py-2.5">
-        <p className="text-sm font-medium text-slate-800">{item.med_showname || item.med_name}</p>
-        <p className="text-[10px] text-slate-400">{item.med_name}</p>
+        <p className="text-base font-semibold text-slate-800">{item.med_showname || item.med_name}</p>
+        <p className="text-xs text-slate-400">{item.med_name}</p>
         {alerts.length > 0 && (
           <div className="mt-0.5 space-y-0.5">
             {alerts.slice(0, 2).map((a, i) => (
@@ -1232,7 +1232,7 @@ export default function DispensePage() {
           DISPENSE CONFIRM MODAL (พร้อม full safety check)
       ════════════════════════════════════════════════════════════════════ */}
       {dispenseRx && (
-        <Modal open onClose={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setPendingOverdueIds(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }} size="2xl"
+        <Modal open onClose={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setPendingOverdueIds(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }} size="full"
           title={`จ่ายยา — ${dispenseRx.prescription_no}${(dispenseItemsChanged || dispenseMetaChanged) ? ' ✏️' : ''}`}
           footer={
             <div className="flex items-center justify-between w-full">
@@ -1444,7 +1444,7 @@ export default function DispensePage() {
                               <input type="checkbox" className="rounded accent-primary-600" checked={checked} readOnly />
                             </td>
                             <td className="px-3 py-2">
-                              <p className={`text-xs font-medium leading-snug ${isOverdue ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.med_showname || it.med_name}</p>
+                              <p className={`text-sm font-semibold leading-snug ${isOverdue ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.med_showname || it.med_name}</p>
                               <div className="flex flex-wrap gap-1 mt-0.5">
                                 {isExpired && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">⛔ หมดอายุ</span>}
                                 {!isExpired && isLowStock && !isOverdue && (
