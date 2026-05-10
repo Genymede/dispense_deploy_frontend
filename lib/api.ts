@@ -64,6 +64,8 @@ export interface StockLot {
   mfg_date: string | null;
   received_at: string;
   note: string | null;
+  cost_price: number | null;
+  unit_price: number | null;
 }
 
 export interface MedTableItem {

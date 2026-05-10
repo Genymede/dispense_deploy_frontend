@@ -545,7 +545,7 @@ export default function DrugsPage() {
                   <table className="w-full text-xs">
                     <thead className="bg-slate-50">
                       <tr>
-                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', ''].map(h => (
+                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'ราคาทุน/หน่วย', 'ราคาขาย/หน่วย', ''].map(h => (
                           <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -560,6 +560,12 @@ export default function DrugsPage() {
                             <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
                             <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
                               {fmtDate(lot.exp_date)}
+                            </td>
+                            <td className="px-3 py-2 text-slate-600 tabular-nums">
+                              {lot.cost_price != null ? `฿${Number(lot.cost_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
+                            </td>
+                            <td className="px-3 py-2 text-slate-600 tabular-nums">
+                              {lot.unit_price != null ? `฿${Number(lot.unit_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
                             </td>
                             <td className="px-3 py-2">
                               {isExpired && lot.quantity > 0 && (
@@ -580,7 +586,7 @@ export default function DrugsPage() {
                       <tr>
                         <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
                         <td className="px-3 py-2 font-bold text-slate-800">{viewLots.filter(l => l.quantity > 0).reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
-                        <td />
+                        <td /><td /><td />
                       </tr>
                     </tfoot>
                   </table>
