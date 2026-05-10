@@ -52,7 +52,7 @@ const ROUTE = ['รับประทาน', 'ฉีดเข้ากล้า
 interface DrugItem {
   med_sid: number; med_id?: number; med_showname: string; med_name: string;
   quantity: number; frequency: string; route: string; unit: string;
-  unit_price: number;
+  unit_price: number; meal_relation?: string; meal_sessions?: string;
 }
 
 // ─── Mini safety badge (ใช้ใน form ขณะพิมพ์) ─────────────────────────────────
@@ -98,6 +98,29 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts }: {
             ))}
           </div>
         )}
+        <div className="flex flex-wrap items-center gap-1 mt-1.5">
+          <select value={item.meal_relation || ''} onChange={e => onUpdate('meal_relation', e.target.value)}
+            className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+            <option value="">ไม่ระบุเวลา</option>
+            <option>ก่อนอาหาร</option>
+            <option>หลังอาหาร</option>
+            <option>พร้อมอาหาร</option>
+          </select>
+          {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+            const sessions = (item.meal_sessions || '').split(',').filter(Boolean);
+            const active = sessions.includes(s);
+            return (
+              <button key={s} type="button"
+                onClick={() => {
+                  const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
+                  onUpdate('meal_sessions', next.join(','));
+                }}
+                className={`h-5 px-1.5 text-[10px] rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
+                {s}
+              </button>
+            );
+          })}
+        </div>
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-1">
@@ -278,9 +301,10 @@ export default function DispensePage() {
     setItems(prev => [...prev, {
       med_sid: drug.med_sid, med_id: drug.med_id,
       med_showname: drug.med_showname || drug.med_name,
-      med_name: drug.med_name, quantity: 1, frequency: 'OD',
+      med_name: drug.med_name, quantity: 1, frequency: 'วันละ 1 ครั้ง',
       route: 'รับประทาน', unit: drug.unit || 'เม็ด',
       unit_price: Number(drug.unit_price) || Number(drug.list_selling_price) || 0,
+      meal_relation: '', meal_sessions: '',
     }]);
   };
   const updateItem = (idx: number, k: keyof DrugItem, v: any) =>
@@ -326,6 +350,7 @@ export default function DispensePage() {
           items: items.map(it => ({
             med_sid: it.med_sid, quantity: it.quantity,
             frequency: it.frequency, route: it.route,
+            meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
         });
         // แก้ meta
@@ -339,6 +364,7 @@ export default function DispensePage() {
           items: items.map(it => ({
             med_sid: it.med_sid, quantity: it.quantity,
             frequency: it.frequency, route: it.route,
+            meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
         });
         if (addToQueue && patientId) {
@@ -443,7 +469,8 @@ export default function DispensePage() {
         await api.put(`/dispense/${dispenseRx.prescription_id}/items`, {
           items: dispenseItems.map((it: any) => ({
             med_sid: it.med_sid, quantity: it.quantity,
-            frequency: it.frequency || 'OD', route: it.route || 'รับประทาน',
+            frequency: it.frequency || '', route: it.route || 'รับประทาน',
+            meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
         });
       }
@@ -500,7 +527,7 @@ export default function DispensePage() {
         `${it.med_showname || it.med_name}`,
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
         `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
-        `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}`,
+        `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}${it.meal_relation ? ` ${it.meal_relation}` : ''}${it.meal_sessions ? ` (${it.meal_sessions.split(',').join(' ')})` : ''}`,
         `แผนก: ${rx.ward || '-'}`,
       ].filter(Boolean).join('\n');
 
@@ -532,11 +559,12 @@ export default function DispensePage() {
       item_id: undefined,
       med_sid: drug.med_sid, med_id: drug.med_id,
       med_showname: drug.med_showname || drug.med_name,
-      med_name: drug.med_name, quantity: 1, frequency: 'OD',
+      med_name: drug.med_name, quantity: 1, frequency: 'วันละ 1 ครั้ง',
       route: 'รับประทาน', unit: drug.unit || 'เม็ด',
       unit_price: Number(drug.unit_price) || Number(drug.list_selling_price) || 0,
       stock_available: available,
       line_total: 0,
+      meal_relation: '', meal_sessions: '',
     }];
     setDispenseItems(newItems);
     setPrintSelected(new Set(newItems.map((_: any, i: number) => i)));
@@ -1392,6 +1420,29 @@ export default function DispensePage() {
                                 {isOverdue && <span className="text-[9px] bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full font-medium">ค้างจ่าย {overdueQty}</span>}
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                                <select value={it.meal_relation || ''} onChange={e => updateDispenseItem(i, 'meal_relation', e.target.value)}
+                                  className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+                                  <option value="">ไม่ระบุเวลา</option>
+                                  <option>ก่อนอาหาร</option>
+                                  <option>หลังอาหาร</option>
+                                  <option>พร้อมอาหาร</option>
+                                </select>
+                                {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+                                  const sessions = (it.meal_sessions || '').split(',').filter(Boolean);
+                                  const active = sessions.includes(s);
+                                  return (
+                                    <button key={s} type="button"
+                                      onClick={() => {
+                                        const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
+                                        updateDispenseItem(i, 'meal_sessions', next.join(','));
+                                      }}
+                                      className={`h-5 px-1.5 text-[10px] rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
+                                      {s}
+                                    </button>
+                                  );
+                                })}
                               </div>
                               {!isExpired && isLowStock && !isOverdue && (
                                 <div className="mt-1.5 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
