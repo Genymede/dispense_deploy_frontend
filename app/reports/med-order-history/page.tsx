@@ -4,6 +4,7 @@ import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
+import { fmtFreq } from '@/lib/drugUtils';
 import RegistryDrawer from '@/components/RegistryDrawer';
 import { Badge } from '@/components/ui';
 import { ClipboardList } from 'lucide-react';
@@ -41,7 +42,9 @@ const COLS: ColDef[] = [
   },
   { key: 'quantity',  label: 'จำนวน',    className: 'text-xs text-center',
     render: r => <span>{r.quantity}</span> },
-  { key: 'frequency', label: 'วิธีใช้',  className: 'text-xs text-slate-600' },
+  { key: 'frequency', label: 'วิธีใช้',  className: 'text-xs text-slate-600',
+    render: r => <span>{fmtFreq(r.frequency)}</span>,
+    exportValue: r => fmtFreq(r.frequency) },
   { key: 'route',     label: 'ทางที่ให้', className: 'text-xs text-slate-500' },
   { key: 'doctor_name',       label: 'แพทย์',    className: 'text-xs text-slate-600' },
   { key: 'dispensed_by_name', label: 'ผู้จ่ายยา', className: 'text-xs text-slate-600' },
@@ -92,7 +95,7 @@ export default function MedOrderHistoryPage() {
           { label: 'รายการยา',    key: 'med_showname' },
           { label: 'ชื่อสามัญ',   key: 'med_name' },
           { label: 'จำนวน',       key: 'quantity' },
-          { label: 'วิธีใช้',     key: 'frequency' },
+          { label: 'วิธีใช้', key: 'frequency', type: 'template' as const, template: (r: any) => fmtFreq(r.frequency) },
           { label: 'ทางที่ให้',   key: 'route' },
           { label: 'แพทย์',       key: 'doctor_name' },
           { label: 'ผู้จ่ายยา',   key: 'dispensed_by_name' },

@@ -7,6 +7,7 @@ import { Badge, Spinner } from '@/components/ui';
 import { registryApi, dispenseApi } from '@/lib/api';
 import { thaiToday, thaiDaysAgo, fmtDate as safeDate } from '@/lib/dateUtils';
 import { ClipboardList, Eye, Pill } from 'lucide-react';
+import { fmtFreq } from '@/lib/drugUtils';
 
 const STATUS_MAP = {
   pending:   { label: 'รอจ่าย',   variant: 'warning' as const },
@@ -128,7 +129,7 @@ export default function DispenseHistoryPage() {
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                           <span className="text-xs text-slate-600">จำนวน: <span className="font-semibold">{item.quantity} {item.unit || ''}</span></span>
                           {item.dose      && <span className="text-xs text-slate-500">ขนาด: {item.dose}</span>}
-                          {item.frequency && <span className="text-xs text-slate-500">ความถี่: {item.frequency}</span>}
+                          {item.frequency && <span className="text-xs text-slate-500">ความถี่: {fmtFreq(item.frequency)}</span>}
                           {item.route     && <span className="text-xs text-slate-500">วิธีใช้: {item.route}</span>}
                           {item.unit_price > 0 && (
                             <span className="text-xs text-primary-600 font-medium">

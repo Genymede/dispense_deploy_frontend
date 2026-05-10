@@ -6,6 +6,7 @@ import SearchSelect from '@/components/SearchSelect';
 import { Badge, Card } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate as safeDate } from '@/lib/dateUtils';
+import { fmtFreq } from '@/lib/drugUtils';
 import { Pill, UserSearch } from 'lucide-react';
 
 const RX_STATUS: Record<string, { label: string; variant: 'success' | 'warning' | 'gray' | 'danger' }> = {
@@ -26,11 +27,11 @@ const COLS: ColDef[] = [
     render: r => (
       <div className="text-xs text-slate-500 space-y-0.5">
         {r.dose      && <p>ขนาด: {r.dose}</p>}
-        {r.frequency && <p>ความถี่: {r.frequency}</p>}
+        {r.frequency && <p>ความถี่: {fmtFreq(r.frequency)}</p>}
         {r.route     && <p>เส้นทาง: {r.route}</p>}
       </div>
     ),
-    exportValue: r => [r.dose, r.frequency, r.route].filter(Boolean).join(' / ') || '-' },
+    exportValue: r => [r.dose, fmtFreq(r.frequency), r.route].filter(Boolean).join(' / ') || '-' },
   { key: 'doctor_name', label: 'แพทย์', className: 'text-xs text-slate-600' },
   { key: 'status', label: 'สถานะ',
     render: r => { const s = RX_STATUS[r.status] ?? { label: r.status, variant: 'gray' as const }; return <Badge variant={s.variant}>{s.label}</Badge>; },

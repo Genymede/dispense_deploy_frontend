@@ -2,6 +2,25 @@ import { drugApi, type StockLot } from './api';
 import toast from 'react-hot-toast';
 import React from 'react';
 
+const FREQ_MAP: Record<string, string> = {
+  OD:   'วันละ 1 ครั้ง',
+  BID:  'วันละ 2 ครั้ง',
+  TID:  'วันละ 3 ครั้ง',
+  QID:  'วันละ 4 ครั้ง',
+  PRN:  'ใช้เมื่อมีอาการ',
+  STAT: 'ให้ยาทันที',
+  HS:   'ก่อนนอน',
+  q4h:  'ทุกๆ 4 ชั่วโมง',
+  q6h:  'ทุกๆ 6 ชั่วโมง',
+  q8h:  'ทุกๆ 8 ชั่วโมง',
+  q12h: 'ทุกๆ 12 ชั่วโมง',
+};
+
+export function fmtFreq(freq: string | null | undefined): string {
+  if (!freq) return '';
+  return FREQ_MAP[freq.trim()] ?? freq;
+}
+
 export async function validateDrugLots(
   med_sid: number, 
   med_name: string, 

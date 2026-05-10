@@ -12,6 +12,7 @@ import {
 import toast from 'react-hot-toast';
 import { parseISO, differenceInYears, isValid } from 'date-fns';
 import { fmtDate as safeDate } from '@/lib/dateUtils';
+import { fmtFreq } from '@/lib/drugUtils';
 
 function safeAge(val: any): number | null {
   if (!val) return null;
@@ -532,7 +533,7 @@ export default function MedUsagePage() {
                               {item.med_generic_name && <p className="text-xs text-slate-400 truncate">{item.med_generic_name}</p>}
                               {(item.frequency || item.route) && (
                                 <p className="text-xs text-slate-400 mt-0.5">
-                                  {[item.frequency, item.route].filter(Boolean).join(' · ')}
+                                  {[fmtFreq(item.frequency), item.route].filter(Boolean).join(' · ')}
                                 </p>
                               )}
                             </td>
