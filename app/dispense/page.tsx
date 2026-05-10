@@ -555,6 +555,7 @@ export default function DispensePage() {
       timeZone: 'Asia/Bangkok',
     });
 
+    console.log('[Print] payload', { rx, items, printerShare });
     setPrintingLabel(true);
     let failed = 0;
     for (const it of items) {
