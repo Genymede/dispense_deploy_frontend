@@ -177,6 +177,15 @@ export default function DrugsPage() {
       .catch(() => toast.error('ไม่พบรายการยา'));
   }, []);
 
+  // auto-open detail drawer เมื่อมาจาก alerts (?view=<med_sid>)
+  useEffect(() => {
+    const viewSid = searchParams.get('view');
+    if (!viewSid) return;
+    drugApi.getById(Number(viewSid))
+      .then(r => setViewDrug(r.data))
+      .catch(() => toast.error('ไม่พบรายการยา'));
+  }, []);
+
   useEffect(() => {
     drugApi.getCategories().then((r) => setCategories(r.data)).catch(() => { });
     api.get('/settings').then(r => {

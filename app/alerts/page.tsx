@@ -117,9 +117,9 @@ export default function AlertsPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
-                      <Link href={a.alert_type === 'incomplete_record' ? `/drugs?edit=${a.med_sid}` : `/drugs?search=${a.drug_name}`}>
+                      <Link href={a.alert_type === 'incomplete_record' ? `/drugs?edit=${a.med_sid}` : `/drugs?view=${a.med_sid}`}>
                         <Button variant="secondary" size="xs" icon={<Eye size={12} />}>
-                          {a.alert_type === 'incomplete_record' ? 'เพิ่มข้อมูลยา' : 'ดูรายการยา'}
+                          {a.alert_type === 'incomplete_record' ? 'เพิ่มข้อมูลยา' : 'ดูรายละเอียด'}
                         </Button>
                       </Link>
                       {!a.is_read && (
