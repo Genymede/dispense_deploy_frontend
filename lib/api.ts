@@ -413,6 +413,7 @@ export interface MedRegistryItem {
   med_out_of_stock: boolean;
   med_mfg: string;
   med_exp: string;
+  med_indication: string | null;
 }
 
 export interface AllergyRecord {
