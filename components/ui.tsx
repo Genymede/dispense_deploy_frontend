@@ -193,11 +193,11 @@ interface ModalProps {
 }
 
 const modalSizes = {
-  sm:  "max-w-sm",
-  md:  "max-w-lg",
-  lg:  "max-w-2xl",
-  xl:  "max-w-4xl",
-  "2xl": "max-w-6xl",
+  sm:  "max-w-xl",
+  md:  "max-w-3xl",
+  lg:  "max-w-5xl",
+  xl:  "max-w-6xl",
+  "2xl": "max-w-7xl",
 };
 
 export function Modal({ open, onClose, title, children, size = "md", footer }: ModalProps) {
@@ -341,16 +341,18 @@ const CONFIRM_CFG = {
 };
 
 export function ConfirmDialog({ open, title, message, confirmLabel = "ยืนยัน", cancelLabel = "ยกเลิก", onConfirm, onCancel, variant = "danger", alertOnly = false }: ConfirmDialogProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!open || !mounted) return null;
   const cfg = CONFIRM_CFG[variant];
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: "rgba(15,23,42,0.5)" }}
+      className="fixed inset-0 z-[300] flex items-center justify-center p-6 animate-fade-in"
+      style={{ background: "rgba(15,23,42,0.55)" }}
       onClick={alertOnly ? onConfirm : onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
@@ -381,6 +383,7 @@ export function ConfirmDialog({ open, title, message, confirmLabel = "ยืน�
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
