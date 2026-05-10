@@ -18,9 +18,9 @@ interface Props {
 }
 
 const MAX_W: Record<DrawerWidth, string> = {
-  sm: 'max-w-[580px]',
-  md: 'max-w-[800px]',
-  lg: 'max-w-[1120px]',
+  sm: 'max-w-[680px]',
+  md: 'max-w-[960px]',
+  lg: 'max-w-[1280px]',
 };
 
 export default function DetailDrawer({
@@ -37,12 +37,11 @@ export default function DetailDrawer({
   return createPortal(
     <DrawerWidthCtx.Provider value={width}>
       <div
-        style={{ left: 'var(--sidebar-w)', top: '64px' }}
-        className="fixed bottom-0 right-0 z-50 flex items-center justify-center p-6 bg-black/30 animate-fade-in"
+        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 animate-fade-in"
         onClick={onClose}
       >
         <div
-          className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-[88%]`}
+          className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-[92%]`}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
