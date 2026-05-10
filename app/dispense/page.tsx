@@ -114,6 +114,10 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
       {/* วิธีใช้ */}
       <td className="px-3 py-2">
         <div className="flex flex-wrap items-center gap-1.5">
+          <select value={item.route} onChange={e => onUpdate('route', e.target.value)}
+            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
+            {ROUTE.map(o => <option key={o}>{o}</option>)}
+          </select>
           <input type="number" min="0.25" step="0.25" value={item.dose_qty || 1}
             onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
             className="w-14 h-7 border border-slate-200 rounded-lg text-xs px-2 outline-none focus:border-primary-500 text-center" />
@@ -125,10 +129,6 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
             }
           </select>
           <span className="text-xs text-slate-400">/ครั้ง</span>
-          <select value={item.route} onChange={e => onUpdate('route', e.target.value)}
-            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
-            {ROUTE.map(o => <option key={o}>{o}</option>)}
-          </select>
           <select value={item.frequency} onChange={e => onUpdate('frequency', e.target.value)}
             className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
             {FREQ.map(o => <option key={o}>{o}</option>)}
@@ -140,7 +140,7 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
             <option>หลังอาหาร</option>
             <option>พร้อมอาหาร</option>
           </select>
-          {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+          {['เช้า', 'กลางวัน', 'เย็น', 'ก่อนนอน'].map(s => {
             const sessions = (item.meal_sessions || '').split(',').filter(Boolean);
             const active = sessions.includes(s);
             return (
@@ -1493,6 +1493,10 @@ export default function DispensePage() {
                             {/* วิธีใช้ */}
                             <td className="px-2 py-2">
                               <div className="flex flex-wrap items-center gap-1.5">
+                                <select value={it.route || 'รับประทาน'} onChange={e => updateDispenseItem(i, 'route', e.target.value)}
+                                  className="h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
+                                  {ROUTE.map(o => <option key={o}>{o}</option>)}
+                                </select>
                                 <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
                                   onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
                                   className="w-14 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
@@ -1504,10 +1508,6 @@ export default function DispensePage() {
                                   }
                                 </select>
                                 <span className="text-xs text-slate-400">/ครั้ง</span>
-                                <select value={it.route || 'รับประทาน'} onChange={e => updateDispenseItem(i, 'route', e.target.value)}
-                                  className="h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
-                                  {ROUTE.map(o => <option key={o}>{o}</option>)}
-                                </select>
                                 <select value={it.frequency || ''} onChange={e => updateDispenseItem(i, 'frequency', e.target.value)}
                                   className="h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
                                   {FREQ.map(o => <option key={o}>{o}</option>)}
@@ -1519,7 +1519,7 @@ export default function DispensePage() {
                                   <option>หลังอาหาร</option>
                                   <option>พร้อมอาหาร</option>
                                 </select>
-                                {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+                                {['เช้า', 'กลางวัน', 'เย็น', 'ก่อนนอน'].map(s => {
                                   const sessions = (it.meal_sessions || '').split(',').filter(Boolean);
                                   const active = sessions.includes(s);
                                   return (
