@@ -88,6 +88,7 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
   return (
     <tr className={`border-b border-slate-50 ${rowCls}`}>
       <td className="px-3 py-2.5 text-center text-slate-300 font-medium w-6">{idx + 1}</td>
+      {/* ชื่อยา */}
       <td className="px-3 py-2.5">
         <p className="text-base font-semibold text-slate-800">{item.med_showname || item.med_name}</p>
         <p className="text-xs text-slate-400">{item.med_name}</p>
@@ -100,43 +101,24 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
             ))}
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-1 mt-1.5">
+      </td>
+      {/* ขนาดยา */}
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="flex items-center gap-1">
           <input type="number" min="0.25" step="0.25" value={item.dose_qty || 1}
             onChange={e => onUpdate('dose_qty', parseFloat(e.target.value) || 1)}
-            className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
+            className="w-14 h-7 border border-slate-200 rounded-lg text-xs px-2 outline-none focus:border-primary-500 text-center" />
           <select value={item.dose_unit || ''} onChange={e => onUpdate('dose_unit', e.target.value)}
-            className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
             {drugUnits.length === 0
               ? <option value="เม็ด">เม็ด</option>
               : drugUnits.map(u => <option key={u} value={u}>{u}</option>)
             }
           </select>
-          <span className="text-[10px] text-slate-400">/ครั้ง</span>
-          <span className="text-[10px] text-slate-300">·</span>
-          <select value={item.meal_relation || ''} onChange={e => onUpdate('meal_relation', e.target.value)}
-            className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
-            <option value="">ไม่ระบุเวลา</option>
-            <option>ก่อนอาหาร</option>
-            <option>หลังอาหาร</option>
-            <option>พร้อมอาหาร</option>
-          </select>
-          {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
-            const sessions = (item.meal_sessions || '').split(',').filter(Boolean);
-            const active = sessions.includes(s);
-            return (
-              <button key={s} type="button"
-                onClick={() => {
-                  const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
-                  onUpdate('meal_sessions', next.join(','));
-                }}
-                className={`h-5 px-1.5 text-[10px] rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
-                {s}
-              </button>
-            );
-          })}
         </div>
       </td>
-      <td className="px-3 py-2">
+      {/* จำนวน */}
+      <td className="px-3 py-2 whitespace-nowrap">
         <div className="flex items-center gap-1">
           <input type="number" min="1" value={item.quantity}
             onChange={e => onUpdate('quantity', Number(e.target.value))}
@@ -144,18 +126,43 @@ function DrugRow({ item, idx, onUpdate, onRemove, alerts, drugUnits }: {
           <span className="text-xs text-slate-400">{item.unit}</span>
         </div>
       </td>
+      {/* วิธีใช้ */}
       <td className="px-3 py-2">
-        <select value={item.frequency} onChange={e => onUpdate('frequency', e.target.value)}
-          className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
-          {FREQ.map(o => <option key={o}>{o}</option>)}
-        </select>
+        <div className="space-y-1">
+          <select value={item.route} onChange={e => onUpdate('route', e.target.value)}
+            className="w-full h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
+            {ROUTE.map(o => <option key={o}>{o}</option>)}
+          </select>
+          <select value={item.frequency} onChange={e => onUpdate('frequency', e.target.value)}
+            className="w-full h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
+            {FREQ.map(o => <option key={o}>{o}</option>)}
+          </select>
+          <div className="flex flex-wrap items-center gap-1">
+            <select value={item.meal_relation || ''} onChange={e => onUpdate('meal_relation', e.target.value)}
+              className="h-6 text-xs border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+              <option value="">ไม่ระบุเวลา</option>
+              <option>ก่อนอาหาร</option>
+              <option>หลังอาหาร</option>
+              <option>พร้อมอาหาร</option>
+            </select>
+            {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+              const sessions = (item.meal_sessions || '').split(',').filter(Boolean);
+              const active = sessions.includes(s);
+              return (
+                <button key={s} type="button"
+                  onClick={() => {
+                    const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
+                    onUpdate('meal_sessions', next.join(','));
+                  }}
+                  className={`h-6 px-2 text-xs rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </td>
-      <td className="px-3 py-2">
-        <select value={item.route} onChange={e => onUpdate('route', e.target.value)}
-          className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-500">
-          {ROUTE.map(o => <option key={o}>{o}</option>)}
-        </select>
-      </td>
+      {/* ราคา */}
       <td className="px-3 py-2 text-right text-xs text-slate-500 whitespace-nowrap">
         {item.unit_price > 0
           ? <><span className="text-slate-400">{Number(item.unit_price).toFixed(2)} × {item.quantity} = </span><span className="font-semibold text-slate-700">{(Number(item.unit_price) * item.quantity).toFixed(2)}</span></>
@@ -1198,7 +1205,7 @@ export default function DispensePage() {
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2.5 text-center font-semibold text-slate-500 w-6">#</th>
-                      {['ชื่อยา', 'จำนวน', 'ความถี่', 'วิธีใช้งาน', 'ราคา (บาท)', ''].map(h => (
+                      {['ชื่อยา', 'ขนาดยา', 'จำนวน', 'วิธีใช้', 'ราคา (บาท)', ''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-left font-semibold text-slate-500">{h}</th>
                       ))}
                     </tr>
@@ -1417,9 +1424,9 @@ export default function DispensePage() {
                           />
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">จำนวน</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">ความถี่</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">วิธีใช้ยา</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">ขนาดยา</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">จำนวน</th>
+                        <th className="px-2 py-2 text-left text-xs font-semibold text-slate-500">วิธีใช้</th>
                         <th className="px-2 py-2 text-right text-xs font-semibold text-slate-500">ราคา</th>
                         <th className="w-5" />
                       </tr>
@@ -1443,6 +1450,7 @@ export default function DispensePage() {
                             })}>
                               <input type="checkbox" className="rounded accent-primary-600" checked={checked} readOnly />
                             </td>
+                            {/* ชื่อยา */}
                             <td className="px-3 py-2">
                               <p className={`text-sm font-semibold leading-snug ${isOverdue ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.med_showname || it.med_name}</p>
                               <div className="flex flex-wrap gap-1 mt-0.5">
@@ -1455,41 +1463,6 @@ export default function DispensePage() {
                                 {isOverdue && <span className="text-[9px] bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full font-medium">ค้างจ่าย {overdueQty}</span>}
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                                <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
-                                  onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
-                                  className="w-14 h-5 border border-slate-200 rounded px-1 text-[10px] outline-none focus:border-primary-500 text-center" />
-                                <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
-                                  className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
-                                  {drugUnits.length === 0
-                                    ? <option value="เม็ด">เม็ด</option>
-                                    : drugUnits.map((u: string) => <option key={u} value={u}>{u}</option>)
-                                  }
-                                </select>
-                                <span className="text-[10px] text-slate-400">/ครั้ง</span>
-                                <span className="text-[10px] text-slate-300">·</span>
-                                <select value={it.meal_relation || ''} onChange={e => updateDispenseItem(i, 'meal_relation', e.target.value)}
-                                  className="h-5 text-[10px] border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
-                                  <option value="">ไม่ระบุเวลา</option>
-                                  <option>ก่อนอาหาร</option>
-                                  <option>หลังอาหาร</option>
-                                  <option>พร้อมอาหาร</option>
-                                </select>
-                                {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
-                                  const sessions = (it.meal_sessions || '').split(',').filter(Boolean);
-                                  const active = sessions.includes(s);
-                                  return (
-                                    <button key={s} type="button"
-                                      onClick={() => {
-                                        const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
-                                        updateDispenseItem(i, 'meal_sessions', next.join(','));
-                                      }}
-                                      className={`h-5 px-1.5 text-[10px] rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
-                                      {s}
-                                    </button>
-                                  );
-                                })}
                               </div>
                               {!isExpired && isLowStock && !isOverdue && (
                                 <div className="mt-1.5 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
@@ -1508,25 +1481,65 @@ export default function DispensePage() {
                                 </div>
                               )}
                             </td>
-                            <td className="px-2 py-2 text-center">
+                            {/* ขนาดยา */}
+                            <td className="px-2 py-2 whitespace-nowrap">
+                              <div className="flex items-center gap-1">
+                                <input type="number" min="0.25" step="0.25" value={it.dose_qty || 1}
+                                  onChange={e => updateDispenseItem(i, 'dose_qty', parseFloat(e.target.value) || 1)}
+                                  className="w-14 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
+                                <select value={it.dose_unit || ''} onChange={e => updateDispenseItem(i, 'dose_unit', e.target.value)}
+                                  className="h-7 border border-slate-200 rounded text-xs px-1 bg-white outline-none focus:border-primary-500">
+                                  {drugUnits.length === 0
+                                    ? <option value="เม็ด">เม็ด</option>
+                                    : drugUnits.map((u: string) => <option key={u} value={u}>{u}</option>)
+                                  }
+                                </select>
+                              </div>
+                            </td>
+                            {/* จำนวน */}
+                            <td className="px-2 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <input type="number" min="1" value={it.quantity}
                                   onChange={e => updateDispenseItem(i, 'quantity', Number(e.target.value))}
-                                  className="w-12 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
-                                <span className="text-[10px] text-slate-400 leading-tight">{it.unit}</span>
+                                  className="w-14 h-7 border border-slate-200 rounded text-xs px-1 outline-none focus:border-primary-500 text-center" />
+                                <span className="text-xs text-slate-400">{it.unit}</span>
                               </div>
                             </td>
+                            {/* วิธีใช้ */}
                             <td className="px-2 py-2">
-                              <select value={it.frequency || 'OD'} onChange={e => updateDispenseItem(i, 'frequency', e.target.value)}
-                                className="w-full h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
-                                {FREQ.map(o => <option key={o}>{o}</option>)}
-                              </select>
-                            </td>
-                            <td className="px-2 py-2">
-                              <select value={it.route || 'รับประทาน'} onChange={e => updateDispenseItem(i, 'route', e.target.value)}
-                                className="w-full h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
-                                {ROUTE.map(o => <option key={o}>{o}</option>)}
-                              </select>
+                              <div className="space-y-1">
+                                <select value={it.route || 'รับประทาน'} onChange={e => updateDispenseItem(i, 'route', e.target.value)}
+                                  className="w-full h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
+                                  {ROUTE.map(o => <option key={o}>{o}</option>)}
+                                </select>
+                                <select value={it.frequency || ''} onChange={e => updateDispenseItem(i, 'frequency', e.target.value)}
+                                  className="w-full h-7 border border-slate-200 rounded text-xs px-1 outline-none bg-white focus:border-primary-500">
+                                  {FREQ.map(o => <option key={o}>{o}</option>)}
+                                </select>
+                                <div className="flex flex-wrap items-center gap-1">
+                                  <select value={it.meal_relation || ''} onChange={e => updateDispenseItem(i, 'meal_relation', e.target.value)}
+                                    className="h-6 text-xs border border-slate-200 rounded px-1 bg-white outline-none focus:border-primary-500">
+                                    <option value="">ไม่ระบุเวลา</option>
+                                    <option>ก่อนอาหาร</option>
+                                    <option>หลังอาหาร</option>
+                                    <option>พร้อมอาหาร</option>
+                                  </select>
+                                  {['เช้า', 'กลางวัน', 'เย็น'].map(s => {
+                                    const sessions = (it.meal_sessions || '').split(',').filter(Boolean);
+                                    const active = sessions.includes(s);
+                                    return (
+                                      <button key={s} type="button"
+                                        onClick={() => {
+                                          const next = active ? sessions.filter((x: string) => x !== s) : [...sessions, s];
+                                          updateDispenseItem(i, 'meal_sessions', next.join(','));
+                                        }}
+                                        className={`h-6 px-2 text-xs rounded border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
+                                        {s}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-2 py-2 text-right whitespace-nowrap">
                               {unitPrice > 0 ? (
@@ -1545,7 +1558,7 @@ export default function DispensePage() {
                     {dispenseItems.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0) > 0 && (
                       <tfoot>
                         <tr className="bg-slate-50 border-t border-slate-200">
-                          <td colSpan={5} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
+                          <td colSpan={6} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
                           <td className="px-2 py-2 text-right text-sm font-bold text-primary-700">
                             {dispenseItems.reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                           </td>
