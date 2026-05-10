@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
@@ -655,9 +656,9 @@ export default function DrugsPage() {
         )}
       </DetailDrawer>
 
-      {/* Write-off Confirm Dialog */}
-      {writeOffConfirm && viewDrug && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+      {/* Write-off Confirm Dialog — portal so it stacks above DetailDrawer */}
+      {writeOffConfirm && viewDrug && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-3">
               <Trash2 size={22} className="text-red-600" />
@@ -694,7 +695,8 @@ export default function DrugsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <ConfirmDialog open={!!deleteId} title="ลบรายการยา"
