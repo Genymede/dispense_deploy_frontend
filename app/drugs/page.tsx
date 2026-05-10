@@ -657,7 +657,7 @@ export default function DrugsPage() {
 
       {/* Write-off Confirm Dialog */}
       {writeOffConfirm && viewDrug && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-3">
               <Trash2 size={22} className="text-red-600" />
