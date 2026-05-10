@@ -4,7 +4,6 @@ import MainLayout from '@/components/MainLayout';
 import { Card, Input, Select, Badge, Button, Modal, EmptyState, Spinner, Textarea, ConfirmDialog } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import SafetyPanel from '@/components/SafetyPanel';
-import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { useConfirm } from '@/hooks/useConfirm';
 import { dispenseApi, safetyApi, api, printerApi, queueApi, registryApi, patientApi, drugApi, type Prescription, type SafetyCheckResult, type SafetyAlert } from '@/lib/api';
@@ -13,7 +12,7 @@ import { useAuth } from '@/lib/auth';
 import {
   Plus, Package, Trash2, RefreshCw,
   Shield, ShieldX, ShieldAlert, ShieldCheck, Wand2,
-  Eye, AlertTriangle, CheckCircle2, Loader2, Printer,
+  AlertTriangle, CheckCircle2, Loader2, Printer,
   PhoneCall, ClipboardCheck, RotateCcw,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -180,11 +179,7 @@ export default function DispensePage() {
   const [loadingSafety, setLoadingSafety] = useState(false);
   const safetyTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  // detail drawer (view)
-  const [drawerRx, setDrawerRx] = useState<any | null>(null);
-  const [drawerFull, setDrawerFull] = useState<any | null>(null);
   const [patientDrawerId, setPatientDrawerId] = useState<number | null>(null);
-  const [drawerLoad, setDrawerLoad] = useState(false);
 
   // dispense modal (confirm + full safety)
   const [dispenseRx, setDispenseRx] = useState<any | null>(null);
@@ -531,45 +526,6 @@ export default function DispensePage() {
     }
   };
 
-  // ── Print labels from drawer (dispensed prescription) ───────────────────
-  const [printingDrawer, setPrintingDrawer] = useState(false);
-  const [drawerPrintSelected, setDrawerPrintSelected] = useState<Set<number>>(new Set());
-  const handlePrintFromDrawer = async () => {
-    const printerShare = localStorage.getItem('selected_printer_name');
-    if (!printerShare) {
-      toast.error('ยังไม่ได้เลือกเครื่องพิมพ์ — กรุณาตั้งค่าที่หน้า สติ๊กเกอร์ยา');
-      return;
-    }
-    const allItems: any[] = drawerFull?.items ?? [];
-    const items = allItems.filter((_: any, i: number) => drawerPrintSelected.has(i));
-    if (!items.length) { toast.error('ไม่ได้เลือกรายการยาสำหรับพิมพ์'); return; }
-    const rx = drawerFull;
-    const printedAt = new Date().toLocaleString('th-TH', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-      timeZone: 'Asia/Bangkok',
-    });
-    setPrintingDrawer(true);
-    let failed = 0;
-    for (const it of items) {
-      const label = [
-        `${rx.patient_name || 'ไม่ระบุชื่อ'}`,
-        `HN: ${rx.hn_number || '-'}   ${printedAt}`,
-        `RX: ${rx.prescription_no}`,
-        `--------------------`,
-        `${it.med_showname || it.med_name}`,
-        it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
-        `จำนวน: ${it.quantity} ${it.unit || ''}  ราคา: ${Number(it.line_total || 0).toFixed(2)} บาท`,
-        `วิธีใช้: ${it.route || '-'} ${it.frequency || ''}`,
-        `แผนก: ${rx.ward || '-'}`,
-      ].filter(Boolean).join('\n');
-      try { await printerApi.print(label, printerShare); } catch { failed++; }
-    }
-    setPrintingDrawer(false);
-    if (failed === 0) toast.success(`พิมพ์ฉลากยา ${items.length} ใบเรียบร้อย`);
-    else toast.error(`พิมพ์สำเร็จ ${items.length - failed}/${items.length} ใบ`);
-  };
-
   // ── Dispense modal inline edit helpers ───────────────────────────────────
   const addDispenseItem = async (drug: any) => {
     if (!drug) return;
@@ -629,19 +585,6 @@ export default function DispensePage() {
     }
   };
 
-  // ── Open detail drawer ────────────────────────────────────────────────────
-  const openDrawer = async (rx: any) => {
-    setDrawerRx(rx); setDrawerFull(null); setDrawerLoad(true); setDrawerPrintSelected(new Set());
-    try {
-      const res = await api.get(`/dispense/${rx.prescription_id}/full`);
-      setDrawerFull(res.data);
-      // pre-select all items for printing by default (mirrors dispense modal behaviour)
-      const items = res.data?.items ?? [];
-      setDrawerPrintSelected(new Set(items.map((_: any, i: number) => i)));
-    } catch { }
-    finally { setDrawerLoad(false); }
-  };
-
   // ── Return prescription ───────────────────────────────────────────────────
   const openReturn = async (rx: any) => {
     setReturnRx(rx);
@@ -649,9 +592,7 @@ export default function DispensePage() {
     setReturnItems([]);
     setReturnLoading(true);
     try {
-      const existing = (drawerFull && drawerRx?.prescription_id === rx.prescription_id)
-        ? drawerFull
-        : (await api.get(`/dispense/${rx.prescription_id}/full`)).data;
+      const existing = (await api.get(`/dispense/${rx.prescription_id}/full`)).data;
       setReturnItems((existing.items || []).map((it: any) => ({
         med_sid: it.med_sid,
         name: it.med_showname || it.med_name,
@@ -682,7 +623,6 @@ export default function DispensePage() {
       });
       toast.success('คืนยาเรียบร้อย — ยาถูกเพิ่มกลับเข้าคลังในล็อต RET');
       setReturnRx(null);
-      setDrawerRx(null); setDrawerFull(null);
       void Promise.all([loadList(), loadDispensed()]);
     } catch (e: any) { toast.error(e.message); }
     finally { setReturning(false); }
@@ -917,7 +857,7 @@ export default function DispensePage() {
                       const rxq = rx.patient_id != null ? queueByPatient.get(rx.patient_id) : undefined;
                       return (
                         <tr key={rx.prescription_id} className="table-row-hover cursor-pointer"
-                          onClick={() => openDrawer(rx)}>
+                          onClick={() => openDispense(rx)}>
                           <td className="px-4 py-3 font-mono text-sm font-bold text-slate-600 whitespace-nowrap">
                             {rxq
                               ? rxq.queue_number
@@ -980,12 +920,6 @@ export default function DispensePage() {
                                   <PhoneCall size={13} /> เรียกคิว
                                 </button>
                               )}
-                              {rx.status !== 'pending' && (
-                                <button onClick={e => { e.stopPropagation(); openDrawer(rx); }}
-                                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary-600 transition-colors">
-                                  <Eye size={14} />
-                                </button>
-                              )}
                             </div>
                           </td>
                         </tr>
@@ -1030,7 +964,7 @@ export default function DispensePage() {
                       {dispensedList.map(rx => {
                         const dq = queueByPatient.get(rx.patient_id);
                         return (
-                          <tr key={rx.prescription_id} className="table-row-hover cursor-pointer" onClick={() => openDrawer(rx)}>
+                          <tr key={rx.prescription_id} className="table-row-hover cursor-pointer" onClick={() => openReturn(rx)}>
                             <td className="px-4 py-3 font-mono font-bold text-primary-700">
                               {(rx as any).queue_number
                                 ? <span className={`text-xs px-1.5 py-0.5 rounded-md ${dq ? (QUEUE_STATUS[dq.status]?.badge ?? 'bg-slate-100 text-slate-500') : 'bg-slate-100 text-slate-500'}`}>{(rx as any).queue_number}</span>
@@ -1614,173 +1548,6 @@ export default function DispensePage() {
         </Modal>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════
-          DETAIL DRAWER
-      ════════════════════════════════════════════════════════════════════ */}
-      <DetailDrawer
-        open={!!drawerRx}
-        onClose={() => { setDrawerRx(null); setDrawerFull(null); }}
-        title={drawerRx?.prescription_no ?? 'ใบสั่งยา'}
-        subtitle={drawerRx ? `${STATUS_TH[drawerRx.status]} · ${drawerRx.patient_name || 'ไม่ระบุผู้ป่วย'}` : ''}
-        width="lg">
-
-        {drawerLoad ? (
-          <div className="flex justify-center py-12"><Spinner size={28} /></div>
-        ) : drawerFull ? (
-          <>
-            <DrawerSection title="ข้อมูลทั่วไป">
-              <button
-                onClick={() => drawerFull.patient_id && setPatientDrawerId(drawerFull.patient_id)}
-                className="flex items-center gap-3 mb-3 w-full text-left group"
-              >
-                <img
-                  src={`/images/patient_image/${drawerFull.patient_photo || 'user.png'}`}
-                  alt={drawerFull.patient_name || 'ผู้ป่วย'}
-                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 shadow-sm flex-shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-800 truncate group-hover:text-primary-600 transition-colors underline decoration-dotted underline-offset-2">
-                    {drawerFull.patient_name || 'ไม่ระบุ'}
-                  </p>
-                  <p className="text-xs text-slate-400 font-mono">HN: {drawerFull.hn_number || '—'}</p>
-                </div>
-              </button>
-              <DrawerGrid items={[
-                { label: 'กรุ๊ปเลือด', value: drawerFull.blood_group ?? '—' },
-                {
-                  label: 'เพศ',
-                  value: (() => {
-                    const g = String(drawerFull.gender || '').toUpperCase();
-                    if (g === 'M') return 'ชาย';
-                    if (g === 'F') return 'หญิง';
-                    return drawerFull.gender || '—';
-                  })()
-                },
-                { label: 'เบอร์โทร', value: drawerFull.phone ?? '—' },
-                { label: 'เลขประจำตัว', value: drawerFull.national_id ?? '—' },
-                { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(drawerFull.treatment_right, drawerFull.treatment_right_note) ?? '—' },
-                { label: 'สถานะใบสั่งยา', value: <span className="font-medium">{STATUS_TH[drawerFull.status] ?? drawerFull.status}</span> },
-                { label: 'แพทย์ผู้สั่งยา', value: drawerFull.doctor_name || '—' },
-                { label: 'แผนกที่สั่งยา', value: drawerFull.ward ?? '—' },
-                { label: 'วันที่สร้าง', value: fmtDate(drawerFull.created_at, true) },
-                { label: 'วินิจฉัย', value: drawerFull.diagnosis ?? '—', span: true },
-                { label: 'PMH', value: drawerFull.PMH ?? '—', span: true },
-                { label: 'หมายเหตุ', value: drawerFull.note ?? '—', span: true },
-              ]} />
-            </DrawerSection>
-
-            <DrawerSection title={`รายการยา (${(drawerFull.items || []).length} รายการ)${drawerFull.total_cost > 0 ? ` · ${Number(drawerFull.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : ''}`}>
-              {(drawerFull.items || []).length > 0 && (
-                <div className="rounded-xl border border-slate-200 overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500 w-8">
-                          <input type="checkbox" className="rounded accent-primary-600"
-                            checked={drawerPrintSelected.size === (drawerFull.items || []).length && (drawerFull.items || []).length > 0}
-                            onChange={e => setDrawerPrintSelected(e.target.checked
-                              ? new Set((drawerFull.items || []).map((_: any, i: number) => i))
-                              : new Set()
-                            )}
-                          />
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">ยา</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">จำนวน</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">ความถี่</th>
-                        <th className="px-2 py-2 text-center text-xs font-semibold text-slate-500">วิธีใช้ยา</th>
-                        <th className="px-2 py-2 text-right text-xs font-semibold text-slate-500">ราคา</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {(drawerFull.items || []).map((it: any, i: number) => {
-                        const isExpired = it.is_expired || (it.exp_date && new Date(it.exp_date) < new Date());
-                        const unitPrice = Number(it.unit_price) || 0;
-                        const qty = Number(it.quantity);
-                        const checked = drawerPrintSelected.has(i);
-                        return (
-                          <tr key={i} className={`cursor-pointer ${isExpired ? 'bg-red-50' : ''}`}
-                            onClick={() => setDrawerPrintSelected(prev => {
-                              const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next;
-                            })}>
-                            <td className="px-2 py-2 text-center">
-                              <input type="checkbox" className="rounded accent-primary-600" checked={checked} readOnly />
-                            </td>
-                            <td className="px-3 py-2">
-                              <p className="text-xs font-medium leading-snug text-slate-800">{it.med_showname || it.med_name}</p>
-                              <p className="text-[10px] text-slate-400 mt-0.5">{it.med_generic_name}{it.med_medical_category ? ` · ${it.med_medical_category}` : ''}</p>
-                              <div className="flex flex-wrap gap-1 mt-0.5">
-                                {isExpired && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">⛔ หมดอายุ</span>}
-                                {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
-                                {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
-                              </div>
-                            </td>
-                            <td className="px-2 py-2 text-center text-xs font-mono whitespace-nowrap">
-                              {qty} {it.unit}
-                            </td>
-                            <td className="px-2 py-2 text-center">
-                              {it.frequency && <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">{it.frequency}</span>}
-                            </td>
-                            <td className="px-2 py-2 text-center">
-                              {it.route && <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{it.route}</span>}
-                            </td>
-                            <td className="px-2 py-2 text-right whitespace-nowrap">
-                              {unitPrice > 0
-                                ? <p className="text-xs font-semibold text-primary-700">{(unitPrice * qty).toFixed(2)}</p>
-                                : <span className="text-slate-300 text-xs">—</span>}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                    {(drawerFull.items || []).reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0) > 0 && (
-                      <tfoot>
-                        <tr className="bg-slate-50 border-t border-slate-200">
-                          <td colSpan={5} className="px-3 py-2 text-right text-xs text-slate-500 font-medium">ยอดรวม</td>
-                          <td className="px-2 py-2 text-right text-sm font-bold text-primary-700">
-                            {(drawerFull.items || []).reduce((s: number, it: any) => s + (Number(it.unit_price) || 0) * Number(it.quantity), 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    )}
-                  </table>
-                </div>
-              )}
-            </DrawerSection>
-
-            {(drawerFull.items || []).length > 0 && (
-              <DrawerSection title="">
-                <Button variant="secondary" className="w-full flex items-center justify-center gap-2"
-                  loading={printingDrawer}
-                  disabled={drawerPrintSelected.size === 0}
-                  onClick={handlePrintFromDrawer}>
-                  <Printer size={14} />
-                  {drawerPrintSelected.size === 0
-                    ? 'เลือกยาที่ต้องการพิมพ์'
-                    : `พิมพ์ฉลากยา ${drawerPrintSelected.size} รายการ`}
-                </Button>
-              </DrawerSection>
-            )}
-            {drawerFull.status === 'pending' && (
-              <DrawerSection title="">
-                <Button className="w-full" onClick={() => { setDrawerRx(null); openDispense(drawerFull); }}>
-                  จ่ายยา / แก้ไขใบสั่งยา
-                </Button>
-              </DrawerSection>
-            )}
-            {drawerFull.status === 'dispensed' && (
-              <DrawerSection title="">
-                <Button variant="secondary" className="w-full flex items-center justify-center gap-2"
-                  onClick={() => { setDrawerRx(null); setDrawerFull(null); openReturn(drawerFull); }}>
-                  <RotateCcw size={14} /> คืนยา
-                </Button>
-              </DrawerSection>
-            )}
-          </>
-        ) : (
-          drawerRx && <div className="flex justify-center py-12"><Spinner size={24} /></div>
-        )}
-      </DetailDrawer>
 
       {/* ════════════════════════════════════════════════════════════════════
           RETURN PRESCRIPTION MODAL
