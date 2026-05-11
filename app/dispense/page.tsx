@@ -575,11 +575,12 @@ export default function DispensePage() {
         `--------------------`,
         `${it.med_showname || it.med_name}`,
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
-        `จำนวน: ${it.quantity} ${it.unit || ''}`,
-        `วิธีใช้: ${[it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(), it.frequency, it.meal_relation, it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''].filter(Boolean).join(' ')}`,
-        it.med_medical_category ? `หมวดหมู่: ${it.med_medical_category}` : '',
-        it.med_indication ? `ข้อบ่งใช้: ${it.med_indication}` : '',
-        `แผนก: ${rx.ward || '-'}`,
+        `${it.quantity} ${it.unit || ''}`,
+        `${[it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`].join(' ')}`,
+        `${it.frequency},${it.meal_relation},${it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''}.filter(Boolean).join(' ')}`,
+        it.med_medical_category ? `${it.med_medical_category}` : '',
+        it.med_indication ? `${it.med_indication}` : '',
+        `${rx.ward || '-'}`,
       ].filter(Boolean).join('\n');
 
       try {
