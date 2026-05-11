@@ -15,9 +15,10 @@ export function FormSpan({ children }: { children: ReactNode }) {
 export function FormSection({ title, children, cols = 2 }: { title: string; children: ReactNode; cols?: 1 | 2 | 3 }) {
   const cls = { 1: 'grid-cols-1', 2: 'grid-cols-1 sm:grid-cols-2', 3: 'grid-cols-1 sm:grid-cols-3' };
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/60 overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-slate-200 bg-white/70">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{title}</p>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5">
+        <span className="w-1 h-4 rounded-full bg-primary-400 flex-shrink-0" />
+        <p className="text-xs font-semibold text-slate-600 tracking-wide">{title}</p>
       </div>
       <div className={`grid ${cls[cols]} gap-x-5 gap-y-4 p-4`}>{children}</div>
     </div>
