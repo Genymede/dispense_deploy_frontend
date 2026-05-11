@@ -7,11 +7,14 @@ import { Input, Select, Textarea, Badge, Button, Spinner } from '@/components/ui
 import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
-import { registryApi, crudApi, drugApi, type Drug } from '@/lib/api';
+import { registryApi, crudApi, drugApi, api, type Drug } from '@/lib/api';
 import { validateDrugLots } from '@/lib/drugUtils';
 import { Truck, Pill, X, AlertTriangle, Search, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
+
+const FREQ = ['วันละ 1 ครั้ง', 'วันละ 2 ครั้ง', 'วันละ 3 ครั้ง', 'วันละ 4 ครั้ง', 'ใช้เมื่อมีอาการ', 'ให้ยาทันที', 'ทุกๆ 4 ชั่วโมง', 'ทุกๆ 6 ชั่วโมง', 'ทุกๆ 8 ชั่วโมง', 'ทุกๆ 12 ชั่วโมง'];
+const ROUTE = ['รับประทาน', 'ฉีดเข้ากล้ามเนื้อ', 'ฉีดเข้าเส้นเลือด', 'พ่น', 'ทาภายนอก', 'หยอดตา', 'หยอดหู', 'อม', 'เหน็บ'];
 
 const STATUS_MAP = {
   Pending: { label: 'รอดำเนินการ', variant: 'warning' as const },
@@ -29,6 +32,12 @@ interface MedItem {
   unit: string;
   stock: number;
   unit_price: number;
+  dose_qty: number;
+  dose_unit: string;
+  frequency: string;
+  route: string;
+  meal_relation: string;
+  meal_sessions: string;
 }
 
 const emptyForm = {
@@ -80,6 +89,8 @@ export default function DeliveryPage() {
   const [drawerAllergies, setDrawerAllergies] = useState<any[]>([]);
   const [drawerAllergyLoading, setDrawerAllergyLoading] = useState(false);
 
+  const [drugUnits, setDrugUnits] = useState<string[]>(['เม็ด', 'แคปซูล', 'ซอง', 'มล.', 'กรัม', 'ไวแอล', 'แอมพูล', 'หลอด']);
+
   // drug search state
   const [drugSearch, setDrugSearch] = useState('');
   const [drugResults, setDrugResults] = useState<Drug[]>([]);
@@ -90,7 +101,15 @@ export default function DeliveryPage() {
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    api.get('/settings').then(r => {
+      if (r.data.drug_units) try { setDrugUnits(JSON.parse(r.data.drug_units)); } catch { }
+    }).catch(() => {});
+  }, []);
+
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const updateMed = (med_sid: number, k: keyof MedItem, v: any) =>
+    setForm(p => ({ ...p, medicine_list: p.medicine_list.map(m => m.med_sid === med_sid ? { ...m, [k]: v } : m) }));
 
   // โหลดประวัติแพ้ยาเมื่อ drawer เปิด
   useEffect(() => {
@@ -204,6 +223,12 @@ export default function DeliveryPage() {
       unit: drug.unit || '',
       stock: available,
       unit_price: drug.unit_price ?? 0,
+      dose_qty: 1,
+      dose_unit: drug.unit || 'เม็ด',
+      frequency: 'วันละ 1 ครั้ง',
+      route: 'รับประทาน',
+      meal_relation: '',
+      meal_sessions: '',
     };
     setForm(p => ({ ...p, medicine_list: [...p.medicine_list, item] }));
     if (errors.medicine_list) setErrors(p => ({ ...p, medicine_list: '' }));
@@ -231,7 +256,15 @@ export default function DeliveryPage() {
       toast.error('ไม่สามารถแก้ไขได้ สถานะสิ้นสุดแล้ว');
       return;
     }
-    const medList: MedItem[] = Array.isArray(row.medicine_list) ? row.medicine_list : [];
+    const medList: MedItem[] = (Array.isArray(row.medicine_list) ? row.medicine_list : []).map((m: any) => ({
+      ...m,
+      dose_qty: m.dose_qty ?? 1,
+      dose_unit: m.dose_unit ?? m.unit ?? 'เม็ด',
+      frequency: m.frequency ?? 'วันละ 1 ครั้ง',
+      route: m.route ?? 'รับประทาน',
+      meal_relation: m.meal_relation ?? '',
+      meal_sessions: m.meal_sessions ?? '',
+    }));
     setForm({
       patient_id: row.patient_id || 0, patient_label: row.patient_name || '',
       delivery_method: row.delivery_method || '', receiver_name: row.receiver_name || '',
@@ -277,7 +310,11 @@ export default function DeliveryPage() {
         tracking_number: form.tracking_number || undefined,
         medicine_list: form.medicine_list.map(m => ({
           med_sid: m.med_sid, med_id: m.med_id, quantity: m.quantity,
-          med_name: m.med_showname || m.med_name, unit_price: m.unit_price ?? 0,
+          med_name: m.med_showname || m.med_name, unit: m.unit, unit_price: m.unit_price ?? 0,
+          dose_qty: m.dose_qty, dose_unit: m.dose_unit,
+          frequency: m.frequency, route: m.route,
+          meal_relation: m.meal_relation || null,
+          meal_sessions: m.meal_sessions || null,
         })),
       };
       if (editingId) { await crudApi.updateDelivery(editingId, payload); toast.success('แก้ไขแล้ว'); }
@@ -408,25 +445,70 @@ export default function DeliveryPage() {
                 <>
                   <div className="space-y-2">
                     {form.medicine_list.map(item => (
-                      <div key={item.med_sid} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
-                        <Pill size={14} className="text-primary-500 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">{item.med_showname || item.med_name}</p>
-                          <p className="text-xs text-slate-400">คงเหลือ {item.stock} {item.unit}</p>
+                      <div key={item.med_sid} className="bg-slate-50 rounded-xl p-3 space-y-2.5">
+                        {/* Row 1: name + qty + price + delete */}
+                        <div className="flex items-center gap-3">
+                          <Pill size={14} className="text-primary-500 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 truncate">{item.med_showname || item.med_name}</p>
+                            <p className="text-xs text-slate-400">คงเหลือ {item.stock} {item.unit}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <input type="number" min={1} max={item.stock} value={item.quantity}
+                              onChange={e => changeQty(item.med_sid, parseInt(e.target.value) || 1)}
+                              className="w-16 text-center text-sm border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-1 focus:ring-primary-300" />
+                            <span className="text-xs text-slate-400">{item.unit}</span>
+                            {item.unit_price > 0 && (
+                              <span className="text-xs text-slate-500 whitespace-nowrap">
+                                = {(item.unit_price * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                              </span>
+                            )}
+                          </div>
+                          <button type="button" onClick={() => removeDrug(item.med_sid)}
+                            className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors shrink-0">
+                            <X size={14} />
+                          </button>
                         </div>
-                        <input type="number" min={1} max={item.stock} value={item.quantity}
-                          onChange={e => changeQty(item.med_sid, parseInt(e.target.value) || 1)}
-                          className="w-16 text-center text-sm border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-1 focus:ring-primary-300" />
-                        <span className="text-xs text-slate-400">{item.unit}</span>
-                        {item.unit_price > 0 && (
-                          <span className="text-xs text-slate-500 whitespace-nowrap">
-                            = {(item.unit_price * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                          </span>
-                        )}
-                        <button type="button" onClick={() => removeDrug(item.med_sid)}
-                          className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
-                          <X size={14} />
-                        </button>
+                        {/* Row 2: usage inputs */}
+                        <div className="flex flex-wrap items-center gap-1.5 pl-[22px]">
+                          <select value={item.route} onChange={e => updateMed(item.med_sid, 'route', e.target.value)}
+                            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-400">
+                            {ROUTE.map(o => <option key={o}>{o}</option>)}
+                          </select>
+                          <span className="text-xs text-slate-400">ครั้งละ</span>
+                          <input type="number" min={0.25} step={0.25} value={item.dose_qty}
+                            onChange={e => updateMed(item.med_sid, 'dose_qty', parseFloat(e.target.value) || 1)}
+                            className="w-14 h-7 border border-slate-200 rounded-lg text-xs px-2 outline-none focus:border-primary-400 text-center" />
+                          <select value={item.dose_unit} onChange={e => updateMed(item.med_sid, 'dose_unit', e.target.value)}
+                            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-400">
+                            {drugUnits.map(u => <option key={u} value={u}>{u}</option>)}
+                          </select>
+                          <select value={item.frequency} onChange={e => updateMed(item.med_sid, 'frequency', e.target.value)}
+                            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-400">
+                            {FREQ.map(o => <option key={o}>{o}</option>)}
+                          </select>
+                          <select value={item.meal_relation} onChange={e => updateMed(item.med_sid, 'meal_relation', e.target.value)}
+                            className="h-7 border border-slate-200 rounded-lg text-xs px-1.5 outline-none bg-white focus:border-primary-400">
+                            <option value="">ไม่ระบุเวลา</option>
+                            <option>ก่อนอาหาร</option>
+                            <option>หลังอาหาร</option>
+                            <option>พร้อมอาหาร</option>
+                          </select>
+                          {['เช้า', 'กลางวัน', 'เย็น', 'ก่อนนอน'].map(s => {
+                            const sessions = (item.meal_sessions || '').split(',').filter(Boolean);
+                            const active = sessions.includes(s);
+                            return (
+                              <button key={s} type="button"
+                                onClick={() => {
+                                  const next = active ? sessions.filter(x => x !== s) : [...sessions, s];
+                                  updateMed(item.med_sid, 'meal_sessions', next.join(','));
+                                }}
+                                className={`h-7 px-2 text-xs rounded-lg border font-medium transition-colors ${active ? 'bg-primary-100 text-primary-700 border-primary-400' : 'bg-white text-slate-400 border-slate-200 hover:border-primary-400 hover:text-primary-600'}`}>
+                                {s}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -523,28 +605,30 @@ export default function DeliveryPage() {
             {Array.isArray(drawer.medicine_list) && drawer.medicine_list.length > 0 && (
               <DrawerSection title={`รายการยา (${drawer.medicine_list.length} รายการ)${Number(drawer.total_cost) > 0 ? ` · ${Number(drawer.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : ''}`}>
                 <div className="space-y-2">
-                  {drawer.medicine_list.map((item: any, i: number) => (
-                    <div key={i} className="rounded-xl border px-4 py-3 bg-slate-50 border-slate-100">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-800">{item.med_name || item.med_showname}</p>
-                          {item.med_generic_name && (
-                            <p className="text-xs text-slate-500 mt-0.5">{item.med_generic_name}</p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-bold text-slate-800">
-                            {item.quantity} {item.unit || 'หน่วย'}
-                          </p>
-                          {Number(item.unit_price) > 0 && (
-                            <p className="text-xs text-primary-600 font-medium">
-                              {Number(item.unit_price).toFixed(2)} × {item.quantity} = {(Number(item.unit_price) * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                  {drawer.medicine_list.map((item: any, i: number) => {
+                    const mealStr = item.meal_sessions ? item.meal_sessions.split(',').filter(Boolean).join(' ') : '';
+                    const usage = [item.route, item.dose_qty ? `ครั้งละ ${item.dose_qty} ${item.dose_unit || ''}` : '', item.frequency, item.meal_relation, mealStr].filter(Boolean).join(' · ');
+                    return (
+                      <div key={i} className="rounded-xl border px-4 py-3 bg-slate-50 border-slate-100">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-slate-800">{item.med_name || item.med_showname}</p>
+                            {usage && <p className="text-xs text-slate-500 mt-1">{usage}</p>}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm font-bold text-slate-800">
+                              {item.quantity} {item.unit || 'หน่วย'}
                             </p>
-                          )}
+                            {Number(item.unit_price) > 0 && (
+                              <p className="text-xs text-primary-600 font-medium">
+                                {Number(item.unit_price).toFixed(2)} × {item.quantity} = {(Number(item.unit_price) * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </DrawerSection>
             )}
