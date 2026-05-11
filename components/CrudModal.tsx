@@ -60,7 +60,7 @@ interface CrudModalProps {
   children: ReactNode;
 }
 
-export function CrudModal({ open, onClose, title, editingId, onSave, saving, size = 'lg', children }: CrudModalProps) {
+export function CrudModal({ open, onClose, title, editingId, onSave, saving, size = 'xl', children }: CrudModalProps) {
   return (
     <Modal open={open} onClose={onClose}
       title={editingId ? `แก้ไข${title}` : `เพิ่ม${title}ใหม่`}
