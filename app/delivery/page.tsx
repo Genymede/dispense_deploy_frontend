@@ -691,7 +691,6 @@ export default function DeliveryPage() {
 
           </div>
         )}
-        )}
       </DetailDrawer>
 
       <PatientDrawer
