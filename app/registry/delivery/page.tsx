@@ -3,13 +3,12 @@ import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
-import { Input, Select, Textarea, Badge } from '@/components/ui';
+import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
-import RegistryDrawer from '@/components/RegistryDrawer';
-import { DrawerSection } from '@/components/DetailDrawer';
+import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { registryApi, crudApi } from '@/lib/api';
 import { phone as validatePhone } from '@/lib/validate';
-import { Truck } from 'lucide-react';
+import { Truck, Pill, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
 
@@ -147,38 +146,58 @@ export default function DeliveryPage() {
         </div>
       </CrudModal>
 
-      <RegistryDrawer
-        open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title="การจัดส่งยา" subtitle={r => r.patient_name}
-        onEdit={openEdit}
-        fields={[
-          { label: 'ผู้ป่วย', key: '_patient', type: 'patient' },
-          { label: 'สถานะ', key: 'status', type: 'badge_status', statusMap: STATUS_MAP },
-          { label: 'วิธีจัดส่ง', key: 'delivery_method' },
-          { label: 'วันที่', key: 'delivery_date', type: 'date' },
-          { label: 'ผู้รับ', key: 'receiver_name' },
-          { label: 'เบอร์โทร', key: 'receiver_phone' },
-          { label: 'ที่อยู่',    key: 'address',          span: true },
-          { label: 'หมายเหตุ',  key: 'note',              span: true },
-        ]}
+      <DetailDrawer
+        open={!!drawer} onClose={() => setDrawer(null)}
+        title={drawer ? `การจัดส่ง — ${drawer.patient_name}` : ''}
+        subtitle={drawer ? `HN: ${drawer.hn_number || '—'}` : ''}
+        width="md"
       >
-        {row => {
-          const list = Array.isArray(row.medicine_list) ? row.medicine_list : [];
-          if (!list.length) return null;
-          return (
-            <DrawerSection title={`รายการยา (${list.length} รายการ)`}>
-              <div className="space-y-2">
-                {list.map((m: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-                    <span className="text-sm text-slate-700">{m.med_showname || m.med_name}</span>
-                    <span className="text-sm font-medium text-slate-600 shrink-0 ml-3">{m.quantity} {m.unit}</span>
-                  </div>
-                ))}
-              </div>
+        {drawer && (
+          <>
+            <DrawerSection title="ข้อมูลการจัดส่ง">
+              <DrawerGrid items={[
+                { label: 'ผู้ป่วย', value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number || '—'}</p></> },
+                { label: 'สถานะ', value: <Badge variant={(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { variant: 'gray' }).variant}>{(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { label: drawer.status }).label}</Badge> },
+                { label: 'วิธีจัดส่ง', value: drawer.delivery_method || '—' },
+                { label: 'วันที่', value: fmtDate(drawer.delivery_date) },
+                { label: 'ผู้รับ', value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทร', value: drawer.receiver_phone || '—' },
+                { label: 'ที่อยู่', value: drawer.address || '—', span: true },
+                { label: 'หมายเหตุ', value: drawer.note || '—', span: true },
+              ]} />
             </DrawerSection>
-          );
-        }}
-      </RegistryDrawer>
+
+            {Array.isArray(drawer.medicine_list) && drawer.medicine_list.length > 0 && (
+              <DrawerSection title={`รายการยา (${drawer.medicine_list.length} รายการ)`}>
+                <div className="space-y-2">
+                  {drawer.medicine_list.map((m: any, i: number) => (
+                    <div key={i} className="bg-slate-50 rounded-xl px-4 py-3 flex gap-3">
+                      <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center">
+                        <Pill size={14} className="text-primary-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 leading-snug">{m.med_showname || m.med_name}</p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                          <span className="text-xs text-slate-600">จำนวน: <span className="font-semibold">{m.quantity} {m.unit || ''}</span></span>
+                          {m.unit_price > 0 && (
+                            <span className="text-xs text-primary-600 font-medium">
+                              {Number(m.unit_price).toFixed(2)} × {m.quantity} = {(m.unit_price * m.quantity).toFixed(2)} บาท
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DrawerSection>
+            )}
+
+            <DrawerSection title="">
+              <Button variant="secondary" size="sm" icon={<Edit2 size={14} />} onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
+            </DrawerSection>
+          </>
+        )}
+      </DetailDrawer>
     </MainLayout>
   );
 }
