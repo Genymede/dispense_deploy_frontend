@@ -336,9 +336,9 @@ interface ConfirmDialogProps {
 }
 
 const CONFIRM_CFG = {
-  danger:  { iconBg: "bg-red-100",   icon: "text-red-500",   btn: "bg-red-600 hover:bg-red-700 focus:ring-red-300" },
-  warning: { iconBg: "bg-amber-100", icon: "text-amber-500", btn: "bg-amber-600 hover:bg-amber-700 focus:ring-amber-300" },
-  info:    { iconBg: "bg-blue-100",  icon: "text-blue-500",  btn: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-300" },
+  danger:  { iconBg: "bg-red-50",    icon: "text-red-500",   btn: "bg-red-600 hover:bg-red-700 focus:ring-red-300",     border: "#dc2626" },
+  warning: { iconBg: "bg-amber-50",  icon: "text-amber-500", btn: "bg-amber-600 hover:bg-amber-700 focus:ring-amber-300", border: "#d97706" },
+  info:    { iconBg: "bg-blue-50",   icon: "text-blue-500",  btn: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-300",    border: "#0284c7" },
 };
 
 export function ConfirmDialog({ open, title, message, confirmLabel = "ยืนยัน", cancelLabel = "ยกเลิก", onConfirm, onCancel, variant = "danger", alertOnly = false }: ConfirmDialogProps) {
@@ -349,37 +349,37 @@ export function ConfirmDialog({ open, title, message, confirmLabel = "ยืน�
   return createPortal(
     <div
       className="fixed inset-0 z-[300] flex items-center justify-center p-6 animate-fade-in"
-      style={{ background: "rgba(15,23,42,0.55)" }}
+      style={{ background: "rgba(15,23,42,0.5)", backdropFilter: "blur(4px)" }}
       onClick={alertOnly ? onConfirm : onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+        className="bg-white rounded-2xl w-full max-w-sm overflow-hidden"
+        style={{
+          borderTop: `3px solid ${cfg.border}`,
+          boxShadow: "0 0 0 1px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.12)",
+        }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start gap-4">
-          <div className={`w-10 h-10 rounded-full ${cfg.iconBg} flex items-center justify-center flex-shrink-0`}>
-            <svg className={`w-5 h-5 ${cfg.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="px-6 py-5 flex items-start gap-3.5">
+          <div className={`w-9 h-9 rounded-full ${cfg.iconBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+            <svg className={`w-4 h-4 ${cfg.icon}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
             </svg>
           </div>
-          <div className="flex-1 pt-0.5">
-            <h3 className="text-base font-semibold text-slate-800">{title}</h3>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
             {message && <p className="text-sm text-slate-500 mt-1 leading-relaxed">{message}</p>}
           </div>
         </div>
-        <div className="flex gap-2.5 mt-6 justify-end">
+        <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/60 flex gap-2 justify-end">
           {!alertOnly && (
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-            >
+            <button onClick={onCancel}
+              className="px-3.5 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">
               {cancelLabel}
             </button>
           )}
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white ${cfg.btn} rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1`}
-          >
+          <button onClick={onConfirm}
+            className={`px-3.5 py-1.5 text-sm font-medium text-white ${cfg.btn} rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1`}>
             {alertOnly ? 'ตกลง' : confirmLabel}
           </button>
         </div>

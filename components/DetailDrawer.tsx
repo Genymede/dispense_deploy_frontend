@@ -41,20 +41,22 @@ export default function DetailDrawer({
         onClick={onClose}
       >
         <div
-          className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl shadow-2xl flex flex-col max-h-[92%]`}
+          className={`relative w-full ${MAX_W[width]} bg-white rounded-2xl flex flex-col max-h-[92%]`}
+          style={{
+            borderTop: "3px solid var(--primary)",
+            boxShadow: "0 0 0 1px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.12)",
+          }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex-shrink-0 px-6 py-4 border-b border-slate-100 flex items-start gap-3">
             <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-slate-800 text-base leading-snug">{title}</h2>
+              <h2 className="text-sm font-semibold text-slate-800 leading-snug">{title}</h2>
               {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
             </div>
-            <button
-              onClick={onClose}
-              className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <X size={16} />
+            <button onClick={onClose}
+              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+              <X size={15} />
             </button>
           </div>
 
@@ -65,7 +67,7 @@ export default function DetailDrawer({
 
           {/* Footer */}
           {footer && (
-            <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div className="flex-shrink-0 px-6 py-3.5 border-t border-slate-100 bg-slate-50/60 flex items-center justify-end gap-2">
               {footer}
             </div>
           )}
