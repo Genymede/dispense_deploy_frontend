@@ -577,7 +577,7 @@ export default function DispensePage() {
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
         `${it.quantity} ${it.unit || ''}`,
         `${[it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`].join(' ')}`,
-        `${it.frequency},${it.meal_relation},${it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''}.filter(Boolean).join(' ')}`,
+        `${[it.frequency, it.meal_relation, it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''].filter(Boolean).join(' ')}`,
         it.med_medical_category ? `${it.med_medical_category}` : '',
         it.med_indication ? `${it.med_indication}` : '',
         `${rx.ward || '-'}`,
