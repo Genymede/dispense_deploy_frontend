@@ -546,6 +546,27 @@ export default function DispensePage() {
     finally { setDispensing(false); }
   };
 
+  // ── word-wrap helper for thermal sticker (60 mm) ─────────────────────────
+  const wrapLine = (text: string, max = 24): string => {
+    if (text.length <= max) return text;
+    const lines: string[] = [];
+    let cur = '';
+    for (const w of text.split(' ')) {
+      if (!cur) {
+        if (w.length > max) { for (let i = 0; i < w.length; i += max) lines.push(w.slice(i, i + max)); }
+        else cur = w;
+      } else if ((cur + ' ' + w).length <= max) {
+        cur += ' ' + w;
+      } else {
+        lines.push(cur);
+        if (w.length > max) { for (let i = 0; i < w.length; i += max) lines.push(w.slice(i, i + max)); cur = ''; }
+        else cur = w;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines.join('\n');
+  };
+
   // ── Print label (1 ใบ / 1 รายการยา) ──────────────────────────────────────
   const handlePrintLabel = async () => {
     const printerShare = localStorage.getItem('selected_printer_name');
@@ -568,15 +589,16 @@ export default function DispensePage() {
     setPrintingLabel(true);
     let failed = 0;
     for (const it of items) {
+      const mealStr = it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : '';
       const label = [
         `${rx.patient_name || 'ไม่ระบุชื่อ'}    ${printedAt}`,
         `${rx.hn_number || '-'}   ${rx.prescription_no}`,
-        it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
-        `${it.med_showname || it.med_name}    ${it.quantity} ${it.unit || ''}`,
-        `${[it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`].join(' ')}`,
-        `${[it.frequency, it.meal_relation, it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''].filter(Boolean).join(' ')}`,
-        it.med_medical_category ? `${it.med_medical_category}` : '',
-        it.med_indication ? `${it.med_indication}` : '',
+        it.med_name !== (it.med_showname || it.med_name) ? wrapLine(it.med_name) : '',
+        wrapLine(`${it.med_showname || it.med_name}    ${it.quantity} ${it.unit || ''}`),
+        wrapLine([it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`].join(' ')),
+        wrapLine([it.frequency, it.meal_relation, mealStr].filter(Boolean).join(' ')),
+        it.med_medical_category ? wrapLine(it.med_medical_category) : '',
+        it.med_indication ? wrapLine(it.med_indication) : '',
         `${rx.ward || '-'}`,
       ].filter(Boolean).join('\n');
 
