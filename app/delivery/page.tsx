@@ -5,7 +5,7 @@ import DataTable, { ColDef, ExportButtons } from '@/components/DataTable';
 import { CrudModal, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button, Spinner } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
-import DetailDrawer from '@/components/DetailDrawer';
+import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import PatientDrawer from '@/components/PatientDrawer';
 import { registryApi, crudApi, drugApi, api, type Drug } from '@/lib/api';
 import { validateDrugLots } from '@/lib/drugUtils';
@@ -536,123 +536,93 @@ export default function DeliveryPage() {
       {/* Detail Drawer */}
       <DetailDrawer
         open={!!drawer} onClose={() => setDrawer(null)}
-        title={drawer ? `การจัดส่ง` : ''}
+        title="รายละเอียดการจัดส่ง"
         subtitle={drawer ? drawer.patient_name : ''}
         width="lg"
-        footer={
-          drawer && (
-            <Button variant="secondary" size="sm" icon={<Edit2 size={13} />}
-              onClick={() => { setDrawer(null); openEdit(drawer); }}>
-              แก้ไข
-            </Button>
-          )
-        }
+        footer={drawer && (
+          <Button variant="secondary" size="sm" icon={<Edit2 size={13} />}
+            onClick={() => { setDrawer(null); openEdit(drawer); }}>
+            แก้ไข
+          </Button>
+        )}
       >
         {drawer && (
-          <div className="grid grid-cols-[5fr_7fr] gap-5 min-h-0">
-
-            {/* ── LEFT: ผู้ป่วย + ข้อมูลจัดส่ง + แพ้ยา ── */}
-            <div className="space-y-4 overflow-y-auto pr-1">
-              {/* Patient card */}
-              <button onClick={() => drawer.patient_id && setPatientDrawerId(drawer.patient_id)}
-                className="flex items-center gap-3 w-full text-left group">
-                <img
-                  src={`/images/patient_image/${drawer.patient_photo || 'user.png'}`}
-                  alt={drawer.patient_name}
-                  onError={e => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-slate-200 shadow-sm shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-800 truncate group-hover:text-primary-600 transition-colors underline decoration-dotted underline-offset-2">
-                    {drawer.patient_name || 'ไม่ระบุ'}
-                  </p>
-                  <p className="text-xs text-slate-400 font-mono">HN: {drawer.hn_number || '—'}</p>
-                </div>
-              </button>
-
-              {/* Delivery info — compact key-value rows */}
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">ข้อมูลการจัดส่ง</p>
-                {[
-                  { label: 'สถานะ',        value: statusBadge(drawer.status) },
-                  { label: 'วิธีจัดส่ง',   value: drawer.delivery_method || '—' },
-                  { label: 'วันที่จัดส่ง',  value: fmtDate(drawer.delivery_date) },
-                  { label: 'เวลาจัดส่งจริง', value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
-                  { label: 'ผู้รับ',        value: drawer.receiver_name || '—' },
-                  { label: 'เบอร์โทรผู้รับ', value: drawer.receiver_phone || '—' },
-                  { label: 'เลขพัสดุ',     value: drawer.tracking_number || '—' },
-                  { label: 'ผู้จัดส่ง',    value: drawer.courier_name || '—' },
-                  { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex gap-2 text-sm leading-snug">
-                    <span className="text-slate-400 shrink-0 w-28">{label}</span>
-                    <span className="text-slate-800 font-medium min-w-0 break-words flex-1">{value}</span>
-                  </div>
-                ))}
-                {drawer.address && (
-                  <div className="pt-1">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ที่อยู่จัดส่ง</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{drawer.address}</p>
-                  </div>
-                )}
-                {drawer.note && (
-                  <div className="pt-1">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">หมายเหตุ</p>
-                    <p className="text-sm text-slate-700">{drawer.note}</p>
-                  </div>
-                )}
+          <>
+            {/* Patient banner */}
+            <button onClick={() => drawer.patient_id && setPatientDrawerId(drawer.patient_id)}
+              className="w-full flex items-center gap-4 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-left group transition-colors mb-1">
+              <img
+                src={`/images/patient_image/${drawer.patient_photo || 'user.png'}`}
+                alt={drawer.patient_name}
+                onError={e => { (e.target as HTMLImageElement).src = '/images/patient_image/user.png'; }}
+                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-800 group-hover:text-primary-600 transition-colors">
+                  {drawer.patient_name || 'ไม่ระบุ'}
+                </p>
+                <p className="text-xs text-slate-400 font-mono mt-0.5">HN: {drawer.hn_number || '—'}</p>
               </div>
+              {statusBadge(drawer.status)}
+            </button>
 
-              {/* Allergy history */}
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">ประวัติแพ้ยา</p>
+            {/* Delivery info grid */}
+            <DrawerSection title="ข้อมูลการจัดส่ง">
+              <DrawerGrid items={[
+                { label: 'วิธีจัดส่ง',       value: drawer.delivery_method || '—' },
+                { label: 'วันที่จัดส่ง',      value: fmtDate(drawer.delivery_date) },
+                { label: 'จัดส่งจริงเมื่อ',   value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'ผู้รับ',            value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทรผู้รับ',    value: drawer.receiver_phone || '—' },
+                { label: 'เลขพัสดุ',          value: drawer.tracking_number || '—' },
+                { label: 'ผู้จัดส่ง',         value: drawer.courier_name || '—' },
+                { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
+                { label: 'ที่อยู่',            value: drawer.address || '—', span: true },
+                ...(drawer.note ? [{ label: 'หมายเหตุ', value: drawer.note, span: true }] : []),
+              ]} />
+            </DrawerSection>
+
+            {/* Allergies — only when present */}
+            {(drawerAllergyLoading || drawerAllergies.length > 0) && (
+              <DrawerSection title="ประวัติแพ้ยา">
                 {drawerAllergyLoading ? (
-                  <div className="flex items-center gap-2 text-xs text-slate-400"><Spinner size={12} />กำลังตรวจสอบ...</div>
-                ) : drawerAllergies.length === 0 ? (
-                  <p className="text-xs text-slate-400">ไม่มีประวัติแพ้ยา</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-400"><Spinner size={12} /> กำลังตรวจสอบ...</div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {drawerAllergies.map((a: any) => (
-                      <div key={a.allr_id} className="flex items-start gap-2 p-2 rounded-lg bg-red-50 border border-red-100">
-                        <AlertTriangle size={13} className="text-red-500 shrink-0 mt-0.5" />
+                      <div key={a.allr_id} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl bg-red-50 border border-red-100">
+                        <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-slate-800 truncate">{a.med_name || `ยา #${a.med_id}`}</p>
-                          {a.symptoms && <p className="text-[10px] text-slate-500">{a.symptoms}</p>}
+                          <p className="text-sm font-medium text-slate-800">{a.med_name || `ยา #${a.med_id}`}</p>
+                          {a.symptoms && <p className="text-xs text-slate-500 mt-0.5">{a.symptoms}</p>}
                         </div>
-                        <Badge variant={a.severity === 'severe' ? 'danger' : a.severity === 'moderate' ? 'warning' : 'gray'} className="text-[10px] shrink-0">
+                        <Badge variant={a.severity === 'severe' ? 'danger' : a.severity === 'moderate' ? 'warning' : 'gray'}>
                           {a.severity === 'severe' ? 'รุนแรงมาก' : a.severity === 'moderate' ? 'ปานกลาง' : 'เล็กน้อย'}
                         </Badge>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
+              </DrawerSection>
+            )}
 
-            {/* ── RIGHT: รายการยา (table) ── */}
-            <div className="overflow-y-auto">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-                รายการยา ({(drawer.medicine_list ?? []).length} รายการ)
-                {Number(drawer.total_cost) > 0 && (
-                  <span className="ml-2 text-primary-600 normal-case font-semibold">
-                    · {Number(drawer.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                  </span>
-                )}
-              </p>
-              {!Array.isArray(drawer.medicine_list) || drawer.medicine_list.length === 0 ? (
-                <p className="text-xs text-slate-400">ไม่มีรายการยา</p>
-              ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                      <tr>
-                        <th className="px-3 py-2 text-left text-slate-400 font-semibold w-6">#</th>
-                        <th className="px-3 py-2 text-left text-slate-400 font-semibold">ชื่อยา / วิธีใช้</th>
-                        <th className="px-3 py-2 text-center text-slate-400 font-semibold whitespace-nowrap">จำนวน</th>
-                        <th className="px-3 py-2 text-right text-slate-400 font-semibold whitespace-nowrap">ราคา</th>
+            {/* Medicine list */}
+            {Array.isArray(drawer.medicine_list) && drawer.medicine_list.length > 0 && (
+              <DrawerSection title={
+                `รายการยา (${drawer.medicine_list.length} รายการ)` +
+                (Number(drawer.total_cost) > 0 ? ` · ${Number(drawer.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : '')
+              }>
+                <div className="overflow-x-auto -mx-1 rounded-xl border border-slate-100">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-400 w-7">#</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-400">ชื่อยา / วิธีใช้</th>
+                        <th className="px-3 py-2.5 text-center text-xs font-semibold text-slate-400 whitespace-nowrap">จำนวน</th>
+                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-slate-400 whitespace-nowrap">ราคา (บาท)</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-50">
                       {drawer.medicine_list.map((item: any, i: number) => {
                         const mealStr = item.meal_sessions ? item.meal_sessions.split(',').filter(Boolean).join(' ') : '';
                         const usage = [
@@ -661,23 +631,24 @@ export default function DeliveryPage() {
                           item.frequency,
                           item.meal_relation,
                           mealStr,
-                        ].filter(Boolean).join(' · ');
+                        ].filter(Boolean).join('  ');
                         return (
-                          <tr key={i} className="border-b border-slate-50 last:border-0">
-                            <td className="px-3 py-2.5 text-slate-300 text-center">{i + 1}</td>
-                            <td className="px-3 py-2.5">
-                              <p className="font-semibold text-slate-800">{item.med_name || item.med_showname}</p>
-                              {usage && <p className="text-slate-500 mt-0.5 leading-snug">{usage}</p>}
+                          <tr key={i}>
+                            <td className="px-3 py-3 text-xs text-slate-300 text-center align-top">{i + 1}</td>
+                            <td className="px-3 py-3">
+                              <p className="font-semibold text-slate-800 leading-snug">{item.med_name || item.med_showname}</p>
+                              {usage && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{usage}</p>}
                             </td>
-                            <td className="px-3 py-2.5 text-center font-semibold text-slate-700 whitespace-nowrap">
-                              {item.quantity} <span className="font-normal text-slate-400">{item.unit || ''}</span>
+                            <td className="px-3 py-3 text-center align-top whitespace-nowrap">
+                              <span className="font-semibold text-slate-700">{item.quantity}</span>
+                              <span className="text-xs text-slate-400 ml-1">{item.unit || ''}</span>
                             </td>
-                            <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                            <td className="px-3 py-3 text-right align-top whitespace-nowrap">
                               {Number(item.unit_price) > 0 ? (
-                                <>
-                                  <span className="text-slate-400">{Number(item.unit_price).toFixed(2)} × {item.quantity} = </span>
-                                  <span className="font-semibold text-slate-700">{(Number(item.unit_price) * item.quantity).toFixed(2)}</span>
-                                </>
+                                <div>
+                                  <p className="font-semibold text-slate-700">{(Number(item.unit_price) * item.quantity).toFixed(2)}</p>
+                                  <p className="text-xs text-slate-400">{Number(item.unit_price).toFixed(2)} × {item.quantity}</p>
+                                </div>
                               ) : <span className="text-slate-300">—</span>}
                             </td>
                           </tr>
@@ -686,10 +657,9 @@ export default function DeliveryPage() {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </div>
-
-          </div>
+              </DrawerSection>
+            )}
+          </>
         )}
       </DetailDrawer>
 
