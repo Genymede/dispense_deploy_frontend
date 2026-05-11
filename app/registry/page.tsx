@@ -8,7 +8,7 @@ import { Input, Select, Textarea, Badge, Spinner } from '@/components/ui';
 import { registryApi, crudApi, api, type MedRegistryItem } from '@/lib/api';
 import { BookOpen, Database } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { thaiToday, thaiDaysAgo, fmtDate } from '@/lib/dateUtils';
+import { fmtDate } from '@/lib/dateUtils';
 
 const CATEGORIES = ['ยาปฏิชีวนะ', 'ยาแก้ปวด', 'ยาลดความดัน', 'ยาเบาหวาน', 'ยาหัวใจ', 'ยาระบบทางเดินอาหาร', 'วิตามิน', 'อื่นๆ'];
 const SEVERITIES = ['ยาทั่วไป', 'ยาอันตราย', 'ยาควบคุมพิเศษ', 'ยาเสพติดให้โทษ', 'วัตถุออกฤทธิ์'];
@@ -18,11 +18,9 @@ const PREG_TH: Record<string, string> = { A: 'A — ปลอดภัย', B: '
 
 const empty = {
   med_name: '', med_generic_name: '', med_severity: 'ยาทั่วไป', med_counting_unit: 'เม็ด',
-  med_marketing_name: '', med_thai_name: '', med_cost_price: '', med_selling_price: '',
-  med_medium_price: '', med_dosage_form: '', med_medical_category: '',
+  med_marketing_name: '', med_thai_name: '', med_dosage_form: '', med_medical_category: '',
   med_essential_med_list: '', med_pregnancy_category: '',
-  med_TMT_code: '', med_TPU_code: '', med_out_of_stock: false,
-  med_mfg: '', med_exp: '', med_indication: '',
+  med_TMT_code: '', med_TPU_code: '', med_indication: '',
 };
 
 const cols: ColDef[] = [
@@ -35,8 +33,8 @@ const cols: ColDef[] = [
   { key: 'med_counting_unit', label: 'หน่วย', className: 'text-xs' },
   { key: 'med_severity', label: 'ระดับ', render: r => <Badge variant={r.med_severity?.includes('เสพติด') ? 'danger' : r.med_severity?.includes('อันตราย') ? 'warning' : 'gray'} className="text-[10px]">{r.med_severity}</Badge> },
   // { key: 'med_essential_med_list', label: 'ยาหลัก', render: r => r.med_essential_med_list === 'Y' ? <Badge variant="success">ใช่</Badge> : <span className="text-slate-300 text-xs">-</span> },
-  { key: 'med_selling_price', label: 'ราคาขาย', render: r => <span className="font-semibold text-primary-700 text-xs">฿{Number(r.med_selling_price || 0).toFixed(2)}</span> },
-  { key: 'med_exp', label: 'หมดอายุ', render: r => fmtDate(r.med_exp) },
+  { key: 'med_indication', label: 'ข้อบ่งใช้', className: 'text-xs text-slate-500 max-w-[200px] truncate', render: r => <span className="truncate block max-w-[200px]" title={r.med_indication}>{r.med_indication || '—'}</span> },
+  { key: 'med_pregnancy_category', label: 'หมวดตั้งครรภ์', render: r => r.med_pregnancy_category ? <Badge variant={r.med_pregnancy_category === 'X' ? 'danger' : r.med_pregnancy_category === 'D' ? 'warning' : 'gray'} className="text-[10px]">{r.med_pregnancy_category}</Badge> : <span className="text-slate-300 text-xs">—</span> },
 ];
 
 export default function RegistryPage() {
@@ -77,14 +75,10 @@ export default function RegistryPage() {
       med_name: row.med_name, med_generic_name: row.med_generic_name || '',
       med_severity: row.med_severity, med_counting_unit: row.med_counting_unit,
       med_marketing_name: row.med_marketing_name, med_thai_name: row.med_thai_name || '',
-      med_cost_price: String(row.med_cost_price || ''), med_selling_price: String(row.med_selling_price || ''),
-      med_medium_price: String(row.med_medium_price || ''), med_dosage_form: row.med_dosage_form || '',
+      med_dosage_form: row.med_dosage_form || '',
       med_medical_category: row.med_medical_category || '', med_essential_med_list: row.med_essential_med_list || '',
       med_pregnancy_category: row.med_pregnancy_category || '',
       med_TMT_code: row.med_TMT_code || '', med_TPU_code: row.med_TPU_code || '',
-      med_out_of_stock: row.med_out_of_stock,
-      med_mfg: row.med_mfg ? row.med_mfg.slice(0, 10) : '',
-      med_exp: row.med_exp ? row.med_exp.slice(0, 10) : '',
       med_indication: row.med_indication || '',
     });
     setErrors({});
@@ -99,14 +93,7 @@ export default function RegistryPage() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     try {
-      const payload = {
-        ...form,
-        med_cost_price: Number(form.med_cost_price || 0),
-        med_selling_price: Number(form.med_selling_price || 0),
-        med_medium_price: Number(form.med_medium_price || 0),
-        med_mfg: form.med_mfg || thaiToday(),
-        med_exp: form.med_exp || thaiDaysAgo(-365),
-      };
+      const payload = { ...form };
       if (editingId) { await crudApi.updateMedTable(editingId, payload); toast.success('แก้ไขเรียบร้อย'); }
       else { await crudApi.createMedTable(payload); toast.success('เพิ่มยาใหม่เรียบร้อย'); }
       setShowModal(false); setReload(r => r + 1);
@@ -165,22 +152,14 @@ export default function RegistryPage() {
             error={errors.med_counting_unit} />
           <Select label="ระดับยา" value={form.med_severity} onChange={e => f('med_severity', e.target.value)}
             options={SEVERITIES.map(s => ({ value: s, label: s }))} />
-          <Input label="ราคาต้นทุน (บาท)" type="number" step="0.01" value={form.med_cost_price} onChange={e => f('med_cost_price', e.target.value)} />
-          <Input label="ราคาขาย (บาท)" type="number" step="0.01" value={form.med_selling_price} onChange={e => f('med_selling_price', e.target.value)} />
           <Select label="บัญชียาหลัก" value={form.med_essential_med_list} onChange={e => f('med_essential_med_list', e.target.value)}
             options={[{ value: 'Y', label: 'ใช่' }, { value: 'N', label: 'ไม่ใช่' }]} placeholder="เลือก" />
           <Select label="หมวดการตั้งครรภ์" value={form.med_pregnancy_category} onChange={e => f('med_pregnancy_category', e.target.value)}
             options={PREG.map(p => ({ value: p, label: PREG_TH[p] }))} placeholder="เลือก" />
           <Input label="TMT Code" value={form.med_TMT_code} onChange={e => f('med_TMT_code', e.target.value)} />
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
-          <Input label="วันผลิต (ทะเบียน)" type="date" value={form.med_mfg} onChange={e => f('med_mfg', e.target.value)} />
-          <Input label="วันหมดอายุ (ทะเบียน)" type="date" value={form.med_exp} onChange={e => f('med_exp', e.target.value)} />
           <FormSpan><Textarea label="ข้อบ่งใช้ (Indication)" value={form.med_indication} onChange={e => f('med_indication', e.target.value)}
             placeholder="เช่น บรรเทาอาการแพ้, ลดอาการภูมิแพ้อากาศ..." rows={2} /></FormSpan>
-          <div className="flex items-center gap-2 pt-1">
-            <input type="checkbox" id="oos" checked={form.med_out_of_stock} onChange={e => f('med_out_of_stock', e.target.checked)} className="w-4 h-4" />
-            <label htmlFor="oos" className="text-sm text-slate-700">หมดสต็อก (Out of Stock)</label>
-          </div>
         </FormGrid>
       </CrudModal>
 
@@ -208,12 +187,8 @@ export default function RegistryPage() {
                 { label: 'ระดับยา', value: <Badge variant={med.med_severity?.includes('เสพติด') ? 'danger' : med.med_severity?.includes('อันตราย') ? 'warning' : 'gray'}>{med.med_severity || '—'}</Badge> },
                 { label: 'บัญชียาหลัก', value: med.med_essential_med_list === 'Y' ? <Badge variant="success">ใช่</Badge> : 'ไม่ใช่' },
                 { label: 'หมวดตั้งครรภ์', value: med.med_pregnancy_category ? `${PREG_TH[med.med_pregnancy_category] ?? med.med_pregnancy_category}` : '—' },
-                { label: 'ราคาต้นทุน', value: `฿${Number(med.med_cost_price || 0).toFixed(2)}` },
-                { label: 'ราคาขาย', value: <span className="font-semibold text-primary-700">฿{Number(med.med_selling_price || 0).toFixed(2)}</span> },
                 { label: 'TMT Code', value: <span className="font-mono text-xs">{med.med_TMT_code || '—'}</span> },
                 { label: 'TPU Code', value: <span className="font-mono text-xs">{med.med_TPU_code || '—'}</span> },
-                { label: 'วันผลิต', value: fmtDate(med.med_mfg) },
-                { label: 'วันหมดอายุ', value: fmtDate(med.med_exp) },
               ]} />
             </DrawerSection>
 
