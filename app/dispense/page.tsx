@@ -547,7 +547,7 @@ export default function DispensePage() {
   };
 
   // ── word-wrap helper for thermal sticker (60 mm) ─────────────────────────
-  const wrapLine = (text: string, max = 45): string => {
+  const wrapLine = (text: string, max = 44): string => {
     if (text.length <= max) return text;
     const lines: string[] = [];
     let cur = '';
