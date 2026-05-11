@@ -22,12 +22,6 @@ const emptyForm = {
   location: '',
   med_showname: '',
   med_showname_eng: '',
-  min_quantity: '',
-  max_quantity: '',
-  cost_price: '',
-  unit_price: '',
-  mfg_date: '',
-  exp_date: '',
 };
 
 export default function DrugsPage() {
@@ -230,12 +224,6 @@ export default function DrugsPage() {
       location: d.location || '',
       med_showname: d.med_showname || '',
       med_showname_eng: d.med_showname_eng || '',
-      min_quantity: String(d.min_quantity ?? ''),
-      max_quantity: String(d.max_quantity ?? ''),
-      cost_price: String(d.cost_price ?? ''),
-      unit_price: String(d.unit_price ?? ''),
-      mfg_date: d.mfg_date ? d.mfg_date.slice(0, 10) : '',
-      exp_date: d.exp_date ? d.exp_date.slice(0, 10) : '',
     });
     setEditingSid(d.med_sid);
     setEditingDrugName(d.med_showname || d.med_name);
@@ -252,12 +240,6 @@ export default function DrugsPage() {
       const payload: any = {
         ...form,
         med_id: Number(form.med_id),
-        min_quantity: form.min_quantity ? Number(form.min_quantity) : null,
-        max_quantity: form.max_quantity ? Number(form.max_quantity) : null,
-        cost_price: form.cost_price ? Number(form.cost_price) : null,
-        unit_price: form.unit_price ? Number(form.unit_price) : null,
-        mfg_date: form.mfg_date || null,
-        exp_date: form.exp_date || null,
       };
       if (editingSid) {
         await drugApi.update(editingSid, payload);
@@ -480,57 +462,36 @@ export default function DrugsPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editingSid ? `แก้ไขข้อมูลยา — ${editingDrugName}` : 'เพิ่มยาในคลัง'} size="lg"
         footer={<><Button variant="secondary" onClick={() => setShowModal(false)}>ยกเลิก</Button><Button onClick={handleSave} loading={saving}>บันทึก</Button></>}
       >
-        <FormTabs tabs={[
-          ...(!editingSid ? [{
-            label: 'เลือกยา',
-            content: (
-              <div>
-                <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required
-                  initialDisplay={selectedMedLabel} resetKey={showModal ? 'open' : 'closed'}
-                  onSelect={d => {
-                    if (d) {
-                      setSelectedMed(d); setSelectedMedLabel(d.med_name);
-                      f('med_id', d.med_id);
-                      if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
-                      if (!form.med_showname) f('med_showname', d.med_name);
-                    } else { setSelectedMed(null); setSelectedMedLabel(''); f('med_id', 0); }
-                  }} />
-                {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
-              </div>
-            ),
-          }] : []),
-          {
-            label: 'ข้อมูลยา',
-            content: (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
-                  onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
-                  options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
-                  error={formErrors.packaging_type} />
-                <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
-                <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
-                <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
-                <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-                  <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
-                  <label htmlFor="div" className="text-sm text-slate-700">แบ่งได้ (Divisible)</label>
-                </div>
-              </div>
-            ),
-          },
-          {
-            label: 'สต็อก & ราคา',
-            content: (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="สต็อกขั้นต่ำ" type="number" value={form.min_quantity} onChange={(e) => f('min_quantity', e.target.value)} />
-                <Input label="สต็อกสูงสุด" type="number" value={form.max_quantity} onChange={(e) => f('max_quantity', e.target.value)} />
-                <Input label="ราคาต้นทุน (บาท)" type="number" step="0.01" value={form.cost_price} onChange={(e) => f('cost_price', e.target.value)} />
-                <Input label="ราคาขาย (บาท)" type="number" step="0.01" value={form.unit_price} onChange={(e) => f('unit_price', e.target.value)} />
-                <Input label="วันผลิต" type="date" value={form.mfg_date} onChange={(e) => f('mfg_date', e.target.value)} />
-                <Input label="วันหมดอายุ" type="date" value={form.exp_date} onChange={(e) => f('exp_date', e.target.value)} />
-              </div>
-            ),
-          },
-        ]} />
+        <div className="flex flex-col gap-5">
+          {!editingSid && (
+            <div>
+              <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required
+                initialDisplay={selectedMedLabel} resetKey={showModal ? 'open' : 'closed'}
+                onSelect={d => {
+                  if (d) {
+                    setSelectedMed(d); setSelectedMedLabel(d.med_name);
+                    f('med_id', d.med_id);
+                    if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
+                    if (!form.med_showname) f('med_showname', d.med_name);
+                  } else { setSelectedMed(null); setSelectedMedLabel(''); f('med_id', 0); }
+                }} />
+              {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
+              onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
+              options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
+              error={formErrors.packaging_type} />
+            <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
+            <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
+            <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
+            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+              <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
+              <label htmlFor="div" className="text-sm text-slate-700">แบ่งได้ (Divisible)</label>
+            </div>
+          </div>
+        </div>
       </Modal>
 
 
