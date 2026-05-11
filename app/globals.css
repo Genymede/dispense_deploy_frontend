@@ -224,14 +224,15 @@ button:focus-visible {
 .modal-box {
   background: white;
   border-radius: 16px;
+  border-top: 3px solid var(--primary);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.08),
-    0 32px 80px rgba(0, 0, 0, 0.16);
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 24px 64px rgba(0, 0, 0, 0.12);
   width: 100%;
   max-height: 99vh;
   overflow-y: auto;
-  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Bump tiny fixed-pixel text up */

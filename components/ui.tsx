@@ -209,14 +209,14 @@ export function Modal({ open, onClose, title, children, size = "md", footer }: M
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={clsx("modal-box w-full", modalSizes[size])}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="text-[15px] font-semibold text-slate-800 tracking-tight">{title}</h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
-            <X size={16} />
+          <h3 className="text-sm font-semibold text-slate-800 tracking-tight">{title}</h3>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+            <X size={15} />
           </button>
         </div>
         <div className="px-6 py-5">{children}</div>
         {footer && (
-          <div className="px-6 py-4 flex justify-end gap-2 border-t border-slate-100">{footer}</div>
+          <div className="px-6 py-3.5 flex justify-end gap-2 border-t border-slate-100 bg-slate-50/60">{footer}</div>
         )}
       </div>
     </div>,
