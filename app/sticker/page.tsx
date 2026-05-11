@@ -16,7 +16,7 @@ function buildMockLabel() {
   });
   return [
     `นายพิมพ์ ทดสอบ    ${printedAt}`,
-    '67-001234   RX-67-000089',
+    '90001234   RX-67-000089',
     'Amoxicillin 500mg Capsule',
     'Amoxicillin (500) Cap    21 แคปซูล',
     'รับประทาน ครั้งละ 1 แคปซูล',
