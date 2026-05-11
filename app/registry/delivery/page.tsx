@@ -100,7 +100,6 @@ export default function DeliveryPage() {
         searchPlaceholder="ค้นหาผู้ป่วย, ผู้รับ..."
         emptyIcon={<Truck size={36} />} emptyText="ไม่พบรายการ"
         deps={[reload]}
-        onAdd={openAdd} addLabel="เพิ่มรายการ"
         onRowClick={row => setDrawer(row)}
         actionCol={row => (
           <RowActions onView={() => setDrawer(row)} onEdit={() => openEdit(row)}
