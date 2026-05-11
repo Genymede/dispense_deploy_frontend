@@ -25,6 +25,28 @@ export function FormSection({ title, children, cols = 2 }: { title: string; chil
   );
 }
 
+interface TabDef { label: string; content: ReactNode; }
+
+export function FormTabs({ tabs }: { tabs: TabDef[] }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div>
+      <div className="flex gap-1 bg-slate-100/80 p-1 rounded-xl mb-5">
+        {tabs.map((t, i) => (
+          <button key={i} type="button" onClick={() => setActive(i)}
+            className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+              active === i ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div>{tabs[active].content}</div>
+    </div>
+  );
+}
+
 interface CrudModalProps {
   open: boolean;
   onClose: () => void;

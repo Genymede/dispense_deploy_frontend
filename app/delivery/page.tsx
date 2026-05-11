@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef, ExportButtons } from '@/components/DataTable';
-import { CrudModal, FormSection, RowActions } from '@/components/CrudModal';
+import { CrudModal, FormTabs, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button, Spinner } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
@@ -321,150 +321,147 @@ export default function DeliveryPage() {
       {/* Create / Edit Modal */}
       <CrudModal open={showModal} onClose={() => setShowModal(false)}
         title="การจัดส่งยา" editingId={editingId} onSave={handleSave} saving={saving} size="lg">
-        <div className="flex flex-col gap-4">
-          <FormSection title="ข้อมูลผู้ป่วย" cols={1}>
-            <div>
-              <SearchSelect type="patient" label="ผู้ป่วย" required
-                initialDisplay={form.patient_label} resetKey={resetKey}
-                onSelect={p => { handleSelectPatient(p); if (errors.patient_id) setErrors(prev => ({ ...prev, patient_id: '' })); }}
-                disabled={!!editingId} />
-              {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
-            </div>
-          </FormSection>
-
-          <FormSection title="รายละเอียดการจัดส่ง">
-            <Select label="วิธีจัดส่ง" required value={form.delivery_method}
-              onChange={e => { f('delivery_method', e.target.value); if (errors.delivery_method) setErrors(p => ({ ...p, delivery_method: '' })); }}
-              placeholder="เลือกวิธี"
-              options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))}
-              error={errors.delivery_method} />
-            {editingId
-              ? <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
-                  options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />
-              : <div />}
-            <Input label="ชื่อผู้รับ" required value={form.receiver_name}
-              onChange={e => { f('receiver_name', e.target.value); if (errors.receiver_name) setErrors(p => ({ ...p, receiver_name: '' })); }}
-              error={errors.receiver_name} />
-            <Input label="เบอร์โทรผู้รับ" required value={form.receiver_phone}
-              onChange={e => { f('receiver_phone', e.target.value); if (errors.receiver_phone) setErrors(p => ({ ...p, receiver_phone: '' })); }}
-              error={errors.receiver_phone} />
-            <div className="sm:col-span-2">
-              <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
-                onChange={e => { f('address', e.target.value); if (errors.address) setErrors(p => ({ ...p, address: '' })); }}
-                rows={2} error={errors.address} />
-            </div>
-          </FormSection>
-
-          {form.delivery_method !== 'มารับด้วยตนเอง' && (
-            <FormSection title="ข้อมูลผู้จัดส่ง">
-              <Input label="ชื่อผู้จัดส่ง" value={form.courier_name} onChange={e => f('courier_name', e.target.value)}
-                placeholder="ชื่อพนักงานส่ง / บริษัทขนส่ง" />
-              <Input label="เบอร์โทรผู้จัดส่ง" value={form.courier_phone} onChange={e => f('courier_phone', e.target.value)}
-                placeholder="0812345678" />
-              <Input label="เลขพัสดุ / Tracking" value={form.tracking_number} onChange={e => f('tracking_number', e.target.value)}
-                placeholder="เลขติดตามพัสดุ" />
-            </FormSection>
-          )}
-
-          {/* Medicine List */}
-          <div className="rounded-xl border border-slate-200 bg-slate-50/60 overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-200 bg-white/70 flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">รายการยา</p>
-              {errors.medicine_list && <p className="text-xs text-red-500">{errors.medicine_list}</p>}
-            </div>
-            <div className="p-4">
-
-            {/* Drug search */}
-            <div ref={searchRef} className="relative mb-3">
-              <div className="relative">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="ค้นหายาเพื่อเพิ่ม..."
-                  value={drugSearch}
-                  onChange={e => setDrugSearch(e.target.value)}
-                  onFocus={() => drugResults.length > 0 && setShowDropdown(true)}
-                  className="w-full pl-8 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300"
-                />
-                {drugLoading && <span className="absolute right-3 top-1/2 -translate-y-1/2"><Spinner size={14} /></span>}
-              </div>
-              {showDropdown && drugResults.length > 0 && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-                  {drugResults.map(drug => {
-                    const isAllergy = patientAllergies.includes(drug.med_id);
-                    const inList = form.medicine_list.some(m => m.med_sid === drug.med_sid);
-                    return (
-                      <button key={drug.med_sid} type="button"
-                        onClick={() => addDrug(drug)}
-                        disabled={inList}
-                        className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 transition-colors ${inList ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        <Pill size={14} className="text-slate-400 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">
-                            {drug.med_showname || drug.med_name}
-                            {isAllergy && <AlertTriangle size={12} className="inline ml-1 text-red-500" />}
-                          </p>
-                          <p className="text-xs text-slate-400">{drug.med_name} · คงเหลือ {drug.current_stock ?? 0} {drug.unit}</p>
-                        </div>
-                        <Plus size={14} className="text-primary-500 shrink-0" />
-                      </button>
-                    );
-                  })}
+        <FormTabs tabs={[
+          {
+            label: 'ผู้ป่วย & ยา',
+            content: (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <SearchSelect type="patient" label="ผู้ป่วย" required
+                    initialDisplay={form.patient_label} resetKey={resetKey}
+                    onSelect={p => { handleSelectPatient(p); if (errors.patient_id) setErrors(prev => ({ ...prev, patient_id: '' })); }}
+                    disabled={!!editingId} />
+                  {errors.patient_id && <p className="mt-1 text-xs text-red-500">{errors.patient_id}</p>}
                 </div>
-              )}
-            </div>
-
-            {/* Medicine list items */}
-            {form.medicine_list.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-4 border border-dashed border-slate-200 rounded-lg">ยังไม่มีรายการยา</p>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  {form.medicine_list.map(item => (
-                    <div key={item.med_sid} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
-                      <Pill size={14} className="text-primary-500 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 truncate">{item.med_showname || item.med_name}</p>
-                        <p className="text-xs text-slate-400">คงเหลือ {item.stock} {item.unit}</p>
-                      </div>
-                      <input
-                        type="number" min={1} max={item.stock}
-                        value={item.quantity}
-                        onChange={e => changeQty(item.med_sid, parseInt(e.target.value) || 1)}
-                        className="w-16 text-center text-sm border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-1 focus:ring-primary-300"
-                      />
-                      <span className="text-xs text-slate-400">{item.unit}</span>
-                      {item.unit_price > 0 && (
-                        <span className="text-xs text-slate-500 whitespace-nowrap">
-                          = {(item.unit_price * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                        </span>
-                      )}
-                      <button type="button" onClick={() => removeDrug(item.med_sid)}
-                        className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
-                        <X size={14} />
-                      </button>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-slate-700">รายการยา</p>
+                    {errors.medicine_list && <p className="text-xs text-red-500">{errors.medicine_list}</p>}
+                  </div>
+                  <div ref={searchRef} className="relative mb-3">
+                    <div className="relative">
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input type="text" placeholder="ค้นหายาเพื่อเพิ่ม..."
+                        value={drugSearch} onChange={e => setDrugSearch(e.target.value)}
+                        onFocus={() => drugResults.length > 0 && setShowDropdown(true)}
+                        className="w-full pl-8 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-300" />
+                      {drugLoading && <span className="absolute right-3 top-1/2 -translate-y-1/2"><Spinner size={14} /></span>}
                     </div>
-                  ))}
+                    {showDropdown && drugResults.length > 0 && (
+                      <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                        {drugResults.map(drug => {
+                          const isAllergy = patientAllergies.includes(drug.med_id);
+                          const inList = form.medicine_list.some(m => m.med_sid === drug.med_sid);
+                          return (
+                            <button key={drug.med_sid} type="button" onClick={() => addDrug(drug)} disabled={inList}
+                              className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 transition-colors ${inList ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <Pill size={14} className="text-slate-400 shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-slate-800 truncate">
+                                  {drug.med_showname || drug.med_name}
+                                  {isAllergy && <AlertTriangle size={12} className="inline ml-1 text-red-500" />}
+                                </p>
+                                <p className="text-xs text-slate-400">{drug.med_name} · คงเหลือ {drug.current_stock ?? 0} {drug.unit}</p>
+                              </div>
+                              <Plus size={14} className="text-primary-500 shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  {form.medicine_list.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-4 border border-dashed border-slate-200 rounded-lg">ยังไม่มีรายการยา</p>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        {form.medicine_list.map(item => (
+                          <div key={item.med_sid} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg">
+                            <Pill size={14} className="text-primary-500 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">{item.med_showname || item.med_name}</p>
+                              <p className="text-xs text-slate-400">คงเหลือ {item.stock} {item.unit}</p>
+                            </div>
+                            <input type="number" min={1} max={item.stock} value={item.quantity}
+                              onChange={e => changeQty(item.med_sid, parseInt(e.target.value) || 1)}
+                              className="w-16 text-center text-sm border border-slate-200 rounded-md py-1 focus:outline-none focus:ring-1 focus:ring-primary-300" />
+                            <span className="text-xs text-slate-400">{item.unit}</span>
+                            {item.unit_price > 0 && (
+                              <span className="text-xs text-slate-500 whitespace-nowrap">
+                                = {(item.unit_price * item.quantity).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                              </span>
+                            )}
+                            <button type="button" onClick={() => removeDrug(item.med_sid)}
+                              className="p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {form.medicine_list.some(m => m.unit_price > 0) && (
+                        <div className="flex justify-end mt-2 px-1">
+                          <span className="text-xs text-slate-500 mr-2">ยอดรวม:</span>
+                          <span className="text-sm font-bold text-primary-700">
+                            {form.medicine_list.reduce((s, m) => s + m.unit_price * m.quantity, 0)
+                              .toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-                {form.medicine_list.some(m => m.unit_price > 0) && (
-                  <div className="flex justify-end mt-2 px-1">
-                    <span className="text-xs text-slate-500 mr-2">ยอดรวม:</span>
-                    <span className="text-sm font-bold text-primary-700">
-                      {form.medicine_list.reduce((s, m) => s + m.unit_price * m.quantity, 0)
-                        .toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
-                    </span>
+              </div>
+            ),
+          },
+          {
+            label: 'การจัดส่ง',
+            content: (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select label="วิธีจัดส่ง" required value={form.delivery_method}
+                    onChange={e => { f('delivery_method', e.target.value); if (errors.delivery_method) setErrors(p => ({ ...p, delivery_method: '' })); }}
+                    placeholder="เลือกวิธี"
+                    options={['ไปรษณีย์', 'Messenger', 'มารับด้วยตนเอง', 'จัดส่งถึงบ้าน'].map(m => ({ value: m, label: m }))}
+                    error={errors.delivery_method} />
+                  {editingId
+                    ? <Select label="สถานะ" value={form.status} onChange={e => f('status', e.target.value)}
+                        options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />
+                    : <div />}
+                  <Input label="ชื่อผู้รับ" required value={form.receiver_name}
+                    onChange={e => { f('receiver_name', e.target.value); if (errors.receiver_name) setErrors(p => ({ ...p, receiver_name: '' })); }}
+                    error={errors.receiver_name} />
+                  <Input label="เบอร์โทรผู้รับ" required value={form.receiver_phone}
+                    onChange={e => { f('receiver_phone', e.target.value); if (errors.receiver_phone) setErrors(p => ({ ...p, receiver_phone: '' })); }}
+                    error={errors.receiver_phone} />
+                  <div className="sm:col-span-2">
+                    <Textarea label="ที่อยู่จัดส่ง" required value={form.address}
+                      onChange={e => { f('address', e.target.value); if (errors.address) setErrors(p => ({ ...p, address: '' })); }}
+                      rows={2} error={errors.address} />
+                  </div>
+                </div>
+                {form.delivery_method !== 'มารับด้วยตนเอง' && (
+                  <div>
+                    <p className="text-sm font-medium text-slate-700 mb-3">ข้อมูลผู้จัดส่ง</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label="ชื่อผู้จัดส่ง" value={form.courier_name} onChange={e => f('courier_name', e.target.value)}
+                        placeholder="ชื่อพนักงานส่ง / บริษัทขนส่ง" />
+                      <Input label="เบอร์โทรผู้จัดส่ง" value={form.courier_phone} onChange={e => f('courier_phone', e.target.value)}
+                        placeholder="0812345678" />
+                      <Input label="เลขพัสดุ / Tracking" value={form.tracking_number} onChange={e => f('tracking_number', e.target.value)}
+                        placeholder="เลขติดตามพัสดุ" />
+                    </div>
                   </div>
                 )}
-              </>
-            )}
-            </div>
-          </div>
-
-          <FormSection title="หมายเหตุ" cols={1}>
-            <Textarea value={form.note}
-              onChange={e => f('note', e.target.value)} rows={2} />
-          </FormSection>
-        </div>
+              </div>
+            ),
+          },
+          {
+            label: 'หมายเหตุ',
+            content: (
+              <Textarea value={form.note} onChange={e => f('note', e.target.value)} rows={4} />
+            ),
+          },
+        ]} />
       </CrudModal>
 
       {/* Detail Drawer */}

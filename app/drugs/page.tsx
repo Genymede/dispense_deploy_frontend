@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import { Button, Input, Select, Badge, Modal, Card, ConfirmDialog, EmptyState, Spinner, Textarea } from '@/components/ui';
-import { FormSection } from '@/components/CrudModal';
+import { FormTabs } from '@/components/CrudModal';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { drugApi, stockApi, api, type Drug, type MedTableItem, type StockLot } from '@/lib/api';
 import { Search, Filter, Edit2, Trash2, Eye, Package, ArrowDownToLine, RotateCcw, AlertTriangle } from 'lucide-react';
@@ -480,56 +480,57 @@ export default function DrugsPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editingSid ? `แก้ไขข้อมูลยา — ${editingDrugName}` : 'เพิ่มยาในคลัง'} size="lg"
         footer={<><Button variant="secondary" onClick={() => setShowModal(false)}>ยกเลิก</Button><Button onClick={handleSave} loading={saving}>บันทึก</Button></>}
       >
-        <div className="flex flex-col gap-4">
-          {!editingSid && (
-            <FormSection title="เลือกยาจากทะเบียน" cols={1}>
+        <FormTabs tabs={[
+          ...(!editingSid ? [{
+            label: 'เลือกยา',
+            content: (
               <div>
-                <SearchSelect
-                  type="drug"
-                  label="ยา (ทะเบียนยา)"
-                  required
-                  initialDisplay={selectedMedLabel}
-                  resetKey={showModal ? 'open' : 'closed'}
+                <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required
+                  initialDisplay={selectedMedLabel} resetKey={showModal ? 'open' : 'closed'}
                   onSelect={d => {
                     if (d) {
-                      setSelectedMed(d);
-                      setSelectedMedLabel(d.med_name);
+                      setSelectedMed(d); setSelectedMedLabel(d.med_name);
                       f('med_id', d.med_id);
                       if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
                       if (!form.med_showname) f('med_showname', d.med_name);
-                    } else {
-                      setSelectedMed(null);
-                      setSelectedMedLabel('');
-                      f('med_id', 0);
-                    }
-                  }}
-                />
+                    } else { setSelectedMed(null); setSelectedMedLabel(''); f('med_id', 0); }
+                  }} />
                 {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
               </div>
-            </FormSection>
-          )}
-          <FormSection title="ข้อมูลยาในคลัง">
-            <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
-              onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
-              options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
-              error={formErrors.packaging_type} />
-            <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
-            <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
-            <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
-            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-              <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
-              <label htmlFor="div" className="text-sm text-slate-700">แบ่งได้ (Divisible)</label>
-            </div>
-          </FormSection>
-          <FormSection title="สต็อกและราคา">
-            <Input label="สต็อกขั้นต่ำ" type="number" value={form.min_quantity} onChange={(e) => f('min_quantity', e.target.value)} />
-            <Input label="สต็อกสูงสุด" type="number" value={form.max_quantity} onChange={(e) => f('max_quantity', e.target.value)} />
-            <Input label="ราคาต้นทุน (บาท)" type="number" step="0.01" value={form.cost_price} onChange={(e) => f('cost_price', e.target.value)} />
-            <Input label="ราคาขาย (บาท)" type="number" step="0.01" value={form.unit_price} onChange={(e) => f('unit_price', e.target.value)} />
-            <Input label="วันผลิต" type="date" value={form.mfg_date} onChange={(e) => f('mfg_date', e.target.value)} />
-            <Input label="วันหมดอายุ" type="date" value={form.exp_date} onChange={(e) => f('exp_date', e.target.value)} />
-          </FormSection>
-        </div>
+            ),
+          }] : []),
+          {
+            label: 'ข้อมูลยา',
+            content: (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
+                  onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
+                  options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
+                  error={formErrors.packaging_type} />
+                <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
+                <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
+                <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
+                <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                  <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
+                  <label htmlFor="div" className="text-sm text-slate-700">แบ่งได้ (Divisible)</label>
+                </div>
+              </div>
+            ),
+          },
+          {
+            label: 'สต็อก & ราคา',
+            content: (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input label="สต็อกขั้นต่ำ" type="number" value={form.min_quantity} onChange={(e) => f('min_quantity', e.target.value)} />
+                <Input label="สต็อกสูงสุด" type="number" value={form.max_quantity} onChange={(e) => f('max_quantity', e.target.value)} />
+                <Input label="ราคาต้นทุน (บาท)" type="number" step="0.01" value={form.cost_price} onChange={(e) => f('cost_price', e.target.value)} />
+                <Input label="ราคาขาย (บาท)" type="number" step="0.01" value={form.unit_price} onChange={(e) => f('unit_price', e.target.value)} />
+                <Input label="วันผลิต" type="date" value={form.mfg_date} onChange={(e) => f('mfg_date', e.target.value)} />
+                <Input label="วันหมดอายุ" type="date" value={form.exp_date} onChange={(e) => f('exp_date', e.target.value)} />
+              </div>
+            ),
+          },
+        ]} />
       </Modal>
 
 
@@ -715,40 +716,46 @@ export default function DrugsPage() {
           </>
         }
       >
-        <div className="flex flex-col gap-4">
-          <FormSection title="เลือกยา" cols={1}>
-            <div>
-              <SearchSelect type="subwarehouse" label="ยาในคลัง" required
-                initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
-                onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRE('med_sid'); }} />
-              {receiveErrors.med_sid && <p className="mt-1 text-xs text-red-500">{receiveErrors.med_sid}</p>}
-            </div>
-          </FormSection>
-          <FormSection title="รายละเอียด Lot">
-            <Input label="จำนวนที่รับ" type="number" min="1" required
-              value={receiveForm.quantity}
-              onChange={e => { rf('quantity', e.target.value); clearRE('quantity'); }}
-              error={receiveErrors.quantity} />
-            <Input label="เลข Lot" value={receiveForm.lot_number}
-              onChange={e => rf('lot_number', e.target.value)} />
-            <Input label="วันหมดอายุ" type="date"
-              value={receiveForm.expiry_date} onChange={e => rf('expiry_date', e.target.value)} />
-            <Input label="วันผลิต" type="date"
-              value={receiveForm.mfg_date} onChange={e => rf('mfg_date', e.target.value)} />
-            <Input label="ราคาทุน/หน่วย (บาท)" type="number" min="0" step="0.01"
-              placeholder="0.00"
-              value={receiveForm.cost_price} onChange={e => rf('cost_price', e.target.value)} />
-            <Input label="ราคาขาย/หน่วย (บาท)" type="number" min="0" step="0.01"
-              placeholder="0.00"
-              value={receiveForm.unit_price} onChange={e => rf('unit_price', e.target.value)} />
-          </FormSection>
-          <FormSection title="อ้างอิงและหมายเหตุ" cols={1}>
-            <Input label="เลขอ้างอิงใบเบิก" placeholder="เช่น REQ-2025-001"
-              value={receiveForm.reference_no} onChange={e => rf('reference_no', e.target.value)} />
-            <Textarea label="หมายเหตุ" rows={2}
-              value={receiveForm.note} onChange={e => rf('note', e.target.value)} />
-          </FormSection>
-        </div>
+        <FormTabs tabs={[
+          {
+            label: 'เลือกยา',
+            content: (
+              <div>
+                <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+                  initialDisplay={receiveForm.med_label} resetKey={receiveResetKey}
+                  onSelect={d => { rf('med_sid', d?.med_sid ?? 0); rf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRE('med_sid'); }} />
+                {receiveErrors.med_sid && <p className="mt-1 text-xs text-red-500">{receiveErrors.med_sid}</p>}
+              </div>
+            ),
+          },
+          {
+            label: 'รายละเอียด Lot',
+            content: (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input label="จำนวนที่รับ" type="number" min="1" required
+                  value={receiveForm.quantity} onChange={e => { rf('quantity', e.target.value); clearRE('quantity'); }}
+                  error={receiveErrors.quantity} />
+                <Input label="เลข Lot" value={receiveForm.lot_number} onChange={e => rf('lot_number', e.target.value)} />
+                <Input label="วันหมดอายุ" type="date" value={receiveForm.expiry_date} onChange={e => rf('expiry_date', e.target.value)} />
+                <Input label="วันผลิต" type="date" value={receiveForm.mfg_date} onChange={e => rf('mfg_date', e.target.value)} />
+                <Input label="ราคาทุน/หน่วย (บาท)" type="number" min="0" step="0.01" placeholder="0.00"
+                  value={receiveForm.cost_price} onChange={e => rf('cost_price', e.target.value)} />
+                <Input label="ราคาขาย/หน่วย (บาท)" type="number" min="0" step="0.01" placeholder="0.00"
+                  value={receiveForm.unit_price} onChange={e => rf('unit_price', e.target.value)} />
+              </div>
+            ),
+          },
+          {
+            label: 'อ้างอิง & หมายเหตุ',
+            content: (
+              <div className="flex flex-col gap-4">
+                <Input label="เลขอ้างอิงใบเบิก" placeholder="เช่น REQ-2025-001"
+                  value={receiveForm.reference_no} onChange={e => rf('reference_no', e.target.value)} />
+                <Textarea label="หมายเหตุ" rows={2} value={receiveForm.note} onChange={e => rf('note', e.target.value)} />
+              </div>
+            ),
+          },
+        ]} />
       </Modal>
 
       {/* ── RETURN STOCK MODAL ── */}
@@ -768,26 +775,37 @@ export default function DrugsPage() {
             <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
             <span>ยาที่คืนจะสร้างล็อต <strong>RET-…</strong> ไม่มีวันหมดอายุ และถูกเลือกใช้ท้ายสุดตาม FEFO</span>
           </div>
-          <FormSection title="เลือกยา" cols={1}>
-            <div>
-              <SearchSelect type="subwarehouse" label="ยาในคลัง" required
-                initialDisplay={returnForm.med_label} resetKey={returnResetKey}
-                onSelect={d => { rrf('med_sid', d?.med_sid ?? 0); rrf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRRE('med_sid'); }} />
-              {returnErrors.med_sid && <p className="mt-1 text-xs text-red-500">{returnErrors.med_sid}</p>}
-            </div>
-          </FormSection>
-          <FormSection title="รายละเอียด">
-            <Input label="จำนวนที่คืน" type="number" min="1" required
-              value={returnForm.quantity}
-              onChange={e => { rrf('quantity', e.target.value); clearRRE('quantity'); }}
-              error={returnErrors.quantity} />
-            <Input label="แผนก/หอผู้ป่วย" placeholder="เช่น IPD-1"
-              value={returnForm.ward_from} onChange={e => rrf('ward_from', e.target.value)} />
-            <Input label="เลขอ้างอิง" placeholder="เช่น RX-2025-001"
-              value={returnForm.reference_no} onChange={e => rrf('reference_no', e.target.value)} />
-            <Textarea label="หมายเหตุ / เหตุผลการคืน" rows={2}
-              value={returnForm.note} onChange={e => rrf('note', e.target.value)} />
-          </FormSection>
+          <FormTabs tabs={[
+            {
+              label: 'เลือกยา',
+              content: (
+                <div>
+                  <SearchSelect type="subwarehouse" label="ยาในคลัง" required
+                    initialDisplay={returnForm.med_label} resetKey={returnResetKey}
+                    onSelect={d => { rrf('med_sid', d?.med_sid ?? 0); rrf('med_label', d ? (d.med_showname || d.med_name) : ''); clearRRE('med_sid'); }} />
+                  {returnErrors.med_sid && <p className="mt-1 text-xs text-red-500">{returnErrors.med_sid}</p>}
+                </div>
+              ),
+            },
+            {
+              label: 'รายละเอียด',
+              content: (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input label="จำนวนที่คืน" type="number" min="1" required
+                    value={returnForm.quantity} onChange={e => { rrf('quantity', e.target.value); clearRRE('quantity'); }}
+                    error={returnErrors.quantity} />
+                  <Input label="แผนก/หอผู้ป่วย" placeholder="เช่น IPD-1"
+                    value={returnForm.ward_from} onChange={e => rrf('ward_from', e.target.value)} />
+                  <Input label="เลขอ้างอิง" placeholder="เช่น RX-2025-001"
+                    value={returnForm.reference_no} onChange={e => rrf('reference_no', e.target.value)} />
+                  <div className="sm:col-span-2">
+                    <Textarea label="หมายเหตุ / เหตุผลการคืน" rows={2}
+                      value={returnForm.note} onChange={e => rrf('note', e.target.value)} />
+                  </div>
+                </div>
+              ),
+            },
+          ]} />
         </div>
       </Modal>
     </MainLayout>

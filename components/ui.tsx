@@ -208,18 +208,15 @@ export function Modal({ open, onClose, title, children, size = "md", footer }: M
   return createPortal(
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={clsx("modal-box w-full", modalSizes[size])}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <span className="w-1 h-5 rounded-full bg-primary-500 flex-shrink-0" />
-            <h3 className="text-base font-semibold text-slate-800">{title}</h3>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 transition-all">
-            <X size={15} />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h3 className="text-[15px] font-semibold text-slate-800 tracking-tight">{title}</h3>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+            <X size={16} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="px-6 py-5">{children}</div>
         {footer && (
-          <div className="px-5 pb-5 flex justify-end gap-2 border-t border-slate-100 pt-4 bg-slate-50/40 rounded-b-2xl">{footer}</div>
+          <div className="px-6 py-4 flex justify-end gap-2 border-t border-slate-100">{footer}</div>
         )}
       </div>
     </div>,
