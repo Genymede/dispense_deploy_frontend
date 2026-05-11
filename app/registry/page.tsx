@@ -4,9 +4,9 @@ import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { CrudModal, FormGrid, FormSpan, RowActions } from '@/components/CrudModal';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
-import { Input, Select, Textarea, Badge, Spinner } from '@/components/ui';
+import { Input, Select, Textarea, Badge, Spinner, Button } from '@/components/ui';
 import { registryApi, crudApi, api, type MedRegistryItem } from '@/lib/api';
-import { BookOpen, Database } from 'lucide-react';
+import { Database, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
 
@@ -237,6 +237,11 @@ export default function RegistryPage() {
                 </div>
               </DrawerSection>
             )}
+
+            <DrawerSection title="">
+              <Button variant="secondary" size="sm" icon={<Edit2 size={14} />}
+                onClick={() => { setDrawerOpen(false); openEdit(med); }}>แก้ไข</Button>
+            </DrawerSection>
           </>
         ) : null}
       </DetailDrawer>
