@@ -67,11 +67,12 @@ interface Props {
   fields: DrawerField[];
   onEdit?: (row: any) => void;
   extraActions?: (row: any) => React.ReactNode;
+  children?: (row: any) => React.ReactNode;
   width?: 'sm' | 'md' | 'lg';
 }
 
 export default function RegistryDrawer({
-  open, onClose, row, title, subtitle, fields, onEdit, extraActions, width = 'md',
+  open, onClose, row, title, subtitle, fields, onEdit, extraActions, children, width = 'md',
 }: Props) {
   const t = row ? (typeof title === 'function' ? title(row) : title) : '';
   const s = row ? (typeof subtitle === 'function' ? subtitle(row) : subtitle) : '';
@@ -89,6 +90,7 @@ export default function RegistryDrawer({
               }))}
             />
           </DrawerSection>
+          {children?.(row)}
           {(onEdit || extraActions) && (
             <DrawerSection title="">
               <div className="flex gap-2">

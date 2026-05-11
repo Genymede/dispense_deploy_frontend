@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
 import RegistryDrawer from '@/components/RegistryDrawer';
+import { DrawerSection } from '@/components/DetailDrawer';
 import { Truck } from 'lucide-react';
 
 const COLS: ColDef[] = [
@@ -50,7 +51,25 @@ export default function MedDeliveryPage() {
           { label:'วันที่',     key:'delivery_date', type:'date' as const },
           { label:'ที่อยู่',    key:'address', span:true },
           { label:'หมายเหตุ',  key:'note',    span:true },
-        ]} />
+        ]}
+      >
+        {row => {
+          const list = Array.isArray(row.medicine_list) ? row.medicine_list : [];
+          if (!list.length) return null;
+          return (
+            <DrawerSection title={`รายการยา (${list.length} รายการ)`}>
+              <div className="space-y-2">
+                {list.map((m: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                    <span className="text-sm text-slate-700">{m.med_showname || m.med_name}</span>
+                    <span className="text-sm font-medium text-slate-600 shrink-0 ml-3">{m.quantity} {m.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </DrawerSection>
+          );
+        }}
+      </RegistryDrawer>
     </MainLayout>
   );
 }
