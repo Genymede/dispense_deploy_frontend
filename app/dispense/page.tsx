@@ -569,13 +569,10 @@ export default function DispensePage() {
     let failed = 0;
     for (const it of items) {
       const label = [
-        `${rx.patient_name || 'ไม่ระบุชื่อ'}`,
-        `HN: ${rx.hn_number || '-'}   ${printedAt}`,
-        `RX: ${rx.prescription_no}`,
-        `--------------------`,
-        `${it.med_showname || it.med_name}`,
+        `${rx.patient_name || 'ไม่ระบุชื่อ'}    ${printedAt}`,
+        `${rx.hn_number || '-'}   ${rx.prescription_no}`,
         it.med_name !== (it.med_showname || it.med_name) ? it.med_name : '',
-        `${it.quantity} ${it.unit || ''}`,
+        `${it.med_showname || it.med_name}    ${it.quantity} ${it.unit || ''}`,
         `${[it.route, `ครั้งละ ${it.dose_qty ?? 1} ${it.dose_unit || ''}`].join(' ')}`,
         `${[it.frequency, it.meal_relation, it.meal_sessions ? it.meal_sessions.split(',').map((s: string) => s.trim()).filter(Boolean).join(' ') : ''].filter(Boolean).join(' ')}`,
         it.med_medical_category ? `${it.med_medical_category}` : '',
