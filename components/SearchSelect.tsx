@@ -30,35 +30,39 @@ const EXPIRY_BADGE: Record<string, string> = {
   ok:       'bg-green-50 text-green-700',
 };
 
-export type SearchSelectType = 'patient' | 'drug' | 'user' | 'subwarehouse';
+export type SearchSelectType = 'patient' | 'drug' | 'user' | 'subwarehouse' | 'inventory_item';
 
 const ENDPOINTS: Record<SearchSelectType, string> = {
-  patient:      '/registry/search/patients',
-  drug:         '/registry/search/drugs',
-  user:         '/auth/users',
-  subwarehouse: '/drugs',
+  patient:        '/registry/search/patients',
+  drug:           '/registry/search/drugs',
+  user:           '/auth/users',
+  subwarehouse:   '/drugs',
+  inventory_item: '/registry/inventory-items',
 };
-const Q_PARAM:    Record<SearchSelectType, string>  = { patient:'q', drug:'q', user:'q', subwarehouse:'search' };
-const MIN_CHARS:  Record<SearchSelectType, number>  = { patient:2, drug:1, user:0, subwarehouse:1 };
+const Q_PARAM:    Record<SearchSelectType, string>  = { patient:'q', drug:'q', user:'q', subwarehouse:'search', inventory_item:'q' };
+const MIN_CHARS:  Record<SearchSelectType, number>  = { patient:2, drug:1, user:0, subwarehouse:1, inventory_item:1 };
 const HINT:       Record<SearchSelectType, string>  = {
-  patient:      'พิมพ์ชื่อ, HN, หรือเลขบัตร...',
-  drug:         'พิมพ์ชื่อยา, ชื่อสามัญ, ชื่อการค้า...',
-  user:         'พิมพ์ชื่อหรือ username...',
-  subwarehouse: 'พิมพ์ชื่อยาในคลัง...',
+  patient:        'พิมพ์ชื่อ, HN, หรือเลขบัตร...',
+  drug:           'พิมพ์ชื่อยา, ชื่อสามัญ, ชื่อการค้า...',
+  user:           'พิมพ์ชื่อหรือ username...',
+  subwarehouse:   'พิมพ์ชื่อยาในคลัง...',
+  inventory_item: 'พิมพ์ชื่อยาใน inventory...',
 };
 
 function label(t: SearchSelectType, r: any): string {
-  if (t === 'patient')      return r.full_name ?? `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim();
-  if (t === 'drug')         return r.med_name ?? '';
-  if (t === 'user')         return r.full_name ?? `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim();
-  if (t === 'subwarehouse') return r.med_showname || r.med_name || '';
+  if (t === 'patient')        return r.full_name ?? `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim();
+  if (t === 'drug')           return r.med_name ?? '';
+  if (t === 'user')           return r.full_name ?? `${r.first_name ?? ''} ${r.last_name ?? ''}`.trim();
+  if (t === 'subwarehouse')   return r.med_showname || r.med_name || '';
+  if (t === 'inventory_item') return r.name ?? '';
   return '';
 }
 function sublabel(t: SearchSelectType, r: any): string {
-  if (t === 'patient')      return `HN: ${r.hn_number ?? '-'}${r.national_id ? ' · ' + r.national_id : ''}`;
-  if (t === 'drug')         return [r.med_generic_name, r.unit ?? r.med_counting_unit, r.med_medical_category].filter(Boolean).join(' · ');
-  if (t === 'user')         return `${r.username ?? ''} · ${r.role_name_th ?? ''}`;
-  if (t === 'subwarehouse') return `คงเหลือ: ${r.current_stock ?? 0} ${r.unit ?? ''}${r.packaging_type ? ' · ' + r.packaging_type : ''}`;
+  if (t === 'patient')        return `HN: ${r.hn_number ?? '-'}${r.national_id ? ' · ' + r.national_id : ''}`;
+  if (t === 'drug')           return [r.med_generic_name, r.unit ?? r.med_counting_unit, r.med_medical_category].filter(Boolean).join(' · ');
+  if (t === 'user')           return `${r.username ?? ''} · ${r.role_name_th ?? ''}`;
+  if (t === 'subwarehouse')   return `คงเหลือ: ${r.current_stock ?? 0} ${r.unit ?? ''}${r.packaging_type ? ' · ' + r.packaging_type : ''}`;
+  if (t === 'inventory_item') return r.code ? `Code: ${r.code}` : '';
   return '';
 }
 

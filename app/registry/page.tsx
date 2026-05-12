@@ -6,6 +6,7 @@ import { CrudModal, FormGrid, FormSpan, RowActions } from '@/components/CrudModa
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { Input, Select, Textarea, Badge, Spinner, Button } from '@/components/ui';
 import { registryApi, crudApi, api, type MedRegistryItem } from '@/lib/api';
+import SearchSelect from '@/components/SearchSelect';
 import { Database, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmtDate } from '@/lib/dateUtils';
@@ -42,6 +43,7 @@ export default function RegistryPage() {
   const [form, setForm] = useState<any>(empty);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [drugUnits, setDrugUnits] = useState<string[]>(DEFAULT_UNITS);
+  const [mainItemLabel, setMainItemLabel] = useState('');
 
   useEffect(() => {
     api.get('/settings').then(r => {
@@ -69,9 +71,10 @@ export default function RegistryPage() {
 
   const openCreate = () => {
     setForm(empty); setErrors({});
-    setEditingId(null); setShowModal(true);
+    setEditingId(null); setMainItemLabel(''); setShowModal(true);
   };
   const openEdit = (row: MedRegistryItem) => {
+    const mid = (row as any).main_item_id || '';
     setForm({
       med_name: row.med_name, med_generic_name: row.med_generic_name || '',
       med_severity: row.med_severity, med_counting_unit: row.med_counting_unit,
@@ -81,10 +84,19 @@ export default function RegistryPage() {
       med_pregnancy_category: row.med_pregnancy_category || '',
       med_TMT_code: row.med_TMT_code || '', med_TPU_code: row.med_TPU_code || '',
       med_indication: row.med_indication || '',
-      main_item_id: (row as any).main_item_id || '',
+      main_item_id: mid,
     });
     setErrors({});
-    setEditingId(row.med_id); setShowModal(true);
+    setEditingId(row.med_id);
+    // ดึงชื่อ inventory item สำหรับแสดงใน picker
+    if (mid) {
+      api.get(`/registry/inventory-items/${mid}`)
+        .then(r => setMainItemLabel(r.data?.name ?? ''))
+        .catch(() => setMainItemLabel(''));
+    } else {
+      setMainItemLabel('');
+    }
+    setShowModal(true);
   };
 
   const handleSave = async () => {
@@ -160,8 +172,14 @@ export default function RegistryPage() {
             options={PREG.map(p => ({ value: p, label: PREG_TH[p] }))} placeholder="เลือก" />
           <Input label="TMT Code" value={form.med_TMT_code} onChange={e => f('med_TMT_code', e.target.value)} />
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
-          <FormSpan><Input label="Main Item ID (UUID — เชื่อมกับคลังหลัก)" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            value={form.main_item_id} onChange={e => f('main_item_id', e.target.value)} /></FormSpan>
+          <FormSpan>
+            <SearchSelect type="inventory_item" label="เชื่อมกับคลังหลัก (inventory.items)"
+              initialDisplay={mainItemLabel} resetKey={showModal ? editingId ?? 'create' : 'closed'}
+              onSelect={item => { f('main_item_id', item?.id ?? ''); setMainItemLabel(item?.name ?? ''); }} />
+            {form.main_item_id && (
+              <p className="mt-1 text-[10px] text-slate-400 font-mono truncate">{form.main_item_id}</p>
+            )}
+          </FormSpan>
           <FormSpan><Textarea label="ข้อบ่งใช้ (Indication)" value={form.med_indication} onChange={e => f('med_indication', e.target.value)}
             placeholder="เช่น บรรเทาอาการแพ้, ลดอาการภูมิแพ้อากาศ..." rows={2} /></FormSpan>
         </FormGrid>
