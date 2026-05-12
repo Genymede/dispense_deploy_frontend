@@ -15,49 +15,6 @@ import { fmtDate } from '@/lib/dateUtils';
 
 const DEFAULT_PACKAGING = ['เม็ด', 'แคปซูล', 'ซอง', 'กล่อง', 'ขวด', 'หลอด', 'มล.', 'กรัม', 'ชิ้น', 'ไวแอล', 'แอมพูล'];
 
-function DrugInfoPanel({ d }: { d: Record<string, any> }) {
-  const name    = d.med_showname || d.med_name || '—';
-  const generic = d.med_generic_name;
-  const cat     = d.med_medical_category ?? d.category;
-  const sev     = d.med_severity;
-  const preg    = d.med_pregnancy_category;
-
-  const details = [
-    { label: 'ชื่อสามัญ',  value: generic },
-    { label: 'ชื่อไทย',    value: d.med_thai_name },
-    { label: 'ชื่อการค้า', value: d.med_marketing_name },
-    { label: 'รูปแบบยา',   value: d.med_dosage_form },
-    { label: 'ข้อบ่งใช้',  value: d.med_indication },
-  ].filter(r => r.value);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <p className="font-semibold text-slate-800 leading-snug text-sm">{name}</p>
-        {generic && generic !== name && (
-          <p className="text-xs text-slate-500 mt-0.5">{generic}</p>
-        )}
-      </div>
-      {(cat || sev || preg) && (
-        <div className="flex flex-wrap gap-1.5">
-          {cat  && <span className="text-[10px] font-semibold bg-blue-50   text-blue-700   px-2 py-0.5 rounded-full">{cat}</span>}
-          {sev  && <span className="text-[10px] font-semibold bg-amber-50  text-amber-700  px-2 py-0.5 rounded-full">{sev}</span>}
-          {preg && <span className="text-[10px] font-semibold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Preg {preg}</span>}
-        </div>
-      )}
-      {details.length > 0 && (
-        <div className="flex flex-col gap-2.5">
-          {details.map(r => (
-            <div key={r.label}>
-              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">{r.label}</p>
-              <p className="text-xs text-slate-700 mt-0.5 leading-snug">{r.value}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 const emptyForm = {
   med_id: 0,
@@ -508,99 +465,75 @@ export default function DrugsPage() {
       {/* Create/Edit Modal */}
       <Modal open={showModal} onClose={() => setShowModal(false)}
         title={editingSid ? `แก้ไขข้อมูลยา — ${editingDrugName}` : 'เพิ่มยาในคลัง'}
-        size="lg"
+        size="md"
         footer={<><Button variant="secondary" onClick={() => setShowModal(false)}>ยกเลิก</Button><Button onClick={handleSave} loading={saving}>บันทึก</Button></>}
       >
-        {/* Two-panel layout — break out of modal padding */}
-        <div className="-mx-6 -my-5 flex min-h-[440px]">
+        <div className="flex flex-col gap-4">
 
-          {/* ── LEFT: drug selection / info ── */}
-          <div className="w-[42%] bg-slate-50 border-r border-slate-100 flex flex-col p-5 gap-4 overflow-y-auto">
-            {!editingSid ? (
-              <>
-                <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">เลือกยาจากทะเบียน</p>
-                  <SearchSelect type="drug" label="" required
-                    initialDisplay={selectedMedLabel} resetKey={showModal ? 'open' : 'closed'}
-                    onSelect={d => {
-                      if (d) {
-                        setSelectedMed(d); setSelectedMedLabel(d.med_name);
-                        f('med_id', d.med_id);
-                        if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
-                        if (!form.med_showname) f('med_showname', d.med_name);
-                      } else { setSelectedMed(null); setSelectedMedLabel(''); f('med_id', 0); }
-                    }} />
-                  {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
+          {/* Drug picker — create only */}
+          {!editingSid && (
+            <div>
+              <SearchSelect type="drug" label="ยาจากทะเบียน" required
+                initialDisplay={selectedMedLabel} resetKey={showModal ? 'open' : 'closed'}
+                onSelect={d => {
+                  if (d) {
+                    setSelectedMed(d); setSelectedMedLabel(d.med_name);
+                    f('med_id', d.med_id);
+                    if (formErrors.med_id) setFormErrors(p => ({ ...p, med_id: '' }));
+                    if (!form.med_showname) f('med_showname', d.med_name);
+                  } else { setSelectedMed(null); setSelectedMedLabel(''); f('med_id', 0); }
+                }} />
+              {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
+            </div>
+          )}
+
+          {/* Drug info strip — compact single row */}
+          {(selectedMed || editingDrug) && (() => {
+            const d = (selectedMed ?? editingDrug) as any;
+            const cat  = d.med_medical_category ?? d.category;
+            const sev  = d.med_severity;
+            const preg = d.med_pregnancy_category;
+            return (
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-100 px-4 py-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{d.med_name || d.med_showname}</p>
+                  {d.med_generic_name && <p className="text-xs text-slate-400 truncate">{d.med_generic_name}</p>}
                 </div>
-                {selectedMed ? (
-                  <DrugInfoPanel d={selectedMed as any} />
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center gap-2 text-slate-300">
-                    <Package size={36} strokeWidth={1.2} />
-                    <p className="text-xs">เลือกยาเพื่อดูรายละเอียด</p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">ข้อมูลยา</p>
-                {editingDrug && <DrugInfoPanel d={editingDrug as any} />}
-              </>
-            )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {cat  && <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full whitespace-nowrap">{cat}</span>}
+                  {sev  && <span className="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">{sev}</span>}
+                  {preg && <span className="text-[10px] font-semibold bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">Preg {preg}</span>}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Form fields */}
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="ชื่อแสดง (ไทย)" placeholder="ชื่อบนฉลาก / ใบจ่ายยา"
+              value={form.med_showname} onChange={e => f('med_showname', e.target.value)} />
+            <Input label="ชื่อแสดง (อังกฤษ)" placeholder="Display name"
+              value={form.med_showname_eng} onChange={e => f('med_showname_eng', e.target.value)} />
+            <Select label="รูปแบบบรรจุ" required
+              value={form.packaging_type}
+              onChange={e => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
+              options={packagingTypes.map(p => ({ value: p, label: p }))}
+              placeholder="เลือกรูปแบบ" error={formErrors.packaging_type} />
+            <Input label="ตำแหน่งที่เก็บ" placeholder="เช่น A-01"
+              value={form.location} onChange={e => f('location', e.target.value)} />
           </div>
 
-          {/* ── RIGHT: editable fields ── */}
-          <div className="flex-1 flex flex-col p-6 gap-6 overflow-y-auto">
-
-            {/* ชื่อแสดง */}
-            <div>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">ชื่อแสดงในคลัง</p>
-              <div className="flex flex-col gap-3">
-                <Input label="ภาษาไทย"
-                  placeholder="ชื่อที่แสดงบนฉลาก / ใบจ่ายยา"
-                  value={form.med_showname}
-                  onChange={e => f('med_showname', e.target.value)} />
-                <Input label="ภาษาอังกฤษ"
-                  placeholder="Display name (English)"
-                  value={form.med_showname_eng}
-                  onChange={e => f('med_showname_eng', e.target.value)} />
-              </div>
+          {/* Toggle */}
+          <label className="flex items-center gap-3 cursor-pointer select-none group w-fit pt-1">
+            <div className="relative">
+              <input type="checkbox" id="div" checked={form.is_divisible}
+                onChange={e => f('is_divisible', e.target.checked)} className="sr-only peer" />
+              <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary-500 transition-colors" />
+              <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform peer-checked:translate-x-5" />
             </div>
+            <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">แบ่งได้ (Divisible)</span>
+          </label>
 
-            {/* คลัง */}
-            <div>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">ข้อมูลคลัง</p>
-              <div className="grid grid-cols-2 gap-3">
-                <Select label="รูปแบบบรรจุ" required
-                  value={form.packaging_type}
-                  onChange={e => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
-                  options={packagingTypes.map(p => ({ value: p, label: p }))}
-                  placeholder="เลือกรูปแบบ"
-                  error={formErrors.packaging_type} />
-                <Input label="ตำแหน่งที่เก็บ"
-                  placeholder="เช่น A-01, B-12"
-                  value={form.location}
-                  onChange={e => f('location', e.target.value)} />
-              </div>
-            </div>
-
-            {/* แบ่งได้ */}
-            <div className="mt-auto">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">ตัวเลือก</p>
-              <label className="flex items-center gap-3 cursor-pointer select-none group w-fit">
-                <div className="relative">
-                  <input type="checkbox" id="div" checked={form.is_divisible}
-                    onChange={e => f('is_divisible', e.target.checked)} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-primary-500 transition-colors duration-200" />
-                  <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 peer-checked:translate-x-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">แบ่งได้ (Divisible)</p>
-                  <p className="text-[10px] text-slate-400">สามารถแบ่งจ่ายได้น้อยกว่า 1 หน่วย</p>
-                </div>
-              </label>
-            </div>
-          </div>
         </div>
       </Modal>
 
