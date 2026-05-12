@@ -49,7 +49,7 @@ function RequisitionRow({ req }: { req: any }) {
               <table className="w-full text-xs">
                 <thead className="bg-slate-100 border-b border-slate-200">
                   <tr>
-                    {['ชื่อรายการ', 'รหัส', 'ขอ', 'อนุมัติ', 'จ่าย', 'ราคาทุน/หน่วย', 'ราคาขาย/หน่วย'].map(h => (
+                    {['ชื่อรายการ', 'รหัส', 'ขอ', 'อนุมัติ', 'จ่าย', 'ราคาขาย/หน่วย'].map(h => (
                       <th key={h} className="px-3 py-2 text-left font-semibold text-slate-500">{h}</th>
                     ))}
                   </tr>
@@ -67,9 +67,6 @@ function RequisitionRow({ req }: { req: any }) {
                       </td>
                       <td className="px-3 py-2">
                         {it.issued_qty != null && it.issued_qty > 0 ? <Badge variant="success">{it.issued_qty}</Badge> : <span className="text-slate-300">—</span>}
-                      </td>
-                      <td className="px-3 py-2 tabular-nums text-slate-600">
-                        {it.cost_price != null ? `฿${Number(it.cost_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-slate-600">
                         {it.unit_price != null ? `฿${Number(it.unit_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
