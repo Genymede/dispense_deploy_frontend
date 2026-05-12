@@ -208,7 +208,7 @@ export default function TransactionsPage() {
                         {safeDate(tx.created_at, true)}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant={tc.variant} className="gap-1.5">{tc.icon}{tc.label}</Badge>
+                        <Badge variant={tc?.variant ?? 'gray'} className="gap-1.5">{tc?.icon}{tc?.label ?? tx.tx_type}</Badge>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
                         {tx.med_showname || tx.med_name}
