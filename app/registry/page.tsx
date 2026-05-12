@@ -21,6 +21,7 @@ const empty = {
   med_marketing_name: '', med_thai_name: '', med_dosage_form: '', med_medical_category: '',
   med_essential_med_list: '', med_pregnancy_category: '',
   med_TMT_code: '', med_TPU_code: '', med_indication: '',
+  main_item_id: '',
 };
 
 const cols: ColDef[] = [
@@ -80,6 +81,7 @@ export default function RegistryPage() {
       med_pregnancy_category: row.med_pregnancy_category || '',
       med_TMT_code: row.med_TMT_code || '', med_TPU_code: row.med_TPU_code || '',
       med_indication: row.med_indication || '',
+      main_item_id: (row as any).main_item_id || '',
     });
     setErrors({});
     setEditingId(row.med_id); setShowModal(true);
@@ -158,6 +160,8 @@ export default function RegistryPage() {
             options={PREG.map(p => ({ value: p, label: PREG_TH[p] }))} placeholder="เลือก" />
           <Input label="TMT Code" value={form.med_TMT_code} onChange={e => f('med_TMT_code', e.target.value)} />
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
+          <FormSpan><Input label="Main Item ID (UUID — เชื่อมกับคลังหลัก)" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+            value={form.main_item_id} onChange={e => f('main_item_id', e.target.value)} /></FormSpan>
           <FormSpan><Textarea label="ข้อบ่งใช้ (Indication)" value={form.med_indication} onChange={e => f('med_indication', e.target.value)}
             placeholder="เช่น บรรเทาอาการแพ้, ลดอาการภูมิแพ้อากาศ..." rows={2} /></FormSpan>
         </FormGrid>
@@ -189,6 +193,7 @@ export default function RegistryPage() {
                 { label: 'หมวดตั้งครรภ์', value: med.med_pregnancy_category ? `${PREG_TH[med.med_pregnancy_category] ?? med.med_pregnancy_category}` : '—' },
                 { label: 'TMT Code', value: <span className="font-mono text-xs">{med.med_TMT_code || '—'}</span> },
                 { label: 'TPU Code', value: <span className="font-mono text-xs">{med.med_TPU_code || '—'}</span> },
+                { label: 'Main Item ID', value: <span className="font-mono text-xs break-all">{med.main_item_id || '—'}</span> },
               ]} />
             </DrawerSection>
 
