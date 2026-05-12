@@ -8,6 +8,7 @@
  *      dropdown ใช้ position:fixed เพื่อหลีกเลี่ยง overflow:hidden ของ Modal
  */
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '@/lib/api';
 import { Search, X, Check, Loader2, ChevronDown } from 'lucide-react';
 
@@ -90,14 +91,15 @@ export default function SearchSelect({
   const [loading,  setLoading]  = useState(false);
   const [open,     setOpen]     = useState(false);
   const [picked,   setPicked]   = useState<any | null>(null);
+  const [mounted,  setMounted]  = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const wrapRef  = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const prevReset = useRef(resetKey);
 
-  // ── fixed-position dropdown (หลีกเลี่ยง modal overflow clipping) ──────────
-  // คำนวณตำแหน่ง inline ตอน render เลย เพื่อไม่ให้เกิด flash จาก state update
+  // ── dropdown position — อ่านจาก getBoundingClientRect ทุก render ──────────
   const getDropdownStyle = (): React.CSSProperties => {
     if (!wrapRef.current) return { position: 'fixed', zIndex: 9999 };
     const rect = wrapRef.current.getBoundingClientRect();
@@ -251,8 +253,8 @@ export default function SearchSelect({
         </div>
       </div>
 
-      {/* dropdown — position:fixed เพื่อหลุดจาก overflow:hidden ของ Modal */}
-      {open && !disabled && (
+      {/* dropdown — portal ไปที่ document.body เพื่อหลุดจาก CSS transform ของ Modal */}
+      {mounted && open && !disabled && createPortal(
         <div style={getDropdownStyle()} className="bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
           {loading && results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-slate-400 flex items-center gap-2">
@@ -308,7 +310,8 @@ export default function SearchSelect({
               })}
             </ul>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
