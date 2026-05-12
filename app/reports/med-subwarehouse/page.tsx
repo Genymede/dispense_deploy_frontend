@@ -18,9 +18,15 @@ const COLS: ColDef[] = [
     exportValue: r => String(r.med_quantity??'-') },
   { key:'min_quantity', label:'ขั้นต่ำ', className:'text-xs text-slate-500' },
   { key:'location', label:'ที่เก็บ', className:'text-xs font-mono' },
-  { key:'exp_date', label:'หมดอายุ',
-    render: r => fmtDate(r.exp_date),
-    exportValue: r => fmtDate(r.exp_date) },
+  { key:'nearest_valid_lot_exp', label:'หมดอายุ (ล็อตใกล้สุด)',
+    render: r => {
+      const d = r.nearest_valid_lot_exp;
+      if (!d) return <span className="text-slate-300 text-xs">—</span>;
+      const isNear = new Date(d) <= new Date(Date.now() + 90 * 86400_000);
+      const isExp  = new Date(d) < new Date();
+      return <span className={isExp ? 'text-red-600 font-semibold' : isNear ? 'text-amber-600 font-medium' : ''}>{fmtDate(d)}</span>;
+    },
+    exportValue: r => fmtDate(r.nearest_valid_lot_exp) },
 ];
 
 export default function MedSubwarehousePage() {
