@@ -23,6 +23,9 @@ const emptyForm = {
   location: '',
   med_showname: '',
   med_showname_eng: '',
+  drug_code: '',
+  min_quantity: '',
+  max_quantity: '',
 };
 
 export default function DrugsPage() {
@@ -227,6 +230,9 @@ export default function DrugsPage() {
       location: d.location || '',
       med_showname: d.med_showname || '',
       med_showname_eng: d.med_showname_eng || '',
+      drug_code: d.drug_code || '',
+      min_quantity: d.min_quantity != null ? String(d.min_quantity) : '',
+      max_quantity: d.max_quantity != null ? String(d.max_quantity) : '',
     });
     setEditingSid(d.med_sid);
     setEditingDrugName(d.med_showname || d.med_name);
@@ -244,6 +250,9 @@ export default function DrugsPage() {
       const payload: any = {
         ...form,
         med_id: Number(form.med_id),
+        drug_code: form.drug_code || undefined,
+        min_quantity: form.min_quantity !== '' ? Number(form.min_quantity) : undefined,
+        max_quantity: form.max_quantity !== '' ? Number(form.max_quantity) : undefined,
       };
       if (editingSid) {
         await drugApi.update(editingSid, payload);
@@ -521,6 +530,14 @@ export default function DrugsPage() {
               placeholder="เลือกรูปแบบ" error={formErrors.packaging_type} />
             <Input label="ตำแหน่งที่เก็บ" placeholder="เช่น A-01"
               value={form.location} onChange={e => f('location', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Input label="รหัสยา" placeholder="เช่น DRG-001"
+              value={form.drug_code} onChange={e => f('drug_code', e.target.value)} />
+            <Input label="สต็อกขั้นต่ำ" type="number" min="0" placeholder="0"
+              value={form.min_quantity} onChange={e => f('min_quantity', e.target.value)} />
+            <Input label="สต็อกสูงสุด" type="number" min="0" placeholder="0"
+              value={form.max_quantity} onChange={e => f('max_quantity', e.target.value)} />
           </div>
 
           {/* Toggle */}
