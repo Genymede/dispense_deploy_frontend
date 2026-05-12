@@ -21,6 +21,11 @@ const COLS: ColDef[] = [
   { key: 'min_quantity', label: 'ขั้นต่ำ', className: 'text-xs text-slate-500' },
   { key: 'location', label: 'ที่เก็บ', className: 'text-xs font-mono' },
   {
+    key: 'lot_count', label: 'จำนวนล็อต',
+    render: r => <span className="text-sm font-medium">{r.lot_count ?? 0}</span>,
+    exportValue: r => String(r.lot_count ?? 0),
+  },
+  {
     key: 'nearest_valid_lot_exp', label: 'หมดอายุ',
     render: r => {
       const d = r.nearest_valid_lot_exp;
