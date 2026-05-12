@@ -544,136 +544,164 @@ export default function DrugsPage() {
         open={!!viewDrug} onClose={() => setViewDrug(null)}
         title={viewDrug ? (viewDrug.med_showname || viewDrug.med_name) : ''}
         subtitle={viewDrug?.med_generic_name ?? ''}
+        width="md"
+        footer={viewDrug && <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}><Edit2 size={14} className="mr-1.5" />แก้ไข</Button>}
       >
-        {viewDrug && (
-          <>
-            {/* 1. รายละเอียด Lot — สำคัญที่สุด */}
-            <DrawerSection title={`รายละเอียด Lot (${viewLots.filter(l => l.quantity > 0).length} lot)`}>
-              {viewLots.filter(l => l.quantity > 0).length === 0 ? (
-                <p className="text-xs text-slate-400">ยังไม่มี lot ในคลัง</p>
-              ) : (
-                <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'ราคาทุน/หน่วย', 'ราคาขาย/หน่วย', ''].map(h => (
-                          <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {viewLots.filter(l => l.quantity > 0).map(lot => {
-                        const isExpired = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
-                        const isNearExpiry = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + nearExpiryDays * 86400_000) : false;
-                        return (
-                          <tr key={lot.lot_id} className={isExpired ? 'bg-red-50' : isNearExpiry ? 'bg-amber-50' : ''}>
-                            <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
-                            <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
-                            <td className={`px-3 py-2 ${isExpired ? 'text-red-600 font-semibold' : isNearExpiry ? 'text-amber-600' : 'text-slate-500'}`}>
-                              {fmtDate(lot.exp_date)}
-                            </td>
-                            <td className="px-3 py-2 text-slate-600 tabular-nums">
-                              {lot.cost_price != null ? `฿${Number(lot.cost_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
-                            </td>
-                            <td className="px-3 py-2 text-slate-600 tabular-nums">
-                              {lot.unit_price != null ? `฿${Number(lot.unit_price).toFixed(2)}` : <span className="text-slate-300">—</span>}
-                            </td>
-                            <td className="px-3 py-2">
-                              {isExpired && lot.quantity > 0 && (
-                                <button
-                                  onClick={() => setWriteOffConfirm({ lot })}
-                                  className="p-1 rounded hover:bg-red-100 text-slate-300 hover:text-red-600 transition-colors"
-                                  title="ตัดออก"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              )}
-                            </td>
+        {viewDrug && (() => {
+          const activeLots = viewLots.filter(l => l.quantity > 0);
+          const totalQty   = activeLots.reduce((s, l) => s + l.quantity, 0);
+          const anyExpired = (viewDrug.expired_lot_count ?? 0) > 0;
+          const validLots  = (viewDrug.lot_count ?? 0) > 0;
+          const nearExp    = !!viewDrug.nearest_valid_lot_exp && new Date(viewDrug.nearest_valid_lot_exp) <= new Date(Date.now() + nearExpiryDays * 86400_000);
+          const isLow      = viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity;
+          const statusBadge = anyExpired && !validLots ? <Badge variant="danger"  dot>หมดอายุ</Badge>
+                            : anyExpired               ? <Badge variant="warning" dot>มีล็อตหมดอายุ</Badge>
+                            : isLow && nearExp         ? <Badge variant="danger"  dot>ต่ำ & ใกล้หมดอายุ</Badge>
+                            : isLow                    ? <Badge variant="warning" dot>สต็อกต่ำ</Badge>
+                            : nearExp                  ? <Badge variant="warning" dot>ใกล้หมดอายุ</Badge>
+                            : viewDrug.med_out_of_stock? <Badge variant="warning" dot>หมดสต็อก</Badge>
+                            :                           <Badge variant="success"  dot>ปกติ</Badge>;
+
+          return (
+            <div className="flex flex-col gap-5">
+
+              {/* ── Lot table ── */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
+                  ล็อตในคลัง ({activeLots.length} ล็อต)
+                </p>
+                {activeLots.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-2">ยังไม่มีล็อตในคลัง</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-100">
+                    <div className="max-h-44 overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-50 sticky top-0">
+                          <tr>
+                            {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'ราคาทุน/หน่วย', 'ราคาขาย/หน่วย', ''].map(h => (
+                              <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
+                            ))}
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                    <tfoot className="bg-slate-50 border-t border-slate-100">
-                      <tr>
-                        <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
-                        <td className="px-3 py-2 font-bold text-slate-800">{viewLots.filter(l => l.quantity > 0).reduce((s, l) => s + l.quantity, 0).toLocaleString()}</td>
-                        <td /><td /><td />
-                      </tr>
-                    </tfoot>
-                  </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {activeLots.map(lot => {
+                            const exp  = lot.exp_date ? new Date(lot.exp_date) < new Date() : false;
+                            const near = lot.exp_date ? new Date(lot.exp_date) <= new Date(Date.now() + nearExpiryDays * 86400_000) : false;
+                            return (
+                              <tr key={lot.lot_id} className={exp ? 'bg-red-50' : near ? 'bg-amber-50' : ''}>
+                                <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
+                                <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
+                                <td className={`px-3 py-2 ${exp ? 'text-red-600 font-semibold' : near ? 'text-amber-600' : 'text-slate-500'}`}>{fmtDate(lot.exp_date)}</td>
+                                <td className="px-3 py-2 tabular-nums text-slate-600">{lot.cost_price != null ? `฿${Number(lot.cost_price).toFixed(2)}` : <span className="text-slate-300">—</span>}</td>
+                                <td className="px-3 py-2 tabular-nums text-slate-600">{lot.unit_price != null ? `฿${Number(lot.unit_price).toFixed(2)}` : <span className="text-slate-300">—</span>}</td>
+                                <td className="px-3 py-2 text-right">
+                                  {exp && <button onClick={() => setWriteOffConfirm({ lot })} className="p-1 rounded hover:bg-red-100 text-slate-300 hover:text-red-600 transition-colors" title="ตัดออก"><Trash2 size={12} /></button>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot className="bg-slate-50 border-t border-slate-100 sticky bottom-0">
+                          <tr>
+                            <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
+                            <td className="px-3 py-2 font-bold text-slate-800">{totalQty.toLocaleString()}</td>
+                            <td /><td /><td /><td />
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Two-column body ── */}
+              <div className="grid grid-cols-2 gap-5">
+
+                {/* LEFT — สต็อก + ราคา */}
+                <div className="flex flex-col gap-4">
+
+                  {/* Stock stats row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-50 rounded-xl px-3 py-3">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">สต็อกปัจจุบัน</p>
+                      <p className={`text-xl font-bold tabular-nums leading-none ${isLow ? 'text-red-600' : 'text-green-600'}`}>
+                        {viewDrug.current_stock.toLocaleString()}
+                        <span className="text-sm font-medium ml-1 text-slate-500">{viewDrug.unit}</span>
+                      </p>
+                      {viewDrug.min_quantity != null && (
+                        <p className="text-[10px] text-slate-400 mt-1">ขั้นต่ำ {viewDrug.min_quantity.toLocaleString()}</p>
+                      )}
+                    </div>
+                    <div className="bg-slate-50 rounded-xl px-3 py-3 flex flex-col justify-between">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">สถานะ</p>
+                      {statusBadge}
+                      {viewDrug.location && (
+                        <p className="text-xs text-slate-500 mt-2 font-mono">{viewDrug.location}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Info row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">รูปแบบบรรจุ</p>
+                      <p className="text-sm font-medium text-slate-700">{viewDrug.packaging_type || '—'}</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">หน่วย / แบ่งได้</p>
+                      <p className="text-sm font-medium text-slate-700">{viewDrug.unit || '—'} · {viewDrug.is_divisible ? 'แบ่งได้' : 'แบ่งไม่ได้'}</p>
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาต้นทุน</p>
+                      <p className="text-sm font-semibold text-slate-700 tabular-nums">
+                        {viewDrug.cost_price != null ? `฿${Number(viewDrug.cost_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาขาย</p>
+                      <p className="text-sm font-semibold text-slate-700 tabular-nums">
+                        {viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </DrawerSection>
 
-            {/* 2. สต็อก & อายุ */}
-            <DrawerSection title="สต็อก & อายุ">
-              <DrawerGrid items={[
-                {
-                  label: 'สต็อกปัจจุบัน',
-                  value: <span className={`font-bold text-base ${viewDrug.current_stock < (viewDrug.min_quantity ?? Infinity) ? 'text-red-600' : 'text-green-600'}`}>
-                    {viewDrug.current_stock.toLocaleString()} {viewDrug.unit}
-                  </span>
-                },
-                {
-                  label: 'สถานะ', value: (() => {
-                    const anyExpired = (viewDrug.expired_lot_count ?? 0) > 0;
-                    const validLots = (viewDrug.lot_count ?? 0) > 0;
-                    const nearExp = !!viewDrug.nearest_valid_lot_exp &&
-                      new Date(viewDrug.nearest_valid_lot_exp) <= new Date(Date.now() + nearExpiryDays * 86400_000);
-                    const low = viewDrug.min_quantity != null && viewDrug.current_stock < viewDrug.min_quantity;
-                    if (anyExpired && !validLots) return <Badge variant="danger" dot>หมดอายุ</Badge>;
-                    if (anyExpired) return <Badge variant="warning" dot>มีล็อตหมดอายุ</Badge>;
-                    if (low && nearExp) return <Badge variant="danger" dot>ต่ำ & ใกล้หมดอายุ</Badge>;
-                    if (low) return <Badge variant="warning" dot>สต็อกต่ำ</Badge>;
-                    if (nearExp) return <Badge variant="warning" dot>ใกล้หมดอายุ</Badge>;
-                    if (viewDrug.med_out_of_stock) return <Badge variant="warning" dot>หมดสต็อก</Badge>;
-                    return <Badge variant="success" dot>ปกติ</Badge>;
-                  })()
-                },
-                { label: 'วันผลิต', value: fmtDate(viewDrug.mfg_date) },
-                { label: 'ที่เก็บ', value: viewDrug.location || '—' },
-              ]} />
-            </DrawerSection>
+                {/* RIGHT — ข้อมูลยา */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">ข้อมูลยา</p>
+                  {([
+                    { label: 'ชื่อแสดง (ไทย)',  value: viewDrug.med_showname },
+                    { label: 'ชื่อแสดง (อังกฤษ)',value: viewDrug.med_showname_eng },
+                    { label: 'ชื่อสามัญ',        value: viewDrug.med_generic_name },
+                    { label: 'ชื่อทะเบียน',      value: viewDrug.med_name },
+                    { label: 'ชื่อไทย',           value: viewDrug.med_thai_name },
+                    { label: 'ชื่อการค้า',        value: viewDrug.med_marketing_name },
+                    { label: 'หมวดหมู่',          value: viewDrug.category },
+                    { label: 'รูปแบบยา',          value: viewDrug.med_dosage_form },
+                    { label: 'ระดับ',             value: viewDrug.med_severity },
+                    { label: 'ข้อบ่งใช้',         value: (viewDrug as any).med_indication },
+                  ] as {label:string; value:any}[]).filter(r => r.value).map(r => (
+                    <div key={r.label} className="flex items-baseline gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wide w-24 flex-shrink-0">{r.label}</span>
+                      <span className="text-xs text-slate-700 font-medium leading-snug flex-1">{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* 3. ข้อมูลยา — identity & clinical */}
-            <DrawerSection title="ข้อมูลยา">
-              <DrawerGrid items={[
-                { label: 'ชื่อแสดง (ไทย)', value: viewDrug.med_showname || '—', span: true },
-                { label: 'ชื่อแสดง (อังกฤษ)', value: viewDrug.med_showname_eng || '—', span: true },
-                { label: 'ชื่อสามัญ', value: viewDrug.med_generic_name || '—', span: true },
-                { label: 'ชื่อทะเบียน', value: viewDrug.med_name, span: true },
-                { label: 'ชื่อไทย (med_table)', value: viewDrug.med_thai_name || '—', span: true },
-                { label: 'ชื่อการค้า', value: viewDrug.med_marketing_name || '—', span: true },
-                { label: 'หมวดหมู่', value: viewDrug.category || '—' },
-                { label: 'รูปแบบยา', value: viewDrug.med_dosage_form || '—' },
-                { label: 'ระดับ', value: viewDrug.med_severity || '—' },
-                { label: 'รูปแบบบรรจุ', value: viewDrug.packaging_type },
-                { label: 'หน่วย', value: viewDrug.unit },
-                { label: 'แบ่งได้', value: viewDrug.is_divisible ? 'ใช่' : 'ไม่ใช่' },
-              ]} />
-            </DrawerSection>
+              {/* ── Timestamps ── */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                <span>เพิ่มเข้าคลัง {fmtDate(viewDrug.created_at, true)}</span>
+                <span>อัปเดต {fmtDate(viewDrug.updated_at, true)}</span>
+              </div>
 
-            {/* 4. ราคา */}
-            <DrawerSection title="ราคา">
-              <DrawerGrid items={[
-                { label: 'ราคาต้นทุน', value: viewDrug.cost_price != null ? `฿${Number(viewDrug.cost_price).toFixed(2)}` : '—' },
-                { label: 'ราคาขาย', value: viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : '—' },
-              ]} />
-            </DrawerSection>
-
-            {/* 5. บันทึก */}
-            <DrawerSection title="บันทึก">
-              <DrawerGrid items={[
-                { label: 'เพิ่มเข้าคลัง', value: fmtDate(viewDrug.created_at, true) },
-                { label: 'อัปเดตล่าสุด', value: fmtDate(viewDrug.updated_at, true) },
-              ]} />
-            </DrawerSection>
-
-            <DrawerSection title="">
-              <Button variant="secondary" onClick={() => { setViewDrug(null); openEdit(viewDrug); }}>แก้ไข</Button>
-            </DrawerSection>
-          </>
-        )}
+            </div>
+          );
+        })()}
       </DetailDrawer>
 
       {/* Write-off Confirm Dialog — portal so it stacks above DetailDrawer */}
