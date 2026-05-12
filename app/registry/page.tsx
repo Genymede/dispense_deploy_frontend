@@ -87,15 +87,8 @@ export default function RegistryPage() {
       main_item_id: mid,
     });
     setErrors({});
+    setMainItemLabel(row.med_marketing_name || '');
     setEditingId(row.med_id);
-    // ดึงชื่อ inventory item สำหรับแสดงใน picker
-    if (mid) {
-      api.get(`/registry/inventory-items/${mid}`)
-        .then(r => setMainItemLabel(r.data?.name ?? ''))
-        .catch(() => setMainItemLabel(''));
-    } else {
-      setMainItemLabel('');
-    }
     setShowModal(true);
   };
 
@@ -152,9 +145,18 @@ export default function RegistryPage() {
             onChange={e => { f('med_name', e.target.value); if (errors.med_name) setErrors(p => ({ ...p, med_name: '' })); }}
             error={errors.med_name} /></FormSpan>
           <Input label="ชื่อสามัญ (Generic name)" value={form.med_generic_name} onChange={e => f('med_generic_name', e.target.value)} />
-          <Input label="ชื่อการค้า" required value={form.med_marketing_name}
-            onChange={e => { f('med_marketing_name', e.target.value); if (errors.med_marketing_name) setErrors(p => ({ ...p, med_marketing_name: '' })); }}
-            error={errors.med_marketing_name} />
+          <div>
+            <SearchSelect type="inventory_item" label="ชื่อการค้า" required
+              initialDisplay={mainItemLabel} resetKey={showModal ? editingId ?? 'create' : 'closed'}
+              onSelect={item => {
+                f('med_marketing_name', item?.name ?? '');
+                f('main_item_id', item?.id ?? '');
+                setMainItemLabel(item?.name ?? '');
+                if (errors.med_marketing_name) setErrors(p => ({ ...p, med_marketing_name: '' }));
+              }}
+              onTextChange={text => { f('med_marketing_name', text); }} />
+            {errors.med_marketing_name && <p className="mt-1 text-xs text-red-500">{errors.med_marketing_name}</p>}
+          </div>
           <Input label="ชื่อภาษาไทย" value={form.med_thai_name} onChange={e => f('med_thai_name', e.target.value)} />
           <Select label="หมวดหมู่" value={form.med_medical_category} onChange={e => f('med_medical_category', e.target.value)}
             options={CATEGORIES.map(c => ({ value: c, label: c }))} placeholder="เลือกหมวดหมู่" />
@@ -172,14 +174,6 @@ export default function RegistryPage() {
             options={PREG.map(p => ({ value: p, label: PREG_TH[p] }))} placeholder="เลือก" />
           <Input label="TMT Code" value={form.med_TMT_code} onChange={e => f('med_TMT_code', e.target.value)} />
           <Input label="TPU Code" value={form.med_TPU_code} onChange={e => f('med_TPU_code', e.target.value)} />
-          <FormSpan>
-            <SearchSelect type="inventory_item" label="เชื่อมกับคลังหลัก (inventory.items)"
-              initialDisplay={mainItemLabel} resetKey={showModal ? editingId ?? 'create' : 'closed'}
-              onSelect={item => { f('main_item_id', item?.id ?? ''); setMainItemLabel(item?.name ?? ''); }} />
-            {form.main_item_id && (
-              <p className="mt-1 text-[10px] text-slate-400 font-mono truncate">{form.main_item_id}</p>
-            )}
-          </FormSpan>
           <FormSpan><Textarea label="ข้อบ่งใช้ (Indication)" value={form.med_indication} onChange={e => f('med_indication', e.target.value)}
             placeholder="เช่น บรรเทาอาการแพ้, ลดอาการภูมิแพ้อากาศ..." rows={2} /></FormSpan>
         </FormGrid>

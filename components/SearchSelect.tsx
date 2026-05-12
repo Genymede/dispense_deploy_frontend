@@ -73,6 +73,7 @@ export interface SearchSelectProps {
   initialDisplay?: string;   // pre-fill text สำหรับ edit mode
   resetKey?: any;            // เปลี่ยนค่านี้เพื่อ reset (เช่น ตอนเปิด modal ใหม่)
   onSelect: (result: any | null) => void;
+  onTextChange?: (text: string) => void;  // ข้อความที่พิมพ์แบบ real-time (กรณีพิมพ์เองไม่เลือก)
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -81,7 +82,7 @@ export interface SearchSelectProps {
 export default function SearchSelect({
   type, label: labelText, required,
   initialDisplay = '', resetKey,
-  onSelect, placeholder, disabled, className,
+  onSelect, onTextChange, placeholder, disabled, className,
 }: SearchSelectProps) {
 
   const [val,      setVal]      = useState(initialDisplay);
@@ -176,10 +177,11 @@ export default function SearchSelect({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
-    setVal(v);           // ← FIX: ต้องให้ input อัปเดตทันที
+    setVal(v);
     setPicked(null);
     setOpen(true);
     clearTimeout(timerRef.current);
+    onTextChange?.(v);
     if (v === '') { onSelect(null); setResults([]); return; }
     timerRef.current = setTimeout(() => fetch(v), 250);
   };
@@ -204,6 +206,7 @@ export default function SearchSelect({
     setResults([]);
     setOpen(false);
     onSelect(null);
+    onTextChange?.('');
     inputRef.current?.focus();
   };
 
