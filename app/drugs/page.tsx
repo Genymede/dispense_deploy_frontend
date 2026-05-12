@@ -595,7 +595,7 @@ export default function DrugsPage() {
                       <table className="w-full text-xs">
                         <thead className="bg-slate-50 sticky top-0">
                           <tr>
-                            {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'ราคาทุน/หน่วย', 'ราคาขาย/หน่วย', ''].map(h => (
+                            {['Lot Number', 'จำนวน', 'วันหมดอายุ', 'ราคาขาย/หน่วย', ''].map(h => (
                               <th key={h} className="px-3 py-2 text-left font-semibold text-slate-400 whitespace-nowrap">{h}</th>
                             ))}
                           </tr>
@@ -609,7 +609,6 @@ export default function DrugsPage() {
                                 <td className="px-3 py-2 font-mono text-slate-700">{lot.lot_number || <span className="text-slate-300">—</span>}</td>
                                 <td className="px-3 py-2 font-semibold text-slate-800">{lot.quantity.toLocaleString()}</td>
                                 <td className={`px-3 py-2 ${exp ? 'text-red-600 font-semibold' : near ? 'text-amber-600' : 'text-slate-500'}`}>{fmtDate(lot.exp_date)}</td>
-                                <td className="px-3 py-2 tabular-nums text-slate-600">{lot.cost_price != null ? `฿${Number(lot.cost_price).toFixed(2)}` : <span className="text-slate-300">—</span>}</td>
                                 <td className="px-3 py-2 tabular-nums text-slate-600">{lot.unit_price != null ? `฿${Number(lot.unit_price).toFixed(2)}` : <span className="text-slate-300">—</span>}</td>
                                 <td className="px-3 py-2 text-right">
                                   {exp && <button onClick={() => setWriteOffConfirm({ lot })} className="p-1 rounded hover:bg-red-100 text-slate-300 hover:text-red-600 transition-colors" title="ตัดออก"><Trash2 size={12} /></button>}
@@ -622,7 +621,7 @@ export default function DrugsPage() {
                           <tr>
                             <td className="px-3 py-2 font-semibold text-slate-500">รวม</td>
                             <td className="px-3 py-2 font-bold text-slate-800">{totalQty.toLocaleString()}</td>
-                            <td /><td /><td /><td />
+                            <td /><td /><td />
                           </tr>
                         </tfoot>
                       </table>
@@ -671,19 +670,11 @@ export default function DrugsPage() {
                   </div>
 
                   {/* Price */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาต้นทุน</p>
-                      <p className="text-sm font-semibold text-slate-700 tabular-nums">
-                        {viewDrug.cost_price != null ? `฿${Number(viewDrug.cost_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
-                      </p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาขาย</p>
-                      <p className="text-sm font-semibold text-slate-700 tabular-nums">
-                        {viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
-                      </p>
-                    </div>
+                  <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาขาย/หน่วย</p>
+                    <p className="text-sm font-semibold text-slate-700 tabular-nums">
+                      {viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
+                    </p>
                   </div>
                 </div>
 
