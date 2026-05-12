@@ -1,10 +1,8 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { AlertTriangle } from 'lucide-react';
 
 const COLS: ColDef[] = [
@@ -20,7 +18,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function MedProblemPage() {
-  const [drawer, setDrawer] = useState<any|null>(null);
   return (
     <MainLayout title="ปัญหาการใช้ยา" subtitle="Medication Problem Report">
       <DataTable cols={COLS}
@@ -28,16 +25,7 @@ export default function MedProblemPage() {
         filters={[{ key:'search', type:'search', placeholder:'ค้นหาชื่อยา...' }]}
         exportTitle="ปัญหาการใช้ยา"
         emptyIcon={<AlertTriangle size={36}/>} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title={r => r.med_name||'ปัญหาการใช้ยา'} subtitle={r => r.problem_type||''}
-        fields={[
-          { label:'ชื่อยา',     key:'med_name' },
-          { label:'ประเภท',     key:'problem_type' },
-          { label:'ผู้รายงาน', key:'reported_by_name' },
-          { label:'สถานะ',     key:'is_resolved', type:'template' as const, template: r => r.is_resolved ? 'แก้ไขแล้ว' : 'ยังไม่แก้ไข' },
-          { label:'คำอธิบาย', key:'description', span:true },
-        ]} />
+        deps={[]} />
     </MainLayout>
   );
 }

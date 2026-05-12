@@ -1,11 +1,9 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { Clock } from 'lucide-react';
 
 const COLS: ColDef[] = [
@@ -26,7 +24,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function OverdueMedPage() {
-  const [drawer, setDrawer] = useState<any|null>(null);
   return (
     <MainLayout title="รายงานยาค้างจ่าย" subtitle="Overdue Medication Report">
       <DataTable cols={COLS}
@@ -34,17 +31,7 @@ export default function OverdueMedPage() {
         filters={[{ key:'search', type:'search', placeholder:'ค้นหาชื่อยา, ผู้ป่วย...' }]}
         exportTitle="รายงานยาค้างจ่าย"
         emptyIcon={<Clock size={36}/>} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title={r => r.med_name} subtitle={r => r.patient_name||'—'}
-        fields={[
-          { label:'ชื่อยา',  key:'_drug',    type:'drug'    as const },
-          { label:'ผู้ป่วย', key:'_patient', type:'patient' as const },
-          { label:'แพทย์',   key:'doctor_name' },
-          { label:'จำนวน',   key:'quantity', type:'number' as const },
-          { label:'สถานะ',   key:'dispense_status', type:'template' as const, template: r => r.dispense_status ? 'จ่ายแล้ว' : 'ค้างจ่าย' },
-          { label:'วันที่',  key:'time', type:'datetime' as const },
-        ]} />
+        deps={[]} />
     </MainLayout>
   );
 }

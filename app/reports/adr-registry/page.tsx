@@ -1,11 +1,9 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { FlaskConical } from 'lucide-react';
 
 const SEV: Record<string,string> = { severe:'รุนแรง', moderate:'ปานกลาง', mild:'เล็กน้อย' };
@@ -29,7 +27,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function AdrRegistryPage() {
-  const [drawer, setDrawer] = useState<any|null>(null);
   return (
     <MainLayout title="รายงาน ADR" subtitle="Adverse Drug Reaction Report">
       <DataTable cols={COLS}
@@ -37,20 +34,7 @@ export default function AdrRegistryPage() {
         filters={[{ key:'search', type:'search', placeholder:'ค้นหาชื่อผู้ป่วย, ยา...' }]}
         exportTitle="รายงาน ADR"
         emptyIcon={<FlaskConical size={36}/>} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title="ADR" subtitle={r => `${r.patient_name} · ${r.med_name}`}
-        fields={[
-          { label:'ผู้ป่วย',    key:'_patient',   type:'patient'   as const },
-          { label:'ยา',         key:'_drug',       type:'drug'      as const },
-          { label:'อาการ',      key:'symptoms',    span:true },
-          { label:'คำอธิบาย',  key:'description', span:true },
-          { label:'ระดับ',      key:'severity' },
-          { label:'ผลลัพธ์',   key:'outcome' },
-          { label:'ผู้รายงาน', key:'reporter_name' },
-          { label:'วันที่',    key:'reported_at', type:'datetime' as const, span:true },
-          { label:'หมายเหตุ',  key:'notes', span:true },
-        ]} />
+        deps={[]} />
     </MainLayout>
   );
 }

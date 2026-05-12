@@ -1,12 +1,9 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
-import { DrawerSection } from '@/components/DetailDrawer';
 import { Truck } from 'lucide-react';
 
 const COLS: ColDef[] = [
@@ -25,7 +22,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function MedDeliveryPage() {
-  const [drawer, setDrawer] = useState<any|null>(null);
   return (
     <MainLayout title="รายงานการจัดส่งยา" subtitle="Medication Delivery Report">
       <DataTable cols={COLS}
@@ -39,37 +35,7 @@ export default function MedDeliveryPage() {
         ]}
         exportTitle="รายงานการจัดส่งยา"
         emptyIcon={<Truck size={36}/>} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title="การจัดส่งยา" subtitle={r => r.patient_name}
-        fields={[
-          { label:'ผู้ป่วย',     key:'_patient', type:'patient' as const },
-          { label:'วิธีจัดส่ง', key:'delivery_method' },
-          { label:'ผู้รับ',      key:'receiver_name' },
-          { label:'เบอร์โทร',   key:'receiver_phone' },
-          { label:'สถานะ',      key:'status' },
-          { label:'วันที่',     key:'delivery_date', type:'date' as const },
-          { label:'ที่อยู่',    key:'address', span:true },
-          { label:'หมายเหตุ',  key:'note',    span:true },
-        ]}
-      >
-        {row => {
-          const list = Array.isArray(row.medicine_list) ? row.medicine_list : [];
-          if (!list.length) return null;
-          return (
-            <DrawerSection title={`รายการยา (${list.length} รายการ)`}>
-              <div className="space-y-2">
-                {list.map((m: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-                    <span className="text-sm text-slate-700">{m.med_showname || m.med_name}</span>
-                    <span className="text-sm font-medium text-slate-600 shrink-0 ml-3">{m.quantity} {m.unit}</span>
-                  </div>
-                ))}
-              </div>
-            </DrawerSection>
-          );
-        }}
-      </RegistryDrawer>
+        deps={[]} />
     </MainLayout>
   );
 }

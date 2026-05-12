@@ -1,11 +1,9 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
 import { fmtFreq } from '@/lib/drugUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { Badge } from '@/components/ui';
 import { ClipboardList } from 'lucide-react';
 
@@ -61,7 +59,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function MedOrderHistoryPage() {
-  const [drawer, setDrawer] = useState<any | null>(null);
   return (
     <MainLayout title="ประวัติการจ่ายยา" subtitle="Medication Dispensing History">
       <DataTable
@@ -82,30 +79,7 @@ export default function MedOrderHistoryPage() {
         exportTitle="ประวัติการจ่ายยา"
         emptyIcon={<ClipboardList size={36} />}
         emptyText="ไม่พบรายการ"
-        deps={[]}
-        onRowClick={row => setDrawer(row)}
-      />
-      <RegistryDrawer
-        open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title="รายละเอียดการจ่ายยา"
-        subtitle={r => `${r.patient_name ?? '—'} · ${r.med_showname || r.med_name}`}
-        fields={[
-          { label: 'ผู้ป่วย',      key: '_patient', type: 'patient' as const },
-          { label: 'เลขใบสั่งยา', key: 'prescription_no' },
-          { label: 'รายการยา',    key: 'med_showname' },
-          { label: 'ชื่อสามัญ',   key: 'med_name' },
-          { label: 'จำนวน',       key: 'quantity' },
-          { label: 'วิธีใช้', key: 'frequency', type: 'template' as const, template: (r: any) => fmtFreq(r.frequency) },
-          { label: 'ทางที่ให้',   key: 'route' },
-          { label: 'แพทย์',       key: 'doctor_name' },
-          { label: 'ผู้จ่ายยา',   key: 'dispensed_by_name' },
-          { label: 'วอร์ด',       key: 'ward' },
-          { label: 'วินิจฉัย',    key: 'diagnosis', span: true },
-          { label: 'สถานะ',       key: 'status' },
-          { label: 'วันที่สั่ง',  key: 'created_at',   type: 'datetime' as const },
-          { label: 'วันที่จ่าย',  key: 'dispensed_at', type: 'datetime' as const },
-        ]}
-      />
+        deps={[]} />
     </MainLayout>
   );
 }

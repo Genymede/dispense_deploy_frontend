@@ -5,12 +5,10 @@ import DataTable, { ColDef } from '@/components/DataTable';
 import { extraReportApi, stockApi } from '@/lib/api';
 import { Button } from '@/components/ui';
 import { fmtDate } from '@/lib/dateUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { TrendingDown, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function MedExpiredPage() {
-  const [drawer, setDrawer] = useState<any | null>(null);
   const [reload, setReload] = useState(0);
   const [writingOff, setWritingOff] = useState<number | null>(null);
   const [confirmRow, setConfirmRow] = useState<any | null>(null);
@@ -20,7 +18,6 @@ export default function MedExpiredPage() {
     try {
       const res = await stockApi.writeOff({ med_sid: row.med_sid });
       toast.success(res.data.message);
-      setDrawer(null);
       setConfirmRow(null);
       setReload(r => r + 1);
     } catch (e: any) {
@@ -68,31 +65,7 @@ export default function MedExpiredPage() {
         filters={[{ key: 'search', type: 'search', placeholder: 'ค้นหาชื่อยา...' }]}
         exportTitle="ยาหมดอายุ"
         emptyIcon={<TrendingDown size={36} />} emptyText="ไม่พบรายการ"
-        deps={[reload]} onRowClick={row => setDrawer(row)}
-      />
-
-      <RegistryDrawer
-        open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title={r => r.drug_name} subtitle="ยาหมดอายุ"
-        fields={[
-          { label: 'ชื่อยา',     key: 'drug_name' },
-          { label: 'รูปแบบ',     key: 'packaging_type' },
-          { label: 'จำนวน',      key: 'med_quantity', type: 'number' as const },
-          { label: 'หน่วย',      key: 'unit' },
-          { label: 'ที่เก็บ',    key: 'location' },
-          { label: 'Lot',        key: 'lot_number' },
-          { label: 'วันหมดอายุ', key: 'exp_date', type: 'date' as const },
-        ]}
-        extraActions={r => (
-          <Button
-            variant="danger"
-            icon={<Trash2 size={14} />}
-            loading={writingOff === r.med_sid}
-            onClick={() => setConfirmRow(r)}
-          >
-            ตัดออก
-          </Button>
-        )}
+        deps={[reload]}
       />
 
       {/* Confirm Dialog */}

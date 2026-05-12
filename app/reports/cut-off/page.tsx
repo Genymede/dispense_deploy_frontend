@@ -4,12 +4,10 @@ import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef, ExportButtons } from '@/components/DataTable';
 import { Badge, Button } from '@/components/ui';
 import { api, extraReportApi } from '@/lib/api';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { CalendarClock, Play } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CutOffPage() {
-  const [drawer, setDrawer] = useState<any | null>(null);
   const [executing, setExecuting] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -67,21 +65,6 @@ export default function CutOffPage() {
         fetcher={p => extraReportApi.getCutOff(p).then((r: any) => ({ data: r.data.data ?? r.data, total: r.data.total ?? 0 }))}
         emptyIcon={<CalendarClock size={36} />} emptyText="ไม่พบรายการ"
         deps={[refreshKey]}
-        onRowClick={row => setDrawer(row)}
-      />
-      <RegistryDrawer
-        open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title={r => r.warehouse_name || 'Cut-off'}
-        subtitle={'ช่วงเวลา cut-off'}
-        fields={[
-          { label: 'คลังยา',  key: 'warehouse_name' },
-          { label: 'วัน',     key: 'period_day',   type: 'number' as const },
-          { label: 'เดือน',   key: 'period_month', type: 'number' as const },
-          { label: 'เวลา',    key: 'period_time_h', type: 'template' as const,
-            template: r => `${String(r.period_time_h??'0').padStart(2,'0')}:${String(r.period_time_m??'0').padStart(2,'0')} น.` },
-          { label: 'สถานะ',  key: 'is_active', type: 'boolean' as const },
-          { label: 'รันล่าสุด', key: 'last_executed_at', type: 'datetime' as const },
-        ]}
       />
     </MainLayout>
   );

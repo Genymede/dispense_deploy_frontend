@@ -1,10 +1,8 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { Repeat2 } from 'lucide-react';
 
 const COLS: ColDef[] = [
@@ -18,13 +16,12 @@ const COLS: ColDef[] = [
   { key:'severity', label:'ระดับ',
     render: r => <Badge variant={r.severity==='severe'?'danger':r.severity?'warning':'gray'}>{r.severity||'-'}</Badge>,
     exportValue: r => r.severity??'-' },
-  { key:'description',      label:'คำอธิบาย', className:'text-xs max-w-[260px] truncate' },
+  { key:'description', label:'คำอธิบาย', className:'text-xs max-w-[260px] truncate' },
   { key:'recorded_by_name', label:'ผู้บันทึก', className:'text-xs text-slate-500',
     exportValue: r => r.recorded_by_name??'-' },
 ];
 
 export default function MedInteractionPage() {
-  const [drawer, setDrawer] = useState<any|null>(null);
   return (
     <MainLayout title="รายงานปฏิกิริยายา" subtitle="Drug Interaction Report">
       <DataTable cols={COLS}
@@ -32,19 +29,7 @@ export default function MedInteractionPage() {
         filters={[{ key:'search', type:'search', placeholder:'ค้นหาชื่อยา...' }]}
         exportTitle="รายงานปฏิกิริยายา"
         emptyIcon={<Repeat2 size={36}/>} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title={r => `${r.drug1_name} + ${r.drug2_name}`} subtitle={r => r.interaction_type}
-        fields={[
-          { label:'ยา 1',       key:'drug1_name' },
-          { label:'ยา 2',       key:'drug2_name' },
-          { label:'ประเภท',     key:'interaction_type' },
-          { label:'ระดับ',      key:'severity' },
-          { label:'คำอธิบาย',  key:'description', span:true },
-          { label:'หลักฐาน',    key:'evidence_level' },
-          { label:'อ้างอิง',    key:'source_reference' },
-          { label:'ผู้บันทึก', key:'recorded_by_name' },
-        ]} />
+        deps={[]} />
     </MainLayout>
   );
 }

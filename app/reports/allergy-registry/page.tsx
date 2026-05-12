@@ -1,11 +1,9 @@
 'use client';
-import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
-import RegistryDrawer from '@/components/RegistryDrawer';
 import { ShieldAlert } from 'lucide-react';
 
 const SEV_LABEL: Record<string, string> = { mild: 'เล็กน้อย', moderate: 'ปานกลาง', severe: 'รุนแรง' };
@@ -39,7 +37,6 @@ const COLS: ColDef[] = [
 ];
 
 export default function AllergyRegistryPage() {
-  const [drawer, setDrawer] = useState<any | null>(null);
   return (
     <MainLayout title="รายงานการแพ้ยา" subtitle="Allergy Registry Report">
       <DataTable cols={COLS}
@@ -47,18 +44,7 @@ export default function AllergyRegistryPage() {
         filters={[{ key: 'search', type: 'search', placeholder: 'ค้นหาชื่อผู้ป่วย, ยา...' }]}
         exportTitle="รายงานการแพ้ยา"
         emptyIcon={<ShieldAlert size={36} />} emptyText="ไม่พบรายการ"
-        deps={[]} onRowClick={row => setDrawer(row)} />
-      <RegistryDrawer open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
-        title="การแพ้ยา" subtitle={r => `${r.patient_name} · ${r.hn_number}`}
-        fields={[
-          { label: 'ผู้ป่วย', key: '_patient', type: 'patient' as const },
-          { label: 'ยาที่แพ้', key: '_drug', type: 'drug' as const },
-          { label: 'อาการ', key: 'symptoms', span: true },
-          { label: 'รายละเอียด', key: 'description', span: true },
-          { label: 'ระดับ', key: 'severity' },
-          { label: 'วันที่', key: 'reported_at', type: 'date' as const },
-          { label: 'ผู้บันทึก', key: 'recorded_by_name' },
-        ]} />
+        deps={[]} />
     </MainLayout>
   );
 }
