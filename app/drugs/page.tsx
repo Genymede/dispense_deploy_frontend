@@ -43,6 +43,7 @@ export default function DrugsPage() {
   const [editingSid, setEditingSid] = useState<number | null>(null);
   const [editingDrugName, setEditingDrugName] = useState('');
   const [viewDrug, setViewDrug] = useState<Drug | null>(null);
+  const [editingDrug, setEditingDrug] = useState<Drug | null>(null);
   const [viewLots, setViewLots] = useState<StockLot[]>([]);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -213,6 +214,7 @@ export default function DrugsPage() {
     setSelectedMed(null);
     setSelectedMedLabel('');
     setEditingSid(null);
+    setEditingDrug(null);
     setShowModal(true);
   };
 
@@ -227,6 +229,7 @@ export default function DrugsPage() {
     });
     setEditingSid(d.med_sid);
     setEditingDrugName(d.med_showname || d.med_name);
+    setEditingDrug(d);
     setShowModal(true);
   };
 
@@ -462,7 +465,8 @@ export default function DrugsPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editingSid ? `แก้ไขข้อมูลยา — ${editingDrugName}` : 'เพิ่มยาในคลัง'} size="lg"
         footer={<><Button variant="secondary" onClick={() => setShowModal(false)}>ยกเลิก</Button><Button onClick={handleSave} loading={saving}>บันทึก</Button></>}
       >
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
+          {/* Drug picker — create only */}
           {!editingSid && (
             <div>
               <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required
@@ -478,17 +482,54 @@ export default function DrugsPage() {
               {formErrors.med_id && <p className="mt-1 text-xs text-red-500">{formErrors.med_id}</p>}
             </div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Drug info card */}
+          {(selectedMed || editingDrug) && (() => {
+            const d = selectedMed ?? editingDrug!;
+            const rows: { label: string; value: string }[] = [
+              { label: 'หมวดหมู่',  value: (d as any).med_medical_category ?? (d as any).category ?? '—' },
+              { label: 'รูปแบบยา',  value: (d as any).med_dosage_form ?? '—' },
+              { label: 'ระดับ',     value: (d as any).med_severity ?? '—' },
+              { label: 'ชื่อสามัญ', value: (d as any).med_generic_name ?? '—' },
+              { label: 'ชื่อการค้า',value: (d as any).med_marketing_name ?? '—' },
+              { label: 'ชื่อไทย',   value: (d as any).med_thai_name ?? '—' },
+            ].filter(r => r.value && r.value !== '—');
+            if (!rows.length) return null;
+            return (
+              <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2">
+                {rows.map(r => (
+                  <div key={r.label} className="min-w-0">
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">{r.label}</p>
+                    <p className="text-xs font-medium text-slate-700 truncate" title={r.value}>{r.value}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Form fields — 3 column grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="col-span-2">
+              <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
+            </div>
+            <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
             <Select label="รูปแบบบรรจุ" required value={form.packaging_type}
               onChange={(e) => { f('packaging_type', e.target.value); if (formErrors.packaging_type) setFormErrors(p => ({ ...p, packaging_type: '' })); }}
               options={packagingTypes.map((p) => ({ value: p, label: p }))} placeholder="เลือกรูปแบบ"
               error={formErrors.packaging_type} />
-            <Input label="ตำแหน่งที่เก็บ" placeholder="A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
-            <Input label="ชื่อแสดง (ไทย)" value={form.med_showname} onChange={(e) => f('med_showname', e.target.value)} />
-            <Input label="ชื่อแสดง (อังกฤษ)" value={form.med_showname_eng} onChange={(e) => f('med_showname_eng', e.target.value)} />
-            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-              <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="w-4 h-4 text-primary-600" />
-              <label htmlFor="div" className="text-sm text-slate-700">แบ่งได้ (Divisible)</label>
+            <Input label="ตำแหน่งที่เก็บ" placeholder="เช่น A-01" value={form.location} onChange={(e) => f('location', e.target.value)} />
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <div className="relative">
+                  <input type="checkbox" id="div" checked={form.is_divisible} onChange={(e) => f('is_divisible', e.target.checked)} className="sr-only peer" />
+                  <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary-500 transition-colors" />
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">แบ่งได้</p>
+                  <p className="text-[10px] text-slate-400">Divisible</p>
+                </div>
+              </label>
             </div>
           </div>
         </div>
