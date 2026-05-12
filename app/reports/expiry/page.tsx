@@ -1,6 +1,8 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import MainLayout from '@/components/MainLayout';
+import ReportPrintTemplate from '@/components/ReportPrintTemplate';
 import { Card, Button, Spinner, EmptyState } from '@/components/ui';
 import { stockApi } from '@/lib/api';
 import { fmtDate } from '@/lib/dateUtils';
@@ -33,61 +35,7 @@ const EXP_STYLE: Record<string, { cls: string; label: string }> = {
 
 const safeDate = (val: any) => fmtDate(val);
 
-// ── PDF / CSV export helpers ──────────────────────────────────────────────────
-const toB64 = (buf: ArrayBuffer) => {
-  const b = new Uint8Array(buf); let s = '';
-  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-  return btoa(s);
-};
-
-async function exportPDF(title: string, columns: string[], rows: string[][]) {
-  const { default: jsPDF } = await import('jspdf');
-  const { default: autoTable } = await import('jspdf-autotable');
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-  const [regularBuf, boldBuf, logoBuf] = await Promise.all([
-    fetch('/font/ThaiSarabun/subset-Sarabun-Regular.ttf').then(r => r.arrayBuffer()),
-    fetch('/font/ThaiSarabun/subset-Sarabun-Bold.ttf').then(r => r.arrayBuffer()),
-    fetch('/logo.png').then(r => r.arrayBuffer()).catch(() => null),
-  ]);
-  doc.addFileToVFS('Sarabun.ttf', toB64(regularBuf));
-  doc.addFont('Sarabun.ttf', 'Sarabun', 'normal');
-  doc.addFileToVFS('Sarabun-Bold.ttf', toB64(boldBuf));
-  doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold');
-
-  const W = doc.internal.pageSize.getWidth();
-  const currentDate = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  const drawHeader = (data: any) => {
-    const pageCount = (doc.internal as any).getNumberOfPages();
-    if (logoBuf) { try { doc.addImage(toB64(logoBuf), 'PNG', 10, 8, 20, 20); } catch {} }
-    doc.setFont('Sarabun', 'bold'); doc.setFontSize(13);
-    doc.text('โรงพยาบาลวัดห้วยปลากั้งเพื่อสังคม', W / 2, 14, { align: 'center' });
-    doc.setFont('Sarabun', 'normal'); doc.setFontSize(9);
-    doc.text('553 11 ตำบล บ้านดู่ อำเภอเมืองเชียงราย เชียงราย 57100', W / 2, 20, { align: 'center' });
-    doc.text(`โทร: 052 029 888   |   วันที่: ${currentDate}`, W / 2, 26, { align: 'center' });
-    doc.setFont('Sarabun', 'bold'); doc.setFontSize(11);
-    doc.text(title, W / 2, 34, { align: 'center' });
-    doc.setDrawColor('#006FC6'); doc.setLineWidth(0.4);
-    doc.line(10, 38, W - 10, 38);
-    doc.setFont('Sarabun', 'normal'); doc.setFontSize(8); doc.setTextColor(150);
-    doc.text(`หน้า ${data.pageNumber} จาก ${pageCount}`, W - 10, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
-    doc.setTextColor(0);
-  };
-
-  autoTable(doc, {
-    startY: 42,
-    head: [columns],
-    body: rows,
-    styles: { font: 'Sarabun', fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-    headStyles: { font: 'Sarabun', fontStyle: 'bold', fillColor: [0, 111, 198], textColor: 255, fontSize: 8 },
-    alternateRowStyles: { fillColor: [240, 247, 255] },
-    margin: { top: 42, left: 10, right: 10, bottom: 15 },
-    didDrawPage: drawHeader,
-  });
-
-  doc.save(`${title}.pdf`);
-}
-
+// ── CSV export helper ─────────────────────────────────────────────────────────
 function exportCSV(title: string, columns: string[], rows: string[][]) {
   const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
   const csv = '\uFEFF' + [columns.map(esc), ...rows.map(r => r.map(esc))].map(r => r.join(',')).join('\n');
@@ -103,6 +51,10 @@ export default function ExpiryReportPage() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
   const [counts, setCounts] = useState<Record<TabKey, number>>({ all: 0, expired: 0, near_expiry: 0, low_stock: 0 });
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [printData, setPrintData] = useState<any[]>([]);
+  const [printCols, setPrintCols] = useState<{ label: string; key: string; render?: (r: any) => string }[]>([]);
+  const [printTitle, setPrintTitle] = useState('');
 
   const load = useCallback(async (t: TabKey) => {
     setLoading(true);
@@ -127,54 +79,61 @@ export default function ExpiryReportPage() {
   // ── Build export rows ────────────────────────────────────────────────────────
   const handleExport = async (type: 'pdf' | 'csv') => {
     const title = TAB_TITLES[tab];
-    let columns: string[];
-    let rows: string[][];
-
-    if (tab === 'low_stock') {
-      columns = ['ชื่อยา', 'ชื่อสามัญ', 'หมวด', 'สต็อกปัจจุบัน', 'สต็อกขั้นต่ำ', 'ตำแหน่ง', 'สถานะ'];
-      rows = data.map(r => {
-        const ratio = r.min_quantity ? r.current_stock / r.min_quantity : 1;
-        const status = r.current_stock === 0 ? 'หมดสต็อก' : ratio <= 0.5 ? 'วิกฤต' : 'ต่ำกว่าขั้นต่ำ';
-        return [
-          r.drug_name ?? '-',
-          r.med_generic_name ?? '-',
-          r.category ?? '-',
-          `${r.current_stock} ${r.unit ?? ''}`.trim(),
-          String(r.min_quantity ?? '-'),
-          r.location ?? '-',
-          status,
-        ];
-      });
-    } else {
-      columns = ['ชื่อยา', 'ชื่อสามัญ', 'Lot Number', 'คงเหลือ', 'วันหมดอายุ', 'วันรับเข้า', 'ตำแหน่ง', 'สถานะ'];
-      rows = data.map(r => {
-        const daysText = r.days_to_expiry != null
-          ? (r.days_to_expiry < 0 ? `หมดอายุไป ${Math.abs(r.days_to_expiry)} วัน` : `อีก ${r.days_to_expiry} วัน`)
-          : '';
-        const expDate = r.exp_date ? `${safeDate(r.exp_date)} ${daysText}`.trim() : '—';
-        return [
-          r.drug_name ?? '-',
-          r.med_generic_name ?? '-',
-          r.lot_number ?? '-',
-          `${r.quantity} ${r.unit ?? ''}`.trim(),
-          expDate,
-          safeDate(r.received_at),
-          r.location ?? '-',
-          EXP_STYLE[r.exp_status]?.label ?? r.exp_status ?? '-',
-        ];
-      });
-    }
-
     setExporting(type);
     try {
-      if (type === 'pdf') await exportPDF(title, columns, rows);
-      else exportCSV(title, columns, rows);
+      const res = await stockApi.getLotsReport({ type: tab as any, days: 90 });
+      const allData = res.data.data;
+
+      if (type === 'pdf') {
+        const cols = tab === 'low_stock'
+          ? [
+              { label: 'ชื่อยา', key: 'drug_name', render: (r: any) => r.drug_name ?? '-' },
+              { label: 'ชื่อสามัญ', key: 'med_generic_name', render: (r: any) => r.med_generic_name ?? '-' },
+              { label: 'หมวด', key: 'category', render: (r: any) => r.category ?? '-' },
+              { label: 'สต็อกปัจจุบัน', key: 'current_stock', render: (r: any) => `${r.current_stock} ${r.unit ?? ''}`.trim() },
+              { label: 'สต็อกขั้นต่ำ', key: 'min_quantity', render: (r: any) => String(r.min_quantity ?? '-') },
+              { label: 'ตำแหน่ง', key: 'location', render: (r: any) => r.location ?? '-' },
+              { label: 'สถานะ', key: '_status', render: (r: any) => { const ratio = r.min_quantity ? r.current_stock / r.min_quantity : 1; return r.current_stock === 0 ? 'หมดสต็อก' : ratio <= 0.5 ? 'วิกฤต' : 'ต่ำกว่าขั้นต่ำ'; } },
+            ]
+          : [
+              { label: 'ชื่อยา', key: 'drug_name', render: (r: any) => r.drug_name ?? '-' },
+              { label: 'ชื่อสามัญ', key: 'med_generic_name', render: (r: any) => r.med_generic_name ?? '-' },
+              { label: 'Lot Number', key: 'lot_number', render: (r: any) => r.lot_number ?? '-' },
+              { label: 'คงเหลือ', key: 'quantity', render: (r: any) => `${r.quantity} ${r.unit ?? ''}`.trim() },
+              { label: 'วันหมดอายุ', key: 'exp_date', render: (r: any) => { const d = r.days_to_expiry != null ? (r.days_to_expiry < 0 ? ` (หมดอายุไป ${Math.abs(r.days_to_expiry)} วัน)` : ` (อีก ${r.days_to_expiry} วัน)`) : ''; return r.exp_date ? `${safeDate(r.exp_date)}${d}` : '—'; } },
+              { label: 'วันรับเข้า', key: 'received_at', render: (r: any) => safeDate(r.received_at) },
+              { label: 'ตำแหน่ง', key: 'location', render: (r: any) => r.location ?? '-' },
+              { label: 'สถานะ', key: 'exp_status', render: (r: any) => EXP_STYLE[r.exp_status]?.label ?? r.exp_status ?? '-' },
+            ];
+        setPrintTitle(title);
+        setPrintCols(cols);
+        setPrintData(allData);
+        setIsPrinting(true);
+        setTimeout(() => { window.print(); setIsPrinting(false); }, 500);
+      } else {
+        const csvColumns = tab === 'low_stock'
+          ? ['ชื่อยา', 'ชื่อสามัญ', 'หมวด', 'สต็อกปัจจุบัน', 'สต็อกขั้นต่ำ', 'ตำแหน่ง', 'สถานะ']
+          : ['ชื่อยา', 'ชื่อสามัญ', 'Lot Number', 'คงเหลือ', 'วันหมดอายุ', 'วันรับเข้า', 'ตำแหน่ง', 'สถานะ'];
+        const rows = tab === 'low_stock'
+          ? allData.map((r: any) => { const ratio = r.min_quantity ? r.current_stock / r.min_quantity : 1; return [r.drug_name ?? '-', r.med_generic_name ?? '-', r.category ?? '-', `${r.current_stock} ${r.unit ?? ''}`.trim(), String(r.min_quantity ?? '-'), r.location ?? '-', r.current_stock === 0 ? 'หมดสต็อก' : ratio <= 0.5 ? 'วิกฤต' : 'ต่ำกว่าขั้นต่ำ']; })
+          : allData.map((r: any) => { const d = r.days_to_expiry != null ? (r.days_to_expiry < 0 ? `หมดอายุไป ${Math.abs(r.days_to_expiry)} วัน` : `อีก ${r.days_to_expiry} วัน`) : ''; return [r.drug_name ?? '-', r.med_generic_name ?? '-', r.lot_number ?? '-', `${r.quantity} ${r.unit ?? ''}`.trim(), r.exp_date ? `${safeDate(r.exp_date)} ${d}`.trim() : '—', safeDate(r.received_at), r.location ?? '-', EXP_STYLE[r.exp_status]?.label ?? r.exp_status ?? '-']; });
+        exportCSV(title, csvColumns, rows);
+      }
     } catch (e: any) {
       toast.error('ออกรายงานไม่สำเร็จ: ' + e.message);
     } finally { setExporting(null); }
   };
 
   const isLotTab = tab !== 'low_stock';
+
+  if (isPrinting) {
+    return createPortal(
+      <div className="print-only print-unbound bg-white text-black min-h-screen">
+        <ReportPrintTemplate title={printTitle} columns={printCols} data={printData} />
+      </div>,
+      document.body,
+    );
+  }
 
   return (
     <MainLayout
