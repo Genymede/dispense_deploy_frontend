@@ -29,6 +29,14 @@ function treatmentRightLabel(right?: string | null, note?: string | null): strin
   return right === 'OTHER' && note ? `${label}: ${note}` : label;
 }
 
+const WARD_OPTIONS = [
+  { value: 'OPD',  label: 'ผู้ป่วยนอก' },
+  { value: 'IPD',  label: 'ผู้ป่วยใน' },
+  { value: 'ER',   label: 'ฉุกเฉิน' },
+  { value: 'DENT', label: 'ทันตกรรม' },
+  { value: 'GEN',  label: 'ตรวจรักษาธรรมดา' },
+];
+
 const STATUS_COLOR: Record<string, 'success' | 'warning' | 'danger' | 'gray' | 'info'> = {
   dispensed: 'success', pending: 'warning', returned: 'gray', cancelled: 'danger',
 };
@@ -210,7 +218,6 @@ export default function DispensePage() {
   const [createAllergies, setCreateAllergies] = useState<any[]>([]);
   const [createAllergyLoading, setCreateAllergyLoading] = useState(false);
   const [createVitals, setCreateVitals] = useState({ temp: '', bp: '' });
-  const [addToQueue, setAddToQueue] = useState(false);
 
   // live safety (create/edit form)
   const [liveAlerts, setLiveAlerts] = useState<Record<number, any[]>>({}); // med_sid → alerts
@@ -351,7 +358,7 @@ export default function DispensePage() {
     setEditingRxId(null); setLiveAlerts({}); setFormErrors({});
     setPatientTreatmentRight(null); setPatientTreatmentRightNote(null);
     setCreatePatientDetail(null); setCreateAllergies([]);
-    setCreateVitals({ temp: '', bp: '' }); setAddToQueue(false);
+    setCreateVitals({ temp: '', bp: '' });
     setResetKey(k => k + 1);
   };
 
@@ -400,11 +407,15 @@ export default function DispensePage() {
             meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
         });
-        if (addToQueue && patientId) {
-          try { await queueApi.create({ patient_id: patientId, ward }); }
-          catch { /* queue creation is non-blocking */ }
+        if (patientId) {
+          try {
+            const qRes = await queueApi.create({ patient_id: patientId, ward });
+            const qNum = qRes.data?.queue_number;
+            toast.success(`สร้างใบสั่งยาเรียบร้อย${qNum ? ` · คิว ${qNum}` : ''}`, { duration: 5000 });
+          } catch { toast.success('สร้างใบสั่งยาเรียบร้อย'); }
+        } else {
+          toast.success('สร้างใบสั่งยาเรียบร้อย');
         }
-        toast.success('สร้างใบสั่งยาเรียบร้อย');
       }
       setShowCreate(false); resetForm(); loadList();
     } catch (e: any) { toast.error(e.message); }
@@ -1078,11 +1089,9 @@ export default function DispensePage() {
                 : <InlineSafetyBadge alerts={allLiveAlerts} />
               }
               {!editingRxId && (
-                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
-                  <input type="checkbox" checked={addToQueue} onChange={e => setAddToQueue(e.target.checked)}
-                    className="w-4 h-4 text-primary-600 rounded" />
-                  ออกคิวรับยา
-                </label>
+                <span className="text-xs text-slate-400 flex items-center gap-1">
+                  🔔 บันทึกแล้วระบบจะออกคิวอัตโนมัติ
+                </span>
               )}
             </div>
             <div className="flex gap-2">
@@ -1115,9 +1124,11 @@ export default function DispensePage() {
                 onSelect={u => { setDoctorId(u?.uid ?? 0); setDoctorLabel(u?.full_name ?? ''); }} />
               <div>
                 <label className="text-xs font-medium text-slate-600 block mb-1.5">แผนก <span className="text-red-400">*</span></label>
-                <input value={ward} onChange={e => { setWard(e.target.value); if (formErrors.ward) setFormErrors(p => ({ ...p, ward: '' })); }}
-                  placeholder="OPD, IPD, ER, ICU..."
-                  className={`w-full h-9 border rounded-lg text-sm px-3 outline-none focus:ring-2 focus:ring-primary-100 ${formErrors.ward ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-primary-500'}`} />
+                <select value={ward} onChange={e => { setWard(e.target.value); if (formErrors.ward) setFormErrors(p => ({ ...p, ward: '' })); }}
+                  className={`w-full h-9 border rounded-lg text-sm px-3 outline-none focus:ring-2 focus:ring-primary-100 bg-white ${formErrors.ward ? 'border-red-400 focus:border-red-400' : 'border-slate-200 focus:border-primary-500'}`}>
+                  <option value="">-- เลือกแผนก --</option>
+                  {WARD_OPTIONS.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
+                </select>
                 {formErrors.ward && <p className="mt-1 text-xs text-red-500">{formErrors.ward}</p>}
               </div>
               <div>
@@ -1389,9 +1400,11 @@ export default function DispensePage() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-600 block mb-1.5">แผนก <span className="text-red-400">*</span></label>
-                    <input value={dispenseWard} onChange={e => { setDispenseWard(e.target.value); setDispenseMetaChanged(true); }}
-                      placeholder="OPD, IPD, ER, ICU..."
-                      className="w-full h-9 border border-slate-200 rounded-lg text-sm px-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+                    <select value={dispenseWard} onChange={e => { setDispenseWard(e.target.value); setDispenseMetaChanged(true); }}
+                      className="w-full h-9 border border-slate-200 rounded-lg text-sm px-3 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 bg-white">
+                      <option value="">-- เลือกแผนก --</option>
+                      {WARD_OPTIONS.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-600 block mb-1.5">คำวินิจฉัย</label>
