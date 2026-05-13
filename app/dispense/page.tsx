@@ -869,8 +869,9 @@ export default function DispensePage() {
               <Select placeholder="ทุกสถานะ" value={fStatus}
                 onChange={e => { setFStatus(e.target.value); setPage(1); }}
                 options={Object.entries(STATUS_TH).map(([v, l]) => ({ value: v, label: l }))} />
-              <Input placeholder="แผนก..." value={fWard}
-                onChange={e => { setFWard(e.target.value); setPage(1); }} className="w-28" />
+              <Select placeholder="ทุกแผนก" value={fWard}
+                onChange={e => { setFWard(e.target.value); setPage(1); }}
+                options={WARD_OPTIONS} className="w-32" />
               <div className="flex items-center gap-1.5">
                 <label className="text-xs text-slate-500 whitespace-nowrap">คิววันที่</label>
                 <input type="date" value={queueDate} onChange={e => setQueueDate(e.target.value)}
