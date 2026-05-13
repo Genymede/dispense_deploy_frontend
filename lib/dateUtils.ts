@@ -58,6 +58,20 @@ export function fmtTime(val: any): string {
 }
 
 /**
+ * แปลงค่า gender จาก DB (M/F/male/female/ชาย/หญิง) → ภาษาไทย
+ */
+export function fmtGender(val: any): string {
+  if (!val) return '—';
+  const g = String(val).trim().toUpperCase();
+  if (g === 'M' || g === 'MALE' || g === '1') return 'ชาย';
+  if (g === 'F' || g === 'FEMALE' || g === '2') return 'หญิง';
+  const raw = String(val).trim();
+  if (raw === 'ชาย') return 'ชาย';
+  if (raw === 'หญิง') return 'หญิง';
+  return '—';
+}
+
+/**
  * Format date สำหรับ label แกน chart (แสดงเฉพาะ วัน+เดือน ไม่มีปี)
  */
 export function fmtDateLabel(val: any): string {

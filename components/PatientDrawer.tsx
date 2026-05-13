@@ -4,7 +4,7 @@ import DetailDrawer, { DrawerSection, DrawerGrid } from './DetailDrawer';
 import { Badge, Spinner } from './ui';
 import { patientApi, dispenseApi } from '@/lib/api';
 import { parseISO, isValid, differenceInYears } from 'date-fns';
-import { fmtDate } from '@/lib/dateUtils';
+import { fmtDate, fmtGender } from '@/lib/dateUtils';
 import { ShieldAlert, FlaskConical, ClipboardList } from 'lucide-react';
 
 const safeDate = (val: any, withTime = false) => fmtDate(val, withTime);
@@ -14,7 +14,6 @@ const TREATMENT_RIGHT_LABEL: Record<string, string> = {
   LGO: 'องค์กรปกครองส่วนท้องถิ่น', SELF: 'ชำระเองเต็ม', OTHER: 'อื่นๆ',
 };
 
-const genderMap: Record<string, string> = { M: 'ชาย', F: 'หญิง' };
 
 function treatmentRightLabel(right: string | null, note: string | null): string {
   if (!right) return '—';
@@ -91,12 +90,7 @@ export default function PatientDrawer({ patientId, open, onClose }: Props) {
             <DrawerSection title="ข้อมูลผู้ป่วย">
               <DrawerGrid items={[
                 {
-                  label: 'เพศ', value: (() => {
-                    const val = patient.gender || patient.sex;
-                    if (!val) return '—';
-                    const g = String(val).toUpperCase();
-                    return genderMap[g] ?? val;
-                  })()
+                  label: 'เพศ', value: fmtGender(patient.gender || patient.sex)
                 },
                 { label: 'วันเกิด', value: safeDate(patient.birthday) },
                 { label: 'อายุ', value: patient.age_y != null ? `${patient.age_y} ปี ${patient.age_m ?? 0} เดือน` : calcAge(patient.birthday) },
