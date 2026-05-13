@@ -216,7 +216,6 @@ export default function DispensePage() {
   const [createPatientDetail, setCreatePatientDetail] = useState<any | null>(null);
   const [createAllergies, setCreateAllergies] = useState<any[]>([]);
   const [createAllergyLoading, setCreateAllergyLoading] = useState(false);
-  const [createVitals, setCreateVitals] = useState({ temp: '', bp: '' });
 
   // live safety (create/edit form)
   const [liveAlerts, setLiveAlerts] = useState<Record<number, any[]>>({}); // med_sid → alerts
@@ -357,7 +356,6 @@ export default function DispensePage() {
     setEditingRxId(null); setLiveAlerts({}); setFormErrors({});
     setPatientTreatmentRight(null); setPatientTreatmentRightNote(null);
     setCreatePatientDetail(null); setCreateAllergies([]);
-    setCreateVitals({ temp: '', bp: '' });
     setResetKey(k => k + 1);
   };
 
@@ -1184,18 +1182,6 @@ export default function DispensePage() {
                       <div><span className="text-slate-400">น้ำหนัก: </span><span>{createPatientDetail.weight ? `${createPatientDetail.weight} kg` : '—'}</span></div>
                       <div><span className="text-slate-400">ส่วนสูง: </span><span>{createPatientDetail.height ? `${createPatientDetail.height} cm` : '—'}</span></div>
                       <div><span className="text-slate-400">BMI: </span><span>{createPatientDetail.bmi ? Number(createPatientDetail.bmi).toFixed(1) : '—'}</span></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                      <div className="text-xs">
-                        <label className="text-slate-400 block mb-1">Temp (°C)</label>
-                        <input value={createVitals.temp} onChange={e => setCreateVitals(v => ({ ...v, temp: e.target.value }))}
-                          placeholder="36.5" className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
-                      </div>
-                      <div className="text-xs">
-                        <label className="text-slate-400 block mb-1">BP (mmHg)</label>
-                        <input value={createVitals.bp} onChange={e => setCreateVitals(v => ({ ...v, bp: e.target.value }))}
-                          placeholder="120/80" className="w-full h-7 border border-slate-200 rounded-lg px-2 outline-none focus:border-primary-400 text-xs" />
-                      </div>
                     </div>
                   </div>
                 )}
