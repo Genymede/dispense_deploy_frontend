@@ -1075,7 +1075,7 @@ export default function DispensePage() {
       ════════════════════════════════════════════════════════════════════ */}
       <Modal open={showCreate}
         onClose={() => { setShowCreate(false); resetForm(); }}
-        size="2xl"
+        size="full"
         title={editingRxId ? `แก้ไขใบสั่งยา` : 'สร้างใบสั่งยาใหม่'}
         footer={
           <div className="flex items-center justify-between w-full">
