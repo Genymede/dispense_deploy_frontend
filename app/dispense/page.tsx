@@ -34,7 +34,6 @@ const WARD_OPTIONS = [
   { value: 'IPD',  label: 'ผู้ป่วยใน' },
   { value: 'ER',   label: 'ฉุกเฉิน' },
   { value: 'DENT', label: 'ทันตกรรม' },
-  { value: 'GEN',  label: 'ตรวจรักษาธรรมดา' },
 ];
 
 const STATUS_COLOR: Record<string, 'success' | 'warning' | 'danger' | 'gray' | 'info'> = {
