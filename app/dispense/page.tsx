@@ -516,11 +516,11 @@ export default function DispensePage() {
         const lines = lowStockItems.map((it: any) => {
           const avail = Math.max(0, Number(it.stock_available));
           const overdue = Number(it.quantity) - avail;
-          return `• ${it.med_showname || it.med_name}: ค้างจ่าย ${overdue} ${it.unit || ''}`.trim();
+          return `• ยา ${it.med_showname || it.med_name} สต็อกไม่พอ ต้องการจ่ายเพิ่ม ${overdue} ${it.unit || ''}`.trim();
         }).join('\n');
         const ok = await confirmDialog({
-          title: 'ยืนยันบันทึกยาค้างจ่าย',
-          message: `รายการยาต่อไปนี้สต็อกไม่พอ จะบันทึกส่วนต่างลงฐานข้อมูลยาค้างจ่ายหรือไม่?\n\n${lines}`,
+          title: 'ยาบางรายการสต็อกไม่พอ',
+          message: `${lines}\n\nบันทึกเป็นยาค้างจ่ายและดำเนินการต่อหรือไม่?`,
           confirmLabel: 'บันทึกยาค้างจ่าย',
           variant: 'warning',
         });
