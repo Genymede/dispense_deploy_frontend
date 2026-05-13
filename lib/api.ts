@@ -319,7 +319,7 @@ export const dispenseApi = {
   getById: (id: number) => api.get<Prescription>(`/dispense/${id}`),
 
   create: (data: {
-    patient_id?: number; doctor_id?: string; ward?: string; note?: string;
+    patient_id?: number; doctor_id?: string; ward?: string; note?: string; diagnosis?: string;
     items: { med_sid: number; quantity: number; dose?: string; frequency?: string; route?: string }[];
   }) => api.post<Prescription>('/dispense', data),
 
