@@ -877,7 +877,7 @@ export default function DispensePage() {
           <Card className="flex-1 min-w-0 !p-3">
             <div className="flex gap-2 flex-wrap items-center">
               <div className="flex-1 min-w-44">
-                <Input placeholder="เลขใบสั่ง, ชื่อผู้ป่วย, HN..."
+                <Input placeholder="เลขคิว, ชื่อผู้ป่วย, HN..."
                   value={dispensedSearch} onChange={e => { setDispensedSearch(e.target.value); setDispensedPage(1); }} />
               </div>
               <div className="flex items-center gap-1.5">
