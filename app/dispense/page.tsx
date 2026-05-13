@@ -500,15 +500,31 @@ export default function DispensePage() {
   const handleDispense = async () => {
     setDispensing(true);
     try {
-      // ── ตรวจสอบล็อตยา (ข้ามรายการที่สต็อกไม่พอ เพราะจะบันทึกเป็นยาค้างจ่ายอัตโนมัติ) ──
+      // ── ตรวจสอบล็อตยา ──
       for (const it of dispenseItems) {
         const isLowStock = it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity);
         if (isLowStock) continue;
         const { ok } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity);
-        if (!ok) {
-          setDispensing(false);
-          return;
-        }
+        if (!ok) { setDispensing(false); return; }
+      }
+
+      // ── ถ้ามียาค้างจ่าย ถามยืนยันก่อน ──
+      const lowStockItems = dispenseItems.filter(
+        (it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity)
+      );
+      if (lowStockItems.length > 0) {
+        const lines = lowStockItems.map((it: any) => {
+          const avail = Math.max(0, Number(it.stock_available));
+          const overdue = Number(it.quantity) - avail;
+          return `• ${it.med_showname || it.med_name}: ค้างจ่าย ${overdue} ${it.unit || ''}`.trim();
+        }).join('\n');
+        const ok = await confirmDialog({
+          title: 'ยืนยันบันทึกยาค้างจ่าย',
+          message: `รายการยาต่อไปนี้สต็อกไม่พอ จะบันทึกส่วนต่างลงฐานข้อมูลยาค้างจ่ายหรือไม่?\n\n${lines}`,
+          confirmLabel: 'บันทึกยาค้างจ่าย',
+          variant: 'warning',
+        });
+        if (!ok) { setDispensing(false); return; }
       }
 
       // บันทึก meta ที่แก้ไขก่อนจ่าย
@@ -1493,15 +1509,6 @@ export default function DispensePage() {
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
                               </div>
-                              {!isExpired && isLowStock && (
-                                <div className="mt-1.5 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
-                                  <span className="text-[10px] text-amber-800 leading-snug">
-                                    {isZeroStock
-                                      ? <>ยาหมด — จะบันทึกค้างจ่าย <strong>{overdueQty} {it.unit}</strong> อัตโนมัติ</>
-                                      : <>สต็อก {stockAvail} — จะบันทึกค้างจ่าย <strong>{overdueQty} {it.unit}</strong> อัตโนมัติ</>}
-                                  </span>
-                                </div>
-                              )}
                             </td>
                             {/* จำนวน */}
                             <td className="px-2 py-2 whitespace-nowrap">
