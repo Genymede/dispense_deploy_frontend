@@ -396,7 +396,7 @@ export default function DispensePage() {
         await dispenseApi.create({
           patient_id: patientId || undefined,
           doctor_id: doctorId || undefined,
-          ward, note,
+          ward, note, diagnosis,
           items: items.map(it => ({
             med_sid: it.med_sid, quantity: it.quantity,
             dose: `${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(),
