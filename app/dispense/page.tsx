@@ -500,8 +500,10 @@ export default function DispensePage() {
   const handleDispense = async () => {
     setDispensing(true);
     try {
-      // ── ตรวจสอบล็อตยา (ข้ามล็อตหมดอายุตามเงื่อนไข FIFO/FEFO) ──
+      // ── ตรวจสอบล็อตยา (ข้ามรายการที่สต็อกไม่พอ เพราะจะบันทึกเป็นยาค้างจ่ายอัตโนมัติ) ──
       for (const it of dispenseItems) {
+        const isLowStock = it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity);
+        if (isLowStock) continue;
         const { ok } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity);
         if (!ok) {
           setDispensing(false);
