@@ -1498,7 +1498,7 @@ export default function DispensePage() {
                             </td>
                             {/* ชื่อยา */}
                             <td className="px-3 py-2">
-                              <p className={`text-sm font-semibold leading-snug ${isOverdue ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.med_showname || it.med_name}</p>
+                              <p className="text-sm font-semibold leading-snug text-slate-800">{it.med_showname || it.med_name}</p>
                               <div className="flex flex-wrap gap-1 mt-0.5">
                                 {isExpired && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">⛔ หมดอายุ</span>}
                                 {!isExpired && isLowStock && (
@@ -1509,6 +1509,15 @@ export default function DispensePage() {
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
                               </div>
+                              {!isExpired && isLowStock && (
+                                <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+                                  <span className="text-[10px] text-amber-800 leading-snug">
+                                    {isZeroStock
+                                      ? <>ยาหมด — ค้างจ่าย <strong>{overdueQty} {it.unit}</strong></>
+                                      : <>สต็อกมี {stockAvail} — ค้างจ่าย <strong>{overdueQty} {it.unit}</strong></>}
+                                  </span>
+                                </div>
+                              )}
                             </td>
                             {/* จำนวน */}
                             <td className="px-2 py-2 whitespace-nowrap">
