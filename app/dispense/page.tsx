@@ -234,8 +234,6 @@ export default function DispensePage() {
   const [printSelected, setPrintSelected] = useState<Set<number>>(new Set());
   const [printingLabel, setPrintingLabel] = useState(false);
 
-  // overdue — item_ids ที่ผู้ใช้เลือกให้บันทึกเป็นยาค้างจ่าย
-  const [pendingOverdueIds, setPendingOverdueIds] = useState<Set<number>>(new Set());
 
   // dispense modal inline edit (items)
   const [dispenseItemsChanged, setDispenseItemsChanged] = useState(false);
@@ -426,7 +424,7 @@ export default function DispensePage() {
 
   // ── Open dispense confirm ─────────────────────────────────────────────────
   const openDispense = async (rx: any) => {
-    setDispenseRx(rx); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setPendingOverdueIds(new Set());
+    setDispenseRx(rx); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set());
     setDispenseItemsChanged(false); setDispenseAddResetKey(k => k + 1); setLiveAlerts({});
     setDispenseWard(rx.ward || '');
     setDispenseDoctorId(rx.doctor_id || null);
@@ -473,29 +471,23 @@ export default function DispensePage() {
         : Promise.resolve(),
     ]);
   };
-  // filter stock alerts สำหรับรายการที่ mark เป็น overdue แล้ว
+  // filter stock alerts — ยาที่สต็อกไม่พอจะบันทึกเป็นยาค้างจ่ายอัตโนมัติ จึงไม่นับเป็น alert
   const filteredSafetyAlerts = useMemo((): SafetyAlert[] | undefined => {
     if (!safetyResult) return undefined;
-    if (pendingOverdueIds.size === 0) return safetyResult.alerts;
-    const overdueMedNames = new Set(
+    const lowStockMedNames = new Set(
       dispenseItems
-        .filter((it: any) => pendingOverdueIds.has(it.item_id))
+        .filter((it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity))
         .flatMap((it: any) => [it.med_name, it.med_showname].filter(Boolean))
     );
     return safetyResult.alerts.filter(a => {
-      // 1. กรองสต็อกถ้าจ่ายเป็นยาค้างจ่ายแล้ว
-      const isStockOverdue = a.type === 'stock' && overdueMedNames.has(a.med_name ?? '');
-      if (isStockOverdue) return false;
-
-      // 2. กรองแจ้งเตือนหมดอายุ ถ้ายังมีสต็อกที่จ่ายได้จริง (Good lots)
+      if (a.type === 'stock' && lowStockMedNames.has(a.med_name ?? '')) return false;
       if (a.type === 'expired') {
         const item = safetyResult.items?.find(it => it.med_name === a.med_name);
         if (item && Number(item.stock_available) > 0) return false;
       }
-
       return true;
     });
-  }, [safetyResult, pendingOverdueIds, dispenseItems]);
+  }, [safetyResult, dispenseItems]);
 
   // alert_level ที่ filter แล้ว (ใช้ check disabled)
   const filteredAlertLevel = useMemo(() => {
@@ -536,7 +528,7 @@ export default function DispensePage() {
         });
       }
       const overdue_items = dispenseItems
-        .filter((it: any) => pendingOverdueIds.has(it.item_id))
+        .filter((it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity))
         .map((it: any) => ({
           item_id: it.item_id,
           overdue_qty: Math.max(0, Number(it.quantity) - Math.max(0, Number(it.stock_available))),
@@ -552,7 +544,7 @@ export default function DispensePage() {
             : 'จ่ายยาเรียบร้อย',
         { duration: 6000 }
       );
-      setDispenseRx(null); setSafetyResult(null); setPendingOverdueIds(new Set());
+      setDispenseRx(null); setSafetyResult(null);
       setDispenseItemsChanged(false); setDispenseMetaChanged(false);
       void Promise.all([loadList(), loadQueue(), loadDispensed()]);
     } catch (e: any) { toast.error(e.message); }
@@ -1273,7 +1265,7 @@ export default function DispensePage() {
           DISPENSE CONFIRM MODAL (พร้อม full safety check)
       ════════════════════════════════════════════════════════════════════ */}
       {dispenseRx && (
-        <Modal open onClose={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setPendingOverdueIds(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }} size="full"
+        <Modal open onClose={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }} size="full"
           title={`จ่ายยา — ${dispenseRx.prescription_no}${(dispenseItemsChanged || dispenseMetaChanged) ? ' ✏️' : ''}`}
           footer={
             <div className="flex items-center justify-between w-full">
@@ -1288,15 +1280,14 @@ export default function DispensePage() {
                 พิมพ์รายการยา
               </Button>
               <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setPendingOverdueIds(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }}>ยกเลิก</Button>
+                <Button variant="secondary" onClick={() => { setDispenseRx(null); setSafetyResult(null); setDispenseItems([]); setPrintSelected(new Set()); setDispenseItemsChanged(false); setDispenseMetaChanged(false); setLiveAlerts({}); setDispensePatientDetail(null); }}>ยกเลิก</Button>
                 <Button
                   onClick={handleDispense} loading={dispensing}
                   disabled={
                     dispenseItems.length === 0 ||
                     (dispenseItemsChanged
                       ? Object.values(liveAlerts).flat().some((a: any) => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')
-                      : (!safetyResult || filteredSafetyAlerts?.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr'))) ||
-                    dispenseItems.some((it: any) => Number(it.stock_available) < Number(it.quantity) && !pendingOverdueIds.has(it.item_id) && it.item_id !== undefined)
+                      : (!safetyResult || filteredSafetyAlerts?.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')))
                   }
                   variant={(dispenseItemsChanged
                     ? Object.values(liveAlerts).flat().some((a: any) => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')
@@ -1478,10 +1469,10 @@ export default function DispensePage() {
                         const isLowStock = it.item_id !== undefined && stockAvail < qty;
                         const isZeroStock = it.item_id !== undefined && stockAvail === 0;
                         const overdueQty = Math.max(0, qty - stockAvail);
-                        const isOverdue = pendingOverdueIds.has(it.item_id);
+                        const isOverdue = isLowStock;
                         const checked = printSelected.has(i);
                         return (
-                          <tr key={i} className={`${isExpired ? 'bg-red-50' : (isLowStock && !isOverdue) ? 'bg-amber-50' : isOverdue ? 'bg-slate-50 opacity-60' : ''}`}>
+                          <tr key={i} className={`${isExpired ? 'bg-red-50' : isOverdue ? 'bg-amber-50' : ''}`}>
                             <td className="px-2 py-2 text-center cursor-pointer" onClick={() => setPrintSelected(prev => {
                               const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next;
                             })}>
@@ -1492,29 +1483,21 @@ export default function DispensePage() {
                               <p className={`text-sm font-semibold leading-snug ${isOverdue ? 'line-through text-slate-400' : 'text-slate-800'}`}>{it.med_showname || it.med_name}</p>
                               <div className="flex flex-wrap gap-1 mt-0.5">
                                 {isExpired && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">⛔ หมดอายุ</span>}
-                                {!isExpired && isLowStock && !isOverdue && (
+                                {!isExpired && isLowStock && (
                                   isZeroStock
-                                    ? <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ หมดสต็อก</span>
-                                    : <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ {stockAvail}/{qty}</span>
+                                    ? <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ หมดสต็อก · ค้างจ่าย {overdueQty}</span>
+                                    : <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ สต็อก {stockAvail}/{qty} · ค้างจ่าย {overdueQty}</span>
                                 )}
-                                {isOverdue && <span className="text-[9px] bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full font-medium">ค้างจ่าย {overdueQty}</span>}
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
                               </div>
-                              {!isExpired && isLowStock && !isOverdue && (
+                              {!isExpired && isLowStock && (
                                 <div className="mt-1.5 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
-                                  <span className="text-[10px] text-amber-800 leading-snug flex-1">
-                                    {isZeroStock ? <>ยาหมด — ค้างจ่าย <strong>{overdueQty} {it.unit}</strong>?</> : <>สต็อก {stockAvail} — ค้างจ่าย <strong>{overdueQty}</strong>?</>}
+                                  <span className="text-[10px] text-amber-800 leading-snug">
+                                    {isZeroStock
+                                      ? <>ยาหมด — จะบันทึกค้างจ่าย <strong>{overdueQty} {it.unit}</strong> อัตโนมัติ</>
+                                      : <>สต็อก {stockAvail} — จะบันทึกค้างจ่าย <strong>{overdueQty} {it.unit}</strong> อัตโนมัติ</>}
                                   </span>
-                                  <button className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-600 text-white px-2 py-0.5 rounded font-semibold"
-                                    onClick={() => setPendingOverdueIds(prev => new Set([...prev, it.item_id]))}>บันทึก</button>
-                                </div>
-                              )}
-                              {isOverdue && (
-                                <div className="mt-1 flex items-center gap-1">
-                                  <span className="text-[10px] text-orange-600 font-medium">{stockAvail > 0 ? `จ่าย ${stockAvail}` : `ค้างทั้งหมด`}</span>
-                                  <button className="text-[10px] text-slate-400 hover:text-red-500 underline"
-                                    onClick={() => setPendingOverdueIds(prev => { const n = new Set(prev); n.delete(it.item_id); return n; })}>เลิก</button>
                                 </div>
                               )}
                             </td>
