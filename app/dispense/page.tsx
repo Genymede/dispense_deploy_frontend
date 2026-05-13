@@ -371,10 +371,15 @@ export default function DispensePage() {
     if (!items.length) errs.items = 'กรุณาเพิ่มยาอย่างน้อย 1 รายการ';
     if (!ward.trim()) errs.ward = 'กรุณาระบุแผนก';
     if (Object.keys(errs).length) { setFormErrors(errs); return; }
-    // Block on allergy or interaction alerts (ทุกระดับความรุนแรง)
-    const blockingAlerts = Object.values(liveAlerts).flat().filter(a => a.type === 'allergy' || a.type === 'interaction');
+    // Block on allergy, interaction, ADR — ทุกระดับความรุนแรง
+    const blockingAlerts = Object.values(liveAlerts).flat().filter(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr');
     if (blockingAlerts.length > 0) {
-      toast.error(`ไม่สามารถบันทึกได้ — พบ${blockingAlerts.some(a => a.type === 'allergy') ? 'การแพ้ยา' : ''}${blockingAlerts.some(a => a.type === 'allergy') && blockingAlerts.some(a => a.type === 'interaction') ? ' และ' : ''}${blockingAlerts.some(a => a.type === 'interaction') ? 'ยาที่ไม่เข้ากัน' : ''} ${blockingAlerts.length} รายการ`);
+      const parts = [
+        blockingAlerts.some(a => a.type === 'allergy') && 'การแพ้ยา',
+        blockingAlerts.some(a => a.type === 'interaction') && 'ยาที่ไม่เข้ากัน',
+        blockingAlerts.some(a => a.type === 'adr') && 'ADR',
+      ].filter(Boolean).join(' และ ');
+      toast.error(`ไม่สามารถบันทึกได้ — พบ${parts} ${blockingAlerts.length} รายการ`);
       return;
     }
     setSaving(true);
@@ -1096,10 +1101,10 @@ export default function DispensePage() {
               <Button
                 onClick={handleSave}
                 loading={saving}
-                disabled={loadingSafety || allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction')}
-                variant={allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction') ? 'danger' : 'primary'}
+                disabled={loadingSafety || allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')}
+                variant={allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr') ? 'danger' : 'primary'}
               >
-                {allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction') ? '⛔ ไม่สามารถบันทึกได้' : 'บันทึก'}
+                {allLiveAlerts.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr') ? '⛔ ไม่สามารถบันทึกได้' : 'บันทึก'}
               </Button>
             </div>
           </div>
@@ -1289,11 +1294,14 @@ export default function DispensePage() {
                   disabled={
                     dispenseItems.length === 0 ||
                     (dispenseItemsChanged
-                      ? Object.values(liveAlerts).flat().some((a: any) => (a.type === 'allergy' || a.type === 'interaction') && a.level === 'critical')
-                      : (!safetyResult || filteredAlertLevel === 'critical')) ||
+                      ? Object.values(liveAlerts).flat().some((a: any) => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')
+                      : (!safetyResult || filteredSafetyAlerts?.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr'))) ||
                     dispenseItems.some((it: any) => Number(it.stock_available) < Number(it.quantity) && !pendingOverdueIds.has(it.item_id) && it.item_id !== undefined)
                   }
-                  variant={(dispenseItemsChanged ? Object.values(liveAlerts).flat().some((a: any) => a.level === 'critical') : filteredAlertLevel === 'critical') ? 'danger' : 'primary'}>
+                  variant={(dispenseItemsChanged
+                    ? Object.values(liveAlerts).flat().some((a: any) => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')
+                    : filteredSafetyAlerts?.some(a => a.type === 'allergy' || a.type === 'interaction' || a.type === 'adr')
+                  ) ? 'danger' : 'primary'}>
                   {(dispenseItemsChanged || dispenseMetaChanged) ? '💾 บันทึก + ยืนยันจ่ายยา' : '✓ ยืนยันจ่ายยา'}
                 </Button>
               </div>
