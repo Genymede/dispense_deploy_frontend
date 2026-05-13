@@ -334,7 +334,7 @@ export default function DeliveryPage() {
       actions={<ExportButtons report="med-delivery" />}>
       <DataTable cols={cols}
         fetcher={p => registryApi.getMedDelivery(p).then(r => r.data)}
-        searchPlaceholder="ค้นหาผู้ป่วย, ผู้รับ..."
+        searchPlaceholder="ชื่อผู้ป่วย, HN, เลขบัตรประชาชน..."
         emptyIcon={<Truck size={36} />} emptyText="ไม่พบรายการ"
         deps={[reload]} onAdd={openAdd} addLabel="สร้างรายการจัดส่ง"
         onRowClick={row => setDrawer(row)}
