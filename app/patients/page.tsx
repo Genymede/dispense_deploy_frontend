@@ -5,6 +5,7 @@ import DataTable, { ColDef } from '@/components/DataTable';
 import DetailDrawer from '@/components/DetailDrawer';
 import { Spinner, Badge } from '@/components/ui';
 import { patientApi } from '@/lib/api';
+import { fmtGender } from '@/lib/dateUtils';
 import { Users } from 'lucide-react';
 
 const TREATMENT_RIGHT_LABEL: Record<string, string> = {
@@ -91,7 +92,7 @@ export default function PatientsPage() {
                   { label: 'ชื่อ-สกุล',  value: p.full_name },
                   { label: 'เลขบัตรประชาชน', value: p.national_id },
                   { label: 'โทรศัพท์',  value: p.phone },
-                  { label: 'เพศ',       value: p.gender },
+                  { label: 'เพศ',       value: fmtGender(p.gender) },
                   { label: 'วันเกิด',   value: p.birthdate ? new Date(p.birthdate).toLocaleDateString('th-TH') : null },
                   { label: 'กรุ๊ปเลือด', value: p.blood_group },
                   { label: 'สิทธิ์การรักษา', value: treatmentRightLabel(p.treatment_right, p.treatment_right_note) },

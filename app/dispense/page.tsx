@@ -1353,7 +1353,7 @@ export default function DispensePage() {
                       {dispensePatientDetail.PMH && (
                         <div className="col-span-4"><span className="text-slate-400">โรคประจำตัว: </span><span className="text-slate-700">{dispensePatientDetail.PMH}</span></div>
                       )}
-                      {(dispensePatientDetail.gender || (dispenseRx as any)?.gender) === 'F' && (
+                      {fmtGender(dispensePatientDetail.gender || (dispenseRx as any)?.gender) === 'หญิง' && (
                         <div className="col-span-4 flex items-center gap-2 pt-0.5">
                           <span className="text-slate-400">สถานะตั้งครรภ์:</span>
                           <button
