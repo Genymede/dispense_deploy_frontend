@@ -26,11 +26,9 @@ const emptyForm = {
 
 const cols: ColDef[] = [
   {
-    key: 'patient_name', label: 'ชื่อผู้ป่วย',
+    key: 'patient_name', label: 'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>
   },
-  { key: 'receiver_name', label: 'ชื่อผู้รับ', className: 'text-sm' },
-  { key: 'receiver_phone', label: 'เบอร์โทรศัพท์ผู้รับ', className: 'text-xs font-mono' },
   { key: 'delivery_method', label: 'วิธีส่ง', className: 'text-xs' },
   {
     key: 'status', label: 'สถานะ',

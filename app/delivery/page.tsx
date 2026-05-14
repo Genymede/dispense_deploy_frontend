@@ -53,8 +53,6 @@ const cols: ColDef[] = [
     key: 'patient_name', label: 'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>
   },
-  { key: 'receiver_name', label: 'ผู้รับ', className: 'text-sm' },
-  { key: 'receiver_phone', label: 'โทรผู้รับ', className: 'text-xs font-mono' },
   { key: 'delivery_method', label: 'วิธีส่ง', className: 'text-xs' },
   {
     key: 'courier_name', label: 'ผู้จัดส่ง', className: 'text-sm',

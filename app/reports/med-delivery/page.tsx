@@ -10,8 +10,6 @@ const COLS: ColDef[] = [
   { key:'patient_name', label:'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>,
     exportValue: r => `${r.patient_name??'-'} (HN: ${r.hn_number??'-'})` },
-  { key:'receiver_name', label:'ผู้รับ', className:'text-sm' },
-  { key:'receiver_phone', label:'โทร', className:'text-xs font-mono' },
   { key:'delivery_method', label:'วิธีส่ง', className:'text-xs' },
   { key:'status', label:'สถานะ',
     render: r => <Badge variant={r.status==='Delivered'?'success':r.status==='Cancelled'?'danger':'warning'}>{r.status}</Badge>,
