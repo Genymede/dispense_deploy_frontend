@@ -209,37 +209,6 @@ export default function RegistryPage() {
               ]} />
             </DrawerSection>
 
-            {/* สต็อกในคลัง */}
-            {drawerData.subwarehouse?.length > 0 && (
-              <DrawerSection title={`สต็อกในคลัง (${drawerData.subwarehouse.length} รายการ)`}>
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        {['ชื่อคลัง/รูปแบบ', 'สต็อก', 'ขั้นต่ำ', 'ที่เก็บ', 'หมดอายุ'].map(h => (
-                          <th key={h} className="px-3 py-2 text-left font-semibold text-slate-500">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {drawerData.subwarehouse.map((s: any) => (
-                        <tr key={s.med_sid} className="hover:bg-slate-50">
-                          <td className="px-3 py-2">
-                            <p className="font-medium">{s.med_showname || s.packaging_type || '—'}</p>
-                            {s.packaging_type && s.med_showname && <p className="text-slate-400">{s.packaging_type}</p>}
-                          </td>
-                          <td className="px-3 py-2 font-semibold">{s.med_quantity}</td>
-                          <td className="px-3 py-2">{s.min_quantity ?? '—'}</td>
-                          <td className="px-3 py-2 font-mono">{s.location || '—'}</td>
-                          <td className="px-3 py-2">{fmtDate(s.exp_date)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </DrawerSection>
-            )}
-
             {/* ปฏิกิริยายา */}
             {drawerData.interactions?.length > 0 && (
               <DrawerSection title={`ปฏิกิริยากับยาอื่น (${drawerData.interactions.length})`}>
