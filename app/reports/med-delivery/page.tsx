@@ -13,10 +13,16 @@ const COLS: ColDef[] = [
   { key:'delivery_method', label:'วิธีส่ง', className:'text-xs' },
   { key:'status', label:'สถานะ',
     render: r => <Badge variant={r.status==='Delivered'?'success':r.status==='Cancelled'?'danger':'warning'}>{r.status}</Badge>,
-    exportValue: r => r.status??'-' },
+    exportValue: r => r.status==='Delivered'?'ส่งแล้ว':r.status==='Cancelled'?'ยกเลิก':r.status==='Processing'?'กำลังส่ง':'รอดำเนินการ' },
   { key:'delivery_date', label:'วันที่',
     render: r => fmtDate(r.delivery_date),
     exportValue: r => fmtDate(r.delivery_date) },
+  { key:'receiver_name',   label:'ผู้รับ',          exportOnly: true, exportValue: r => r.receiver_name??'-' },
+  { key:'receiver_phone',  label:'เบอร์โทรผู้รับ',  exportOnly: true, exportValue: r => r.receiver_phone??'-' },
+  { key:'address',         label:'ที่อยู่จัดส่ง',   exportOnly: true, exportValue: r => r.address??'-' },
+  { key:'courier_name',    label:'ผู้จัดส่ง',        exportOnly: true, exportValue: r => r.courier_name??'-' },
+  { key:'tracking_number', label:'เลขพัสดุ',         exportOnly: true, exportValue: r => r.tracking_number??'-' },
+  { key:'total_cost',      label:'ยอดรวม (บาท)',     exportOnly: true, exportValue: r => Number(r.total_cost)>0 ? Number(r.total_cost).toFixed(2) : '-' },
 ];
 
 export default function MedDeliveryPage() {

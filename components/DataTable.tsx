@@ -27,6 +27,7 @@ export interface ColDef {
   className?: string;
   exportValue?: (row: any) => string;  // plain text for PDF/CSV export
   skipExport?: boolean;                // omit column from export (e.g. action cols)
+  exportOnly?: boolean;               // include in export but hide from table UI
 }
 
 export interface FilterConfig {
@@ -319,7 +320,7 @@ export default function DataTable({
               <table className="w-full text-sm min-w-max">
                 <thead className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
                   <tr>
-                    {cols.map(c => (
+                    {cols.filter(c => !c.exportOnly).map(c => (
                       <th key={c.key} style={c.width ? { width: c.width, minWidth: c.width } : {}}
                         className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">
                         {c.label}
@@ -336,7 +337,7 @@ export default function DataTable({
                   {rows.map((row, i) => (
                     <tr key={i} className={`table-row-hover${onRowClick ? ' cursor-pointer' : ''}`}
                       onClick={onRowClick ? () => onRowClick(row) : undefined}>
-                      {cols.map(c => (
+                      {cols.filter(c => !c.exportOnly).map(c => (
                         <td key={c.key} className={`px-4 py-3 ${c.className ?? ''}`}>
                           {c.render ? c.render(row) : (row[c.key] ?? '-')}
                         </td>
