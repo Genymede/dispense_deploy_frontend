@@ -153,21 +153,26 @@ export default function DeliveryPage() {
           <>
             <DrawerSection title="ข้อมูลการจัดส่ง">
               <DrawerGrid items={[
-                { label: 'สถานะ',            value: <Badge variant={(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { variant: 'gray' }).variant}>{(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { label: drawer.status }).label}</Badge> },
-                { label: 'วันที่จัดส่ง',     value: fmtDate(drawer.delivery_date) },
-                { label: 'วันที่รับยา',       value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
-                { label: 'วิธีจัดส่ง',        value: drawer.delivery_method || '—' },
-                { label: 'เลขพัสดุ',          value: drawer.tracking_number || '—' },
-                { label: 'ผู้จัดส่ง',         value: drawer.courier_name || '—' },
-                { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
+                { label: 'สถานะ',        value: <Badge variant={(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { variant: 'gray' }).variant}>{(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { label: drawer.status }).label}</Badge> },
+                { label: 'วันที่จัดส่ง', value: fmtDate(drawer.delivery_date) },
+                { label: 'วันที่รับยา',  value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'วิธีจัดส่ง',   value: drawer.delivery_method || '—' },
+                { label: 'เลขพัสดุ',     value: drawer.tracking_number || '—' },
               ]} />
             </DrawerSection>
 
             <DrawerSection title="ข้อมูลผู้รับ">
               <DrawerGrid items={[
-                { label: 'ผู้รับ',     value: drawer.receiver_name || '—' },
-                { label: 'เบอร์โทร',   value: drawer.receiver_phone || '—' },
-                { label: 'ที่อยู่',    value: drawer.address || '—', span: true },
+                { label: 'ผู้รับ',   value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทร', value: drawer.receiver_phone || '—' },
+                { label: 'ที่อยู่',  value: drawer.address || '—', span: true },
+              ]} />
+            </DrawerSection>
+
+            <DrawerSection title="ผู้จัดส่ง">
+              <DrawerGrid items={[
+                { label: 'ชื่อผู้จัดส่ง',    value: drawer.courier_name || '—' },
+                { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
               ]} />
             </DrawerSection>
 
