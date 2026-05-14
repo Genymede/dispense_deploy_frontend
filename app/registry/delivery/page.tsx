@@ -153,39 +153,74 @@ export default function DeliveryPage() {
           <>
             <DrawerSection title="ข้อมูลการจัดส่ง">
               <DrawerGrid items={[
-                { label: 'ผู้ป่วย', value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number || '—'}</p></> },
-                { label: 'สถานะ', value: <Badge variant={(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { variant: 'gray' }).variant}>{(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { label: drawer.status }).label}</Badge> },
-                { label: 'วิธีจัดส่ง', value: drawer.delivery_method || '—' },
-                { label: 'วันที่', value: fmtDate(drawer.delivery_date) },
-                { label: 'ผู้รับ', value: drawer.receiver_name || '—' },
-                { label: 'เบอร์โทร', value: drawer.receiver_phone || '—' },
-                { label: 'ที่อยู่', value: drawer.address || '—', span: true },
-                { label: 'หมายเหตุ', value: drawer.note || '—', span: true },
+                { label: 'สถานะ',            value: <Badge variant={(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { variant: 'gray' }).variant}>{(STATUS_MAP[drawer.status as keyof typeof STATUS_MAP] ?? { label: drawer.status }).label}</Badge> },
+                { label: 'วันที่จัดส่ง',     value: fmtDate(drawer.delivery_date) },
+                { label: 'วันที่รับยา',       value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'วิธีจัดส่ง',        value: drawer.delivery_method || '—' },
+                { label: 'เลขพัสดุ',          value: drawer.tracking_number || '—' },
+                { label: 'ผู้จัดส่ง',         value: drawer.courier_name || '—' },
+                { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
+              ]} />
+            </DrawerSection>
+
+            <DrawerSection title="ข้อมูลผู้รับ">
+              <DrawerGrid items={[
+                { label: 'ผู้รับ',     value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทร',   value: drawer.receiver_phone || '—' },
+                { label: 'ที่อยู่',    value: drawer.address || '—', span: true },
               ]} />
             </DrawerSection>
 
             {Array.isArray(drawer.medicine_list) && drawer.medicine_list.length > 0 && (
-              <DrawerSection title={`รายการยา (${drawer.medicine_list.length} รายการ)`}>
-                <div className="space-y-2">
-                  {drawer.medicine_list.map((m: any, i: number) => (
-                    <div key={i} className="bg-slate-50 rounded-xl px-4 py-3 flex gap-3">
-                      <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center">
-                        <Pill size={14} className="text-primary-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 leading-snug">{m.med_showname || m.med_name}</p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                          <span className="text-xs text-slate-600">จำนวน: <span className="font-semibold">{m.quantity} {m.unit || ''}</span></span>
-                          {m.unit_price > 0 && (
-                            <span className="text-xs text-primary-600 font-medium">
-                              {Number(m.unit_price).toFixed(2)} × {m.quantity} = {(m.unit_price * m.quantity).toFixed(2)} บาท
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <DrawerSection title={
+                `รายการยา (${drawer.medicine_list.length} รายการ)` +
+                (Number(drawer.total_cost) > 0 ? ` · ${Number(drawer.total_cost).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท` : '')
+              }>
+                <div className="overflow-x-auto -mx-1 rounded-xl border border-slate-100">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-400 w-7">#</th>
+                        <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-400">ชื่อยา / วิธีใช้</th>
+                        <th className="px-3 py-2.5 text-center text-xs font-semibold text-slate-400 whitespace-nowrap">จำนวน</th>
+                        <th className="px-3 py-2.5 text-right text-xs font-semibold text-slate-400 whitespace-nowrap">ราคา (บาท)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {drawer.medicine_list.map((m: any, i: number) => {
+                        const mealStr = m.meal_sessions ? m.meal_sessions.split(',').filter(Boolean).join(' ') : '';
+                        const usage = [m.route, m.dose_qty ? `ครั้งละ ${m.dose_qty} ${m.dose_unit || ''}` : '', m.frequency, m.meal_relation, mealStr].filter(Boolean).join('  ');
+                        return (
+                          <tr key={i}>
+                            <td className="px-3 py-3 text-xs text-slate-300 text-center align-top">{i + 1}</td>
+                            <td className="px-3 py-3">
+                              <p className="font-semibold text-slate-800 leading-snug">{m.med_showname || m.med_name}</p>
+                              {usage && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{usage}</p>}
+                            </td>
+                            <td className="px-3 py-3 text-center align-top whitespace-nowrap">
+                              <span className="font-semibold text-slate-700">{m.quantity}</span>
+                              <span className="text-xs text-slate-400 ml-1">{m.unit || ''}</span>
+                            </td>
+                            <td className="px-3 py-3 text-right align-top whitespace-nowrap">
+                              {Number(m.unit_price) > 0 ? (
+                                <div>
+                                  <p className="font-semibold text-slate-700">{(Number(m.unit_price) * m.quantity).toFixed(2)}</p>
+                                  <p className="text-xs text-slate-400">{Number(m.unit_price).toFixed(2)} × {m.quantity}</p>
+                                </div>
+                              ) : <span className="text-slate-300">—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
+              </DrawerSection>
+            )}
+
+            {drawer.note && (
+              <DrawerSection title="หมายเหตุ">
+                <p className="text-sm text-slate-600">{drawer.note}</p>
               </DrawerSection>
             )}
 
