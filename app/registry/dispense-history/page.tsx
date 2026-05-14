@@ -66,7 +66,6 @@ export default function DispenseHistoryPage() {
     <MainLayout title="ประวัติจ่ายยา" subtitle="Dispensing History">
       <DataTable cols={cols}
         fetcher={p => registryApi.getDispenseHistory({ ...p, date_from: dateFrom, date_to: dateTo }).then(r => r.data)}
-        searchPlaceholder="ค้นหาเลขใบสั่ง, ผู้ป่วย, HN..."
         emptyIcon={<ClipboardList size={36} />} emptyText="ไม่พบประวัติ"
         deps={[dateFrom, dateTo]}
         onRowClick={openDrawer}
