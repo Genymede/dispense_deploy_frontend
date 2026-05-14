@@ -571,7 +571,7 @@ export default function DeliveryPage() {
               <DrawerGrid items={[
                 { label: 'วิธีจัดส่ง',       value: drawer.delivery_method || '—' },
                 { label: 'วันที่จัดส่ง',      value: fmtDate(drawer.delivery_date) },
-                { label: 'จัดส่งจริงเมื่อ',   value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'วันที่รับยา',        value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
                 { label: 'ผู้รับ',            value: drawer.receiver_name || '—' },
                 { label: 'เบอร์โทรผู้รับ',    value: drawer.receiver_phone || '—' },
                 { label: 'เลขพัสดุ',          value: drawer.tracking_number || '—' },
