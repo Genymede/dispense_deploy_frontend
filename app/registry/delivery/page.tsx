@@ -147,7 +147,13 @@ export default function DeliveryPage() {
         open={!!drawer} onClose={() => setDrawer(null)}
         title={drawer ? `การจัดส่ง — ${drawer.patient_name}` : ''}
         subtitle={drawer ? `HN: ${drawer.hn_number || '—'}` : ''}
-        width="md"
+        width="lg"
+        footer={drawer && (
+          <Button variant="secondary" size="sm" icon={<Edit2 size={14} />}
+            onClick={() => { setDrawer(null); openEdit(drawer); }}>
+            แก้ไข
+          </Button>
+        )}
       >
         {drawer && (
           <>
@@ -229,9 +235,6 @@ export default function DeliveryPage() {
               </DrawerSection>
             )}
 
-            <DrawerSection title="">
-              <Button variant="secondary" size="sm" icon={<Edit2 size={14} />} onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
-            </DrawerSection>
           </>
         )}
       </DetailDrawer>
