@@ -122,7 +122,7 @@ export default function RegistryPage() {
       <DataTable
         cols={cols}
         fetcher={p => registryApi.getDrugs(p).then(r => r.data)}
-        searchPlaceholder="ค้นหาชื่อยา, ชื่อสามัญ, TMT Code..."
+        searchPlaceholder="ค้นหาชื่อยา, ชื่อสามัญ, ชื่อการค้า..."
         emptyIcon={<Database size={36} />} emptyText="ไม่พบรายการยา"
         deps={[reload]}
         onRowClick={row => openView(row.med_id)}
