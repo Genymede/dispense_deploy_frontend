@@ -567,16 +567,25 @@ export default function DeliveryPage() {
             {/* Delivery info grid */}
             <DrawerSection title="ข้อมูลการจัดส่ง">
               <DrawerGrid items={[
-                { label: 'วิธีจัดส่ง',       value: drawer.delivery_method || '—' },
-                { label: 'วันที่จัดส่ง',      value: fmtDate(drawer.delivery_date) },
-                { label: 'วันที่รับยา',        value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
-                { label: 'ผู้รับ',            value: drawer.receiver_name || '—' },
-                { label: 'เบอร์โทรผู้รับ',    value: drawer.receiver_phone || '—' },
-                { label: 'เลขพัสดุ',          value: drawer.tracking_number || '—' },
-                { label: 'ผู้จัดส่ง',         value: drawer.courier_name || '—' },
+                { label: 'วันที่จัดส่ง', value: fmtDate(drawer.delivery_date) },
+                { label: 'วันที่รับยา',  value: drawer.delivered_at ? fmtDate(drawer.delivered_at, true) : '—' },
+                { label: 'วิธีจัดส่ง',   value: drawer.delivery_method || '—' },
+                { label: 'เลขพัสดุ',     value: drawer.tracking_number || '—' },
+              ]} />
+            </DrawerSection>
+
+            <DrawerSection title="ข้อมูลผู้รับ">
+              <DrawerGrid items={[
+                { label: 'ผู้รับ',         value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทรผู้รับ', value: drawer.receiver_phone || '—' },
+                { label: 'ที่อยู่',        value: drawer.address || '—', span: true },
+              ]} />
+            </DrawerSection>
+
+            <DrawerSection title="ผู้จัดส่ง">
+              <DrawerGrid items={[
+                { label: 'ชื่อผู้จัดส่ง',    value: drawer.courier_name || '—' },
                 { label: 'เบอร์โทรผู้จัดส่ง', value: drawer.courier_phone || '—' },
-                { label: 'ที่อยู่',            value: drawer.address || '—', span: true },
-                ...(drawer.note ? [{ label: 'หมายเหตุ', value: drawer.note, span: true }] : []),
               ]} />
             </DrawerSection>
 
@@ -655,6 +664,12 @@ export default function DeliveryPage() {
                     </tbody>
                   </table>
                 </div>
+              </DrawerSection>
+            )}
+
+            {drawer.note && (
+              <DrawerSection title="หมายเหตุ">
+                <p className="text-sm text-slate-600">{drawer.note}</p>
               </DrawerSection>
             )}
           </>

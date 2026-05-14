@@ -163,8 +163,8 @@ export default function DeliveryPage() {
 
             <DrawerSection title="ข้อมูลผู้รับ">
               <DrawerGrid items={[
-                { label: 'ผู้รับ',   value: drawer.receiver_name || '—' },
-                { label: 'เบอร์โทร', value: drawer.receiver_phone || '—' },
+                { label: 'ผู้รับ',         value: drawer.receiver_name || '—' },
+                { label: 'เบอร์โทรผู้รับ', value: drawer.receiver_phone || '—' },
                 { label: 'ที่อยู่',  value: drawer.address || '—', span: true },
               ]} />
             </DrawerSection>
