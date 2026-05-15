@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
-import { RowActions } from '@/components/CrudModal';
 import { Input, Badge, ConfirmDialog, Modal, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
@@ -94,17 +93,14 @@ export default function OverduePage() {
         emptyIcon={<Clock size={36} />} emptyText="ไม่มียาค้างจ่าย 🎉"
         deps={[reload]}
         onRowClick={row => setDrawer(row)}
-        actionCol={row => (
-          <div className="flex items-center justify-end gap-1">
-            <RowActions onView={() => setDrawer(row)} />
-            {!row.dispense_status && (
-              <button onClick={e => { e.stopPropagation(); openDispenseModal(row); }}
-                className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 font-medium">
-                จ่ายยา
-              </button>
-            )}
+        actionCol={row => !row.dispense_status ? (
+          <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
+            <button onClick={() => openDispenseModal(row)}
+              className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 font-medium">
+              จ่ายยา
+            </button>
           </div>
-        )}
+        ) : null}
       />
 
       <ConfirmDialog {...alertDialogProps} />
@@ -153,7 +149,6 @@ export default function OverduePage() {
         open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
         title="ยาค้างจ่าย" subtitle={r => r.med_name}
         fields={[
-          { label: 'ชื่อยา', key: 'med_name' },
           { label: 'ผู้ป่วย', key: '_patient', type: 'patient' },
           { label: 'จำนวน', key: 'quantity', type: 'template', template: r => r.unit ? `${r.quantity} ${r.unit}` : String(r.quantity ?? '-') },
           { label: 'แพทย์', key: 'doctor_name' },
