@@ -546,6 +546,9 @@ export const radApi = {
 
   reject: (id: number, approved_by: string) =>
     api.put(`/registry/rad/${id}`, { status: 'rejected', approved_by }),
+
+  dispense: (id: number, approved_by: string) =>
+    api.put(`/registry/rad/${id}`, { status: 'dispensed', approved_by }),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
