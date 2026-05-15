@@ -96,8 +96,7 @@ export default function OverduePage() {
         onRowClick={row => setDrawer(row)}
         actionCol={row => (
           <div className="flex items-center justify-end gap-1">
-            <RowActions onView={() => setDrawer(row)}
-              onDelete={async () => { await crudApi.deleteOverdue(row.overdue_id); setReload(r => r + 1); }} />
+            <RowActions onView={() => setDrawer(row)} />
             {!row.dispense_status && (
               <button onClick={e => { e.stopPropagation(); openDispenseModal(row); }}
                 className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 font-medium">
@@ -106,7 +105,6 @@ export default function OverduePage() {
             )}
           </div>
         )}
-        deleteConfirmText={row => `ลบรายการ "${row.med_name}"?`}
       />
 
       <ConfirmDialog {...alertDialogProps} />
