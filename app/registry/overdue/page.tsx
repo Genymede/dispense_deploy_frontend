@@ -14,7 +14,7 @@ import { fmtDate } from '@/lib/dateUtils';
 const cols: ColDef[] = [
   {
     key: 'med_name', label: 'ชื่อยา',
-    render: r => <><p className="font-medium">{r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></>
+    render: r => <><p className="font-medium">{r.sub_drug_name || r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></>
   },
   {
     key: 'patient_name', label: 'ผู้ป่วย',
