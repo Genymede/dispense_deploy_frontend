@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { CrudModal, FormGrid, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
-import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
+import DetailDrawer, { DrawerSection } from '@/components/DetailDrawer';
 import { registryApi, crudApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { FlaskConical } from 'lucide-react';
@@ -71,6 +71,13 @@ export default function AdrPage() {
     });
     setEditingId(row.adr_id); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
   };
+
+  const C = ({ label, value, span }: { label: string; value: React.ReactNode; span?: boolean }) => (
+    <div className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? 'col-span-2' : ''}`}>
+      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
+      <div className="text-sm font-medium text-slate-800 break-words">{value || <span className="text-slate-300">—</span>}</div>
+    </div>
+  );
 
   const handleSave = async () => {
     const errs: Record<string,string> = {};
@@ -156,28 +163,45 @@ export default function AdrPage() {
       </CrudModal>
 
       <DetailDrawer open={!!drawer} onClose={() => setDrawer(null)}
+        width="lg"
         title={drawer ? `ADR: ${drawer.med_name}` : ''}
-        subtitle={drawer ? `${drawer.patient_name} · ${drawer.reporter_name || ''}` : ''}>
+        subtitle={drawer ? `${drawer.patient_name} · ${drawer.reporter_name || ''}` : ''}
+        footer={drawer && (
+          <Button variant="secondary" onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
+        )}>
         {drawer && (
-          <DrawerSection title="รายละเอียด ADR">
-            <DrawerGrid items={[
-              { label: 'ผู้ป่วย',      value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number}</p></> },
-              { label: 'ระดับ',        value: <Badge variant={SEV_V[drawer.severity] ?? 'gray'}>{drawer.severity || '—'}</Badge> },
-              { label: 'ยา',           value: <><p className="font-medium">{drawer.med_name}</p><p className="text-xs text-slate-400">{drawer.med_generic_name || ''}</p></>, span: true },
-              { label: 'อาการ',        value: drawer.symptoms || '—', span: true },
-              { label: 'คำอธิบาย',    value: drawer.description, span: true },
-              { label: 'ผลลัพธ์',     value: drawer.outcome || '—' },
-              { label: 'วันที่รายงาน', value: fmtDate(drawer.reported_at, true), span: true },
-              { label: 'วันที่บันทึก', value: fmtDate(drawer.created_at, true), span: true },
-              { label: 'ผู้รายงาน',   value: drawer.reporter_name || '—' },
-              { label: 'หมายเหตุ',    value: drawer.notes || '—', span: true },
-            ]} />
-          </DrawerSection>
-        )}
-        {drawer && (
-          <DrawerSection title="">
-            <Button variant="secondary" onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
-          </DrawerSection>
+          <div className="flex gap-4">
+            {/* Left */}
+            <div className="w-[42%] flex flex-col gap-3">
+              <DrawerSection title="ยาที่เกิด ADR">
+                <div className="flex flex-col gap-2">
+                  <C label="ชื่อยา" value={drawer.med_name} />
+                  <C label="ชื่อสามัญ" value={drawer.med_generic_name} />
+                </div>
+              </DrawerSection>
+              <DrawerSection title="ผู้ป่วย">
+                <div className="grid grid-cols-2 gap-2">
+                  <C label="ชื่อ-นามสกุล" value={drawer.patient_name} span />
+                  <C label="HN" value={drawer.hn_number} />
+                  <C label="ระดับ" value={<Badge variant={SEV_V[drawer.severity] ?? 'gray'}>{drawer.severity || '—'}</Badge>} />
+                  <C label="ผลลัพธ์" value={drawer.outcome} span />
+                  <C label="ผู้รายงาน" value={drawer.reporter_name} span />
+                  <C label="วันที่รายงาน" value={fmtDate(drawer.reported_at, true)} />
+                  <C label="วันที่บันทึก" value={fmtDate(drawer.created_at, true)} />
+                </div>
+              </DrawerSection>
+            </div>
+            {/* Right */}
+            <div className="flex-1 flex flex-col gap-3">
+              <DrawerSection title="รายละเอียดปฏิกิริยา">
+                <div className="flex flex-col gap-2">
+                  <C label="อาการ" value={drawer.symptoms} />
+                  <C label="คำอธิบาย" value={drawer.description} />
+                  <C label="หมายเหตุ" value={drawer.notes} />
+                </div>
+              </DrawerSection>
+            </div>
+          </div>
         )}
       </DetailDrawer>
     </MainLayout>
