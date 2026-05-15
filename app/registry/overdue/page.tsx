@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
+import { CrudModal, FormSection, RowActions } from '@/components/CrudModal';
 import { Input, Badge, ConfirmDialog, Modal, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
 import RegistryDrawer from '@/components/RegistryDrawer';
@@ -35,6 +36,14 @@ const cols: ColDef[] = [
   },
 ];
 
+const emptyForm = {
+  med_id: 0, med_label: '',
+  med_sid: 0, med_sid_label: '',
+  patient_id: 0, patient_label: '',
+  doctor_id: '' as string, doctor_label: '',
+  quantity: '',
+};
+
 const emptyDispenseForm = { med_sid: 0, drug_sub_label: '', quantity: '' };
 
 export default function OverduePage() {
@@ -42,12 +51,65 @@ export default function OverduePage() {
   const [drawer, setDrawer] = useState<any | null>(null);
   const { confirm: alertDialog, dialogProps: alertDialogProps } = useConfirm();
 
+  // CRUD
+  const [form, setForm] = useState<typeof emptyForm>(emptyForm);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
+  const clearErr = (k: string) => setErrors(p => ({ ...p, [k]: '' }));
+
+  // Dispense
   const [dispenseRow, setDispenseRow] = useState<any | null>(null);
   const [dispenseForm, setDispenseForm] = useState(emptyDispenseForm);
   const [dispenseResetKey, setDispenseResetKey] = useState(0);
   const [dispenseErrors, setDispenseErrors] = useState<Record<string, string>>({});
   const [dispensing, setDispensing] = useState(false);
   const df = (k: string, v: any) => setDispenseForm(p => ({ ...p, [k]: v }));
+
+  const openAdd = () => {
+    setForm(emptyForm);
+    setEditingId(null); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
+  };
+
+  const openEdit = (row: any) => {
+    setForm({
+      med_id: row.med_id || 0, med_label: row.med_name || '',
+      med_sid: row.med_sid || 0, med_sid_label: row.sub_drug_name || '',
+      patient_id: row.patient_id || 0, patient_label: row.patient_name || '',
+      doctor_id: row.doctor_id || '', doctor_label: row.doctor_name || '',
+      quantity: row.quantity != null ? String(row.quantity) : '',
+    });
+    setEditingId(row.overdue_id); setResetKey(k => k + 1); setErrors({}); setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    const errs: Record<string, string> = {};
+    if (!form.med_id) errs.med_id = 'กรุณาเลือกยา';
+    if (!form.quantity || Number(form.quantity) <= 0) errs.quantity = 'กรุณาระบุจำนวน';
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        med_id: form.med_id,
+        med_sid: form.med_sid || undefined,
+        patient_id: form.patient_id || undefined,
+        doctor_id: form.doctor_id || undefined,
+        quantity: Number(form.quantity),
+      };
+      if (editingId) {
+        await crudApi.updateOverdue(editingId, payload);
+        toast.success('แก้ไขเรียบร้อย');
+      } else {
+        await crudApi.createOverdue(payload);
+        toast.success('เพิ่มเรียบร้อย');
+      }
+      setShowModal(false); setReload(r => r + 1);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setSaving(false); }
+  };
 
   const openDispenseModal = (row: any) => {
     setDispenseForm({
@@ -93,17 +155,58 @@ export default function OverduePage() {
         emptyIcon={<Clock size={36} />} emptyText="ไม่มียาค้างจ่าย 🎉"
         deps={[reload]}
         onRowClick={row => setDrawer(row)}
-        actionCol={row => !row.dispense_status ? (
-          <div className="flex items-center justify-end" onClick={e => e.stopPropagation()}>
-            <button onClick={() => openDispenseModal(row)}
-              className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 font-medium">
-              จ่ายยา
-            </button>
+        onAdd={openAdd} addLabel="เพิ่มรายการ"
+        actionCol={row => (
+          <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+            <RowActions
+              onView={() => setDrawer(row)}
+              onEdit={() => openEdit(row)}
+              onDelete={async () => { await crudApi.deleteOverdue(row.overdue_id); setReload(r => r + 1); }}
+            />
+            {!row.dispense_status && (
+              <button onClick={() => openDispenseModal(row)}
+                className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 font-medium">
+                จ่ายยา
+              </button>
+            )}
           </div>
-        ) : null}
+        )}
+        deleteConfirmText={row => `ลบรายการยาค้างจ่าย "${row.sub_drug_name || row.med_name}"?`}
       />
 
       <ConfirmDialog {...alertDialogProps} />
+
+      {/* Add / Edit Modal */}
+      <CrudModal open={showModal} onClose={() => setShowModal(false)}
+        title="ยาค้างจ่าย" editingId={editingId} onSave={handleSave} saving={saving}>
+        <div className="flex flex-col gap-4">
+          <FormSection title="ยาและผู้ป่วย">
+            <div>
+              <SearchSelect type="drug" label="ยา" required
+                initialDisplay={form.med_label} resetKey={resetKey}
+                onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); clearErr('med_id'); }} />
+              {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+            </div>
+            <SearchSelect type="subwarehouse" label="ยาในคลัง (ถ้ามี)"
+              initialDisplay={form.med_sid_label} resetKey={resetKey}
+              onSelect={s => { f('med_sid', s?.med_sid ?? 0); f('med_sid_label', s ? (s.med_showname || s.med_name) : ''); }} />
+            <SearchSelect type="patient" label="ผู้ป่วย"
+              initialDisplay={form.patient_label} resetKey={resetKey}
+              onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
+            <SearchSelect type="user" label="แพทย์"
+              initialDisplay={form.doctor_label} resetKey={resetKey}
+              onSelect={u => { f('doctor_id', u?.id ?? ''); f('doctor_label', u?.full_name ?? ''); }} />
+          </FormSection>
+          <FormSection title="จำนวน">
+            <div>
+              <Input label="จำนวน" required type="number" min="1"
+                value={form.quantity}
+                onChange={e => { f('quantity', e.target.value); clearErr('quantity'); }}
+                error={errors.quantity} />
+            </div>
+          </FormSection>
+        </div>
+      </CrudModal>
 
       {/* Dispense Modal */}
       <Modal open={!!dispenseRow} onClose={() => setDispenseRow(null)}
