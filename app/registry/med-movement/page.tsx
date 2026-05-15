@@ -6,21 +6,15 @@ import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDraw
 import { Badge, Select } from '@/components/ui';
 import { stockApi, type StockTransaction } from '@/lib/api';
 import { thaiToday, thaiDaysAgo, fmtDate as safeDate } from '@/lib/dateUtils';
-import {
-  Activity, ArrowUpCircle, ArrowDownCircle,
-  RotateCcw, AlertTriangle, Settings,
-} from 'lucide-react';
+import { Activity, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 
 const TX_CONFIG: Record<string, {
   label: string;
   icon: React.ReactNode;
-  variant: 'success' | 'danger' | 'info' | 'warning' | 'gray';
+  variant: 'success' | 'info';
 }> = {
-  in:      { label: 'รับเข้า',    icon: <ArrowDownCircle size={13} />, variant: 'success' },
-  out:     { label: 'จ่ายออก',   icon: <ArrowUpCircle   size={13} />, variant: 'info'    },
-  adjust:  { label: 'ปรับสต็อก', icon: <Settings        size={13} />, variant: 'warning' },
-  return:  { label: 'คืนยา',     icon: <RotateCcw       size={13} />, variant: 'gray'    },
-  expired: { label: 'หมดอายุ',   icon: <AlertTriangle   size={13} />, variant: 'danger'  },
+  in:  { label: 'รับเข้า',  icon: <ArrowDownCircle size={13} />, variant: 'success' },
+  out: { label: 'จ่ายออก', icon: <ArrowUpCircle   size={13} />, variant: 'info'    },
 };
 
 const cols: ColDef[] = [
