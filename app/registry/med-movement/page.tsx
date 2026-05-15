@@ -3,7 +3,7 @@ import { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef, DateRangeFilter } from '@/components/DataTable';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
-import { Badge } from '@/components/ui';
+import { Badge, Select } from '@/components/ui';
 import { stockApi, type StockTransaction } from '@/lib/api';
 import { thaiToday, thaiDaysAgo, fmtDate as safeDate } from '@/lib/dateUtils';
 import {
@@ -80,25 +80,6 @@ export default function MedMovementPage() {
   return (
     <MainLayout title="ทะเบียนการเคลื่อนไหวยา" subtitle="Medication Movement Registry">
 
-      {/* Type filter cards */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        <button
-          onClick={() => setTxType('')}
-          className={`card px-4 py-2.5 text-sm font-medium transition-all ${!txType ? 'ring-2 ring-primary-400 border-primary-200' : 'hover:border-primary-200'}`}
-        >
-          ทั้งหมด
-        </button>
-        {Object.entries(TX_CONFIG).map(([type, { label, variant }]) => (
-          <button
-            key={type}
-            onClick={() => setTxType(txType === type ? '' : type)}
-            className={`card px-4 py-2.5 transition-all ${txType === type ? 'ring-2 ring-primary-400 border-primary-200' : 'hover:border-primary-200'}`}
-          >
-            <Badge variant={variant}>{label}</Badge>
-          </button>
-        ))}
-      </div>
-
       <DataTable
         cols={cols}
         fetcher={p =>
@@ -115,10 +96,15 @@ export default function MedMovementPage() {
         deps={[dateFrom, dateTo, txType]}
         onRowClick={setDrawer}
         extraFilters={
-          <DateRangeFilter
-            dateFrom={dateFrom} dateTo={dateTo}
-            onFromChange={setDateFrom} onToChange={setDateTo}
-          />
+          <>
+            <Select value={txType} onChange={e => setTxType(e.target.value)}
+              placeholder="ทุกประเภท"
+              options={Object.entries(TX_CONFIG).map(([v, { label }]) => ({ value: v, label }))} />
+            <DateRangeFilter
+              dateFrom={dateFrom} dateTo={dateTo}
+              onFromChange={setDateFrom} onToChange={setDateTo}
+            />
+          </>
         }
       />
 
