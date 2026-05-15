@@ -120,7 +120,7 @@ export default function OverduePage() {
         {dispenseRow && (
           <div className="flex flex-col gap-4">
             <div className="rounded-xl bg-slate-50 px-4 py-3 border border-slate-100">
-              <p className="text-sm font-semibold text-slate-700">{dispenseRow.med_name}</p>
+              <p className="text-sm font-semibold text-slate-700">{dispenseRow.sub_drug_name || dispenseRow.med_name}</p>
               {dispenseRow.med_generic_name && <p className="text-xs text-slate-400 mt-0.5">{dispenseRow.med_generic_name}</p>}
               {dispenseRow.patient_name && (
                 <p className="text-xs text-slate-500 mt-1">ผู้ป่วย: {dispenseRow.patient_name} {dispenseRow.hn_number ? `(HN: ${dispenseRow.hn_number})` : ''}</p>
