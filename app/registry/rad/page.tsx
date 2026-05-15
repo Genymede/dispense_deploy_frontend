@@ -240,16 +240,6 @@ export default function RadPage() {
               onSelect={u => { f('requested_by', u?.id ?? ''); f('req_label', u?.full_name ?? u?.email ?? ''); clearErr('requested_by'); }} />
             {errors.requested_by && <p className="mt-1 text-xs text-red-500">{errors.requested_by}</p>}
           </div>
-          {editId ? (
-            <>
-              <SearchSelect type="user" label="ผู้อนุมัติ"
-                initialDisplay={form.appr_label} resetKey={resetKey}
-                onSelect={u => { f('approved_by', u?.id ?? ''); f('appr_label', u?.full_name ?? u?.email ?? ''); }} />
-              <Select label="สถานะ" value={form.status}
-                onChange={e => f('status', e.target.value)}
-                options={Object.entries(STATUS_MAP).map(([v, { label }]) => ({ value: v, label }))} />
-            </>
-          ) : null}
 
           <div className="sm:col-span-2">
             <Textarea label="หมายเหตุ" rows={2}
