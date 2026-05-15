@@ -157,7 +157,7 @@ export default function RadPage() {
           <div className="flex items-center justify-end gap-1">
             <RowActions
               onView={() => setRow(r)}
-              onEdit={() => openEdit(r)}
+              onEdit={r.status === 'pending' ? () => openEdit(r) : undefined}
               onDelete={['pending', 'cancelled'].includes(r.status)
                 ? async () => { await radApi.remove(r.rad_id); setReload(n => n + 1); }
                 : undefined}
@@ -258,7 +258,9 @@ export default function RadPage() {
         width="lg"
         footer={row && (
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={() => { setRow(null); openEdit(row); }}>แก้ไข</Button>
+            {row.status === 'pending' && (
+              <Button variant="secondary" size="sm" onClick={() => { setRow(null); openEdit(row); }}>แก้ไข</Button>
+            )}
             {row.status === 'pending' && <>
               <Button size="sm" onClick={() => { setRow(null); setConfirm({ type: 'approve', row }); }}>อนุมัติ</Button>
               <Button size="sm" variant="danger" onClick={() => { setRow(null); setConfirm({ type: 'reject', row }); }}>ปฏิเสธ</Button>
