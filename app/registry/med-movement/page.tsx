@@ -131,6 +131,14 @@ export default function MedMovementPage() {
         {drawer && (
           <DrawerSection title="รายละเอียดการเคลื่อนไหว">
             <DrawerGrid items={[
+              { label: 'ชื่อยา',
+                value: (
+                  <>
+                    <p className="font-medium">{drawer.med_showname || drawer.med_name}</p>
+                    {drawer.med_generic_name && <p className="text-xs text-slate-400">{drawer.med_generic_name}</p>}
+                  </>
+                ),
+                span: true },
               { label: 'ประเภท',
                 value: tc
                   ? <Badge variant={tc.variant} className="gap-1.5">{tc.icon}{tc.label}</Badge>
@@ -141,19 +149,11 @@ export default function MedMovementPage() {
                     {isPositive ? '+' : ''}{drawer.quantity.toLocaleString()}
                   </span>
                 ) },
-              { label: 'สต็อกก่อน',     value: drawer.balance_before.toLocaleString() },
-              { label: 'สต็อกหลัง',     value: <span className="font-semibold">{drawer.balance_after.toLocaleString()}</span> },
-              { label: 'ชื่อยา',
-                value: (
-                  <>
-                    <p className="font-medium">{drawer.med_showname || drawer.med_name}</p>
-                    {drawer.med_generic_name && <p className="text-xs text-slate-400">{drawer.med_generic_name}</p>}
-                  </>
-                ),
-                span: true },
-              { label: 'Lot Number',      value: drawer.lot_number    || '—' },
-              { label: 'วันเวลา',        value: safeDate(drawer.created_at, true), span: true },
-              { label: 'หมายเหตุ',       value: drawer.note || '—', span: true },
+              { label: 'สต็อกก่อน',  value: drawer.balance_before.toLocaleString() },
+              { label: 'สต็อกหลัง',  value: <span className="font-semibold">{drawer.balance_after.toLocaleString()}</span> },
+              { label: 'Lot Number', value: drawer.lot_number || '—' },
+              { label: 'วันเวลา',   value: safeDate(drawer.created_at, true), span: true },
+              { label: 'หมายเหตุ',  value: drawer.note || '—', span: true },
             ]} />
           </DrawerSection>
         )}
