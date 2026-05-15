@@ -155,17 +155,11 @@ export default function OverduePage() {
         open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
         title="ยาค้างจ่าย" subtitle={r => r.med_name}
         fields={[
+          { label: 'ชื่อยา', key: 'med_name' },
           { label: 'ผู้ป่วย', key: '_patient', type: 'patient' },
-          { label: 'แพทย์', key: 'doctor_name' },
-          {
-            label: 'สถานะ', key: 'dispense_status', type: 'template',
-            template: r => r.dispense_status ? 'จ่ายแล้ว' : 'ค้างจ่าย'
-          },
-          { label: 'ชื่อยา (ทะเบียน)', key: '_drug', type: 'drug' },
-          { label: 'รายการในคลัง', key: 'sub_drug_name' },
-          { label: 'รูปแบบ/บรรจุ', key: 'packaging_type' },
-          { label: 'ที่เก็บ', key: 'location' },
           { label: 'จำนวน', key: 'quantity', type: 'template', template: r => r.unit ? `${r.quantity} ${r.unit}` : String(r.quantity ?? '-') },
+          { label: 'แพทย์', key: 'doctor_name' },
+          { label: 'สถานะ', key: 'dispense_status', type: 'template', template: r => r.dispense_status ? 'จ่ายแล้ว' : 'ค้างจ่าย' },
           { label: 'วันที่', key: 'time', type: 'datetime' },
         ]}
       />
