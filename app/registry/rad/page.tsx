@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef, StatusBadge } from '@/components/DataTable';
 import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
@@ -266,47 +266,62 @@ export default function RadPage() {
           </div>
         )}
       >
-        {row && (
-          <div className="flex gap-4">
-            {/* ซ้าย: ยา + ผู้ป่วย + บุคลากร */}
-            <div className="flex-1 flex flex-col gap-3 min-w-0">
-              <DrawerSection title="ยาปฏิชีวนะ">
-                <DrawerGrid items={[
-                  { label: 'ชื่อยา',    value: <><p className="font-semibold">{row.med_name}</p>{row.med_generic_name && <p className="text-xs text-slate-400 mt-0.5">{row.med_generic_name}</p>}</>, span: true },
-                  { label: 'จำนวน',     value: `${row.quantity} ${row.unit || ''}` },
-                  { label: 'ระยะเวลา',  value: row.duration_days ? `${row.duration_days} วัน` : '—' },
-                ]} />
-              </DrawerSection>
-              <DrawerSection title="ผู้ป่วย">
-                <DrawerGrid items={[
-                  { label: 'ผู้ป่วย',  value: row.patient_name || '—' },
-                  { label: 'Ward',     value: row.ward || '—' },
-                  { label: 'สถานะ',    value: <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${row.status === 'approved' ? 'bg-green-100 text-green-700' : row.status === 'rejected' ? 'bg-red-100 text-red-700' : row.status === 'dispensed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{STATUS_MAP[row.status as keyof typeof STATUS_MAP]?.label ?? row.status}</span> },
-                  { label: 'วันที่ขอ', value: row.request_time ? new Date(row.request_time).toLocaleDateString('th-TH') : '—' },
-                ]} />
-              </DrawerSection>
-              <DrawerSection title="บุคลากร">
-                <DrawerGrid items={[
-                  { label: 'แพทย์ผู้สั่ง', value: row.prescriber_name || '—' },
-                  { label: 'ผู้ขอ',         value: row.requested_by_name || '—' },
-                  { label: 'ผู้อนุมัติ',    value: row.approved_by_name || '—', span: true },
-                ]} />
-              </DrawerSection>
+        {row && (() => {
+          const C = ({ label, value, span }: { label: string; value: React.ReactNode; span?: boolean }) => (
+            <div className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? 'col-span-2' : ''}`}>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
+              <div className="text-sm font-medium text-slate-800 break-words">{value || <span className="text-slate-300">—</span>}</div>
             </div>
-            {/* ขวา: ทางคลินิก */}
-            <div className="flex-1 flex flex-col gap-3 min-w-0">
-              <DrawerSection title="ข้อมูลทางคลินิก">
-                <DrawerGrid items={[
-                  { label: 'การวินิจฉัย',      value: row.diagnosis || '—', span: true },
-                  { label: 'ตำแหน่งติดเชื้อ',  value: row.infection_site || '—' },
-                  { label: 'ผล Culture',        value: CULTURE_OPTIONS.find(o => o.value === row.culture_result)?.label ?? row.culture_result ?? '—' },
-                  { label: 'เหตุผลทางคลินิก',  value: row.clinical_indication || '—', span: true },
-                  ...(row.note ? [{ label: 'หมายเหตุ', value: row.note, span: true as const }] : []),
-                ]} />
-              </DrawerSection>
+          );
+          const statusEntry = STATUS_MAP[row.status as keyof typeof STATUS_MAP];
+          return (
+            <div className="flex gap-5">
+              {/* ซ้าย */}
+              <div className="w-[42%] flex-shrink-0 flex flex-col gap-4">
+                <DrawerSection title="ยาปฏิชีวนะ">
+                  <div className="space-y-2">
+                    <div className="bg-slate-50 rounded-xl px-3 py-2.5">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ชื่อยา</p>
+                      <p className="text-sm font-semibold text-slate-800">{row.med_name}</p>
+                      {row.med_generic_name && <p className="text-xs text-slate-400 mt-0.5">{row.med_generic_name}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <C label="จำนวน"    value={`${row.quantity} ${row.unit || ''}`} />
+                      <C label="ระยะเวลา" value={row.duration_days ? `${row.duration_days} วัน` : null} />
+                    </div>
+                  </div>
+                </DrawerSection>
+                <DrawerSection title="ผู้ป่วย">
+                  <div className="grid grid-cols-2 gap-2">
+                    <C label="ชื่อผู้ป่วย" value={row.patient_name} span />
+                    <C label="Ward"        value={row.ward} />
+                    <C label="สถานะ"       value={statusEntry ? <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusEntry.variant === 'success' ? 'bg-green-100 text-green-700' : statusEntry.variant === 'danger' ? 'bg-red-100 text-red-700' : statusEntry.variant === 'info' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{statusEntry.label}</span> : row.status} />
+                    <C label="วันที่ขอ"   value={fmtDate(row.request_time)} />
+                  </div>
+                </DrawerSection>
+                <DrawerSection title="บุคลากร">
+                  <div className="grid grid-cols-2 gap-2">
+                    <C label="แพทย์ผู้สั่ง" value={row.prescriber_name} span />
+                    <C label="ผู้ขอ"         value={row.requested_by_name} />
+                    <C label="ผู้อนุมัติ"    value={row.approved_by_name} />
+                  </div>
+                </DrawerSection>
+              </div>
+              {/* ขวา */}
+              <div className="flex-1 min-w-0">
+                <DrawerSection title="ทางคลินิก">
+                  <div className="grid grid-cols-2 gap-2">
+                    <C label="การวินิจฉัย"     value={row.diagnosis} span />
+                    <C label="ตำแหน่งติดเชื้อ" value={row.infection_site} />
+                    <C label="ผล Culture"       value={CULTURE_OPTIONS.find(o => o.value === row.culture_result)?.label} />
+                    <C label="เหตุผลทางคลินิก" value={row.clinical_indication} span />
+                    {row.note && <C label="หมายเหตุ" value={row.note} span />}
+                  </div>
+                </DrawerSection>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </DetailDrawer>
       {/* Confirm Dialog */}
       {confirm && (
