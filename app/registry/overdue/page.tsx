@@ -115,7 +115,7 @@ export default function OverduePage() {
   };
 
   const handleSave = async () => {
-    if (!form.med_id) { setErrors({ med_id: 'กรุณาเลือกยา' }); return; }
+    if (!form.med_sid) { setErrors({ med_sid: 'กรุณาเลือกยาในคลัง' }); return; }
     setSaving(true);
     try {
       const payload = {
@@ -160,12 +160,15 @@ export default function OverduePage() {
         <div className="flex flex-col gap-4">
           <FormSection title="ยาและผู้ป่วย">
             <div>
-              <SearchSelect type="drug" label="ยา (ทะเบียนยา)" required initialDisplay={form.med_label} resetKey={resetKey}
-                onSelect={d => { f('med_id', d?.med_id ?? 0); f('med_label', d?.med_name ?? ''); if (errors.med_id) setErrors(p => ({ ...p, med_id: '' })); }} />
-              {errors.med_id && <p className="mt-1 text-xs text-red-500">{errors.med_id}</p>}
+              <SearchSelect type="subwarehouse" label="ยาในคลัง" required initialDisplay={form.drug_sub_label} resetKey={resetKey}
+                onSelect={s => {
+                  f('med_sid', s?.med_sid ?? 0);
+                  f('med_id', s?.med_id ?? 0);
+                  f('drug_sub_label', s ? (s.med_showname || s.med_name) : '');
+                  if (errors.med_sid) setErrors(p => ({ ...p, med_sid: '' }));
+                }} />
+              {errors.med_sid && <p className="mt-1 text-xs text-red-500">{errors.med_sid}</p>}
             </div>
-            <SearchSelect type="subwarehouse" label="ยาในคลัง" initialDisplay={form.drug_sub_label} resetKey={resetKey}
-              onSelect={s => { f('med_sid', s?.med_sid ?? 0); f('drug_sub_label', s ? (s.med_showname || s.med_name) : ''); }} />
             <SearchSelect type="patient" label="ผู้ป่วย" initialDisplay={form.patient_label} resetKey={resetKey}
               onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
             <SearchSelect type="user" label="แพทย์" initialDisplay={form.doctor_label} resetKey={resetKey}
