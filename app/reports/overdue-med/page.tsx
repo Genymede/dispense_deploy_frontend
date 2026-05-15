@@ -8,8 +8,8 @@ import { Clock } from 'lucide-react';
 
 const COLS: ColDef[] = [
   { key:'med_name', label:'ชื่อยา',
-    render: r => <><p className="font-medium">{r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></>,
-    exportValue: r => r.med_name??'-' },
+    render: r => <><p className="font-medium">{r.sub_drug_name || r.med_name}</p><p className="text-xs text-slate-400">{r.med_generic_name}</p></>,
+    exportValue: r => r.sub_drug_name ?? r.med_name ?? '-' },
   { key:'patient_name', label:'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name||'-'}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>,
     exportValue: r => `${r.patient_name??'-'} (HN: ${r.hn_number??'-'})` },
