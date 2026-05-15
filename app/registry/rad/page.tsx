@@ -9,7 +9,7 @@ import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDraw
 import { radApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { fmtDate } from '@/lib/dateUtils';
-import { FileWarning, CheckCircle, XCircle, Package } from 'lucide-react';
+import { FileWarning, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const STATUS_MAP = {
@@ -63,7 +63,7 @@ export default function RadPage() {
   const [reload, setReload] = useState(0);
   const [resetKey, setResetKey] = useState(0);
   const [row, setRow] = useState<any>(null);
-  const [confirm, setConfirm] = useState<{ type: 'approve' | 'reject' | 'dispense'; row: any } | null>(null);
+  const [confirm, setConfirm] = useState<{ type: 'approve' | 'reject'; row: any } | null>(null);
   const [errors, setErrors] = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
   const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
@@ -101,12 +101,9 @@ export default function RadPage() {
       if (type === 'approve') {
         await radApi.approve(r.rad_id, user?.id ?? '');
         toast.success('อนุมัติแล้ว');
-      } else if (type === 'reject') {
+      } else {
         await radApi.reject(r.rad_id, user?.id ?? '');
         toast.success('ปฏิเสธคำขอแล้ว');
-      } else {
-        await radApi.dispense(r.rad_id, user?.id ?? '');
-        toast.success('จ่ายยาเรียบร้อย — ตัดสต็อกแล้ว');
       }
       setReload(n => n + 1);
     } catch (e: any) { toast.error(e.message); }
@@ -176,12 +173,6 @@ export default function RadPage() {
                 <XCircle size={12} /> ปฏิเสธ
               </button>
             </>)}
-            {r.status === 'approved' && (
-              <button onClick={e => { e.stopPropagation(); setConfirm({ type: 'dispense', row: r }); }}
-                className="px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium flex items-center gap-1">
-                <Package size={12} /> จ่ายยา
-              </button>
-            )}
           </div>
         )}
         deleteConfirmText={r => `ลบใบขอ RAD "${r.med_name}"?`}
@@ -272,9 +263,6 @@ export default function RadPage() {
               <Button size="sm" onClick={() => { setRow(null); setConfirm({ type: 'approve', row }); }}>อนุมัติ</Button>
               <Button size="sm" variant="danger" onClick={() => { setRow(null); setConfirm({ type: 'reject', row }); }}>ปฏิเสธ</Button>
             </>}
-            {row.status === 'approved' && (
-              <Button size="sm" onClick={() => { setRow(null); setConfirm({ type: 'dispense', row }); }}>จ่ายยา</Button>
-            )}
           </div>
         )}
       >
@@ -339,18 +327,16 @@ export default function RadPage() {
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <div className={`flex items-center gap-3 mb-3 ${confirm.type === 'approve' ? 'text-green-600' : confirm.type === 'dispense' ? 'text-blue-600' : 'text-red-600'}`}>
-              {confirm.type === 'approve' ? <CheckCircle size={24} /> : confirm.type === 'dispense' ? <Package size={24} /> : <XCircle size={24} />}
+            <div className={`flex items-center gap-3 mb-3 ${confirm.type === 'approve' ? 'text-green-600' : 'text-red-600'}`}>
+              {confirm.type === 'approve' ? <CheckCircle size={24} /> : <XCircle size={24} />}
               <h3 className="font-bold text-base text-slate-800">
-                {confirm.type === 'approve' ? 'ยืนยันการอนุมัติ' : confirm.type === 'dispense' ? 'ยืนยันการจ่ายยา' : 'ยืนยันการปฏิเสธ'}
+                {confirm.type === 'approve' ? 'ยืนยันการอนุมัติ' : 'ยืนยันการปฏิเสธ'}
               </h3>
             </div>
             <p className="text-sm text-slate-600 mb-1">
               คุณต้องการ{' '}
               {confirm.type === 'approve'
                 ? <span className="font-semibold text-green-700">อนุมัติ</span>
-                : confirm.type === 'dispense'
-                ? <span className="font-semibold text-blue-700">จ่ายยา (ตัดสต็อก)</span>
                 : <span className="font-semibold text-red-700">ปฏิเสธ</span>}{' '}
               คำขอนี้?
             </p>
@@ -364,8 +350,8 @@ export default function RadPage() {
                 ยกเลิก
               </button>
               <button onClick={handleConfirm}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold text-white ${confirm.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : confirm.type === 'dispense' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                {confirm.type === 'approve' ? 'อนุมัติ' : confirm.type === 'dispense' ? 'จ่ายยา' : 'ปฏิเสธ'}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold text-white ${confirm.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                {confirm.type === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}
               </button>
             </div>
           </div>
