@@ -256,6 +256,7 @@ export default function RadPage() {
         title={r => `RAD: ${r.med_name}`}
         subtitle={r => STATUS_MAP[r.status as keyof typeof STATUS_MAP]?.label ?? r.status}
         onEdit={openEdit}
+        width="lg"
         extraActions={r => r.status === 'pending' ? (
           <div className="flex gap-2">
             <Button onClick={() => { setRow(null); setConfirm({ type: 'approve', row: r }); }}>อนุมัติ</Button>
@@ -263,17 +264,17 @@ export default function RadPage() {
           </div>
         ) : null}
         fields={[
+          { label: 'ยาปฏิชีวนะ',       key: '_drug',               type: 'drug',         span: true },
+          { label: 'จำนวน',             key: 'quantity',            type: 'template',     template: r => `${r.quantity} ${r.unit || ''}` },
           { label: 'ผู้ป่วย',           key: 'patient_name' },
           { label: 'Ward',              key: 'ward' },
           { label: 'สถานะ',             key: 'status',              type: 'badge_status', statusMap: STATUS_MAP },
-          { label: 'ยาปฏิชีวนะ',       key: '_drug',               type: 'drug',         span: true },
-          { label: 'จำนวน',             key: 'quantity',            type: 'template',     template: r => `${r.quantity} ${r.unit || ''}` },
+          { label: 'วันที่ขอ',          key: 'request_time',        type: 'datetime' },
           { label: 'การวินิจฉัย',       key: 'diagnosis',           span: true },
           { label: 'ตำแหน่งติดเชื้อ',  key: 'infection_site' },
           { label: 'ผล Culture',        key: 'culture_result',      type: 'template',     template: r => CULTURE_OPTIONS.find(o => o.value === r.culture_result)?.label ?? r.culture_result },
-          { label: 'เหตุผลทางคลินิก',  key: 'clinical_indication', span: true },
           { label: 'ระยะเวลา (วัน)',    key: 'duration_days' },
-          { label: 'วันที่ขอ',          key: 'request_time',        type: 'datetime',     span: true },
+          { label: 'เหตุผลทางคลินิก',  key: 'clinical_indication', span: true },
           { label: 'แพทย์ผู้สั่ง',      key: 'prescriber_name' },
           { label: 'ผู้ขอ',             key: 'requested_by_name' },
           { label: 'ผู้อนุมัติ',        key: 'approved_by_name' },
