@@ -64,11 +64,6 @@ const cols: ColDef[] = [
       </span>
     ),
     exportValue: r => `${r.balance_before} → ${r.balance_after}` },
-  { key: 'reference_no', label: 'เลขอ้างอิง',
-    render: r => <span className="text-xs text-slate-500">{r.reference_no || r.prescription_no || r.ward_from || '—'}</span>,
-    exportValue: r => r.reference_no || r.prescription_no || r.ward_from || '' },
-  { key: 'performed_by_name', label: 'ผู้ดำเนินการ',
-    render: r => <span className="text-xs text-slate-600">{r.performed_by_name || '—'}</span> },
   { key: 'note', label: 'หมายเหตุ',
     render: r => <span className="text-xs text-slate-400 max-w-[140px] truncate block">{r.note || '—'}</span> },
 ];
@@ -156,12 +151,7 @@ export default function MedMovementPage() {
                   </>
                 ),
                 span: true },
-              { label: 'เลขอ้างอิง',    value: drawer.reference_no  || '—' },
-              { label: 'เลขใบสั่งยา',   value: drawer.prescription_no || '—' },
-              { label: 'Ward',            value: drawer.ward_from     || '—' },
               { label: 'Lot Number',      value: drawer.lot_number    || '—' },
-              { label: 'วันหมดอายุ (lot)', value: safeDate(drawer.expiry_date) },
-              { label: 'ผู้ดำเนินการ',   value: drawer.performed_by_name || '—' },
               { label: 'วันเวลา',        value: safeDate(drawer.created_at, true), span: true },
               { label: 'หมายเหตุ',       value: drawer.note || '—', span: true },
             ]} />
