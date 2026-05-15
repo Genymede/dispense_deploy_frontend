@@ -31,7 +31,10 @@ const cols: ColDef[] = [
     key: 'patient_name', label: 'ผู้ป่วย',
     render: r => <><p className="font-medium">{r.patient_name || '-'}</p><p className="text-xs text-slate-400">{r.hn_number}</p></>
   },
-  { key: 'quantity', label: 'จำนวน', className: 'font-semibold' },
+  {
+    key: 'quantity', label: 'จำนวน',
+    render: r => <span className="font-semibold">{r.quantity} <span className="text-xs font-normal text-slate-400">{r.unit || ''}</span></span>
+  },
   { key: 'doctor_name', label: 'แพทย์', className: 'text-xs' },
   {
     key: 'dispense_status', label: 'สถานะ',
@@ -237,7 +240,7 @@ export default function OverduePage() {
           { label: 'รายการในคลัง', key: 'sub_drug_name' },
           { label: 'รูปแบบ/บรรจุ', key: 'packaging_type' },
           { label: 'ที่เก็บ', key: 'location' },
-          { label: 'จำนวน', key: 'quantity' },
+          { label: 'จำนวน', key: 'quantity', type: 'template', template: r => r.unit ? `${r.quantity} ${r.unit}` : String(r.quantity ?? '-') },
           { label: 'วันที่', key: 'time', type: 'datetime' },
         ]}
       />
