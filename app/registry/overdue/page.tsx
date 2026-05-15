@@ -149,6 +149,7 @@ export default function OverduePage() {
         open={!!drawer} onClose={() => setDrawer(null)} row={drawer}
         title="ยาค้างจ่าย" subtitle={r => r.med_name}
         fields={[
+          { label: 'ชื่อยา', key: 'med_name' },
           { label: 'ผู้ป่วย', key: '_patient', type: 'patient' },
           { label: 'จำนวน', key: 'quantity', type: 'template', template: r => r.unit ? `${r.quantity} ${r.unit}` : String(r.quantity ?? '-') },
           { label: 'แพทย์', key: 'doctor_name' },
