@@ -20,6 +20,13 @@ const STATUS_MAP = {
   cancelled: { label: 'ยกเลิก',      variant: 'gray'    as const },
 };
 
+const WARD_OPTIONS = [
+  { value: 'OPD',  label: 'ผู้ป่วยนอก' },
+  { value: 'IPD',  label: 'ผู้ป่วยใน' },
+  { value: 'ER',   label: 'ฉุกเฉิน' },
+  { value: 'DENT', label: 'ทันตกรรม' },
+];
+
 const CULTURE_OPTIONS = [
   { value: 'not_done',  label: 'ยังไม่ได้ส่ง' },
   { value: 'pending',   label: 'รอผล' },
@@ -199,8 +206,8 @@ export default function RadPage() {
           <SearchSelect type="patient" label="ผู้ป่วย"
             initialDisplay={form.patient_label} resetKey={resetKey}
             onSelect={p => { f('patient_id', p?.patient_id ?? 0); f('patient_label', p?.full_name ?? ''); }} />
-          <Input label="Ward / แผนก"
-            value={form.ward} onChange={e => f('ward', e.target.value)} />
+          <Select label="แผนก" value={form.ward} onChange={e => f('ward', e.target.value)}
+            placeholder="เลือกแผนก" options={WARD_OPTIONS} />
 
           {/* ข้อมูลทางคลินิก */}
           <div className="sm:col-span-2">
@@ -296,7 +303,7 @@ export default function RadPage() {
                 <DrawerSection title="ผู้ป่วย">
                   <div className="grid grid-cols-2 gap-2">
                     <C label="ชื่อผู้ป่วย" value={row.patient_name} span />
-                    <C label="Ward"        value={row.ward} />
+                    <C label="แผนก"       value={WARD_OPTIONS.find(w => w.value === row.ward)?.label ?? row.ward} />
                     <C label="สถานะ"       value={statusEntry ? <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusEntry.variant === 'success' ? 'bg-green-100 text-green-700' : statusEntry.variant === 'danger' ? 'bg-red-100 text-red-700' : statusEntry.variant === 'info' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{statusEntry.label}</span> : row.status} />
                     <C label="วันที่ขอ"   value={fmtDate(row.request_time)} />
                   </div>
