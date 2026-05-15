@@ -83,7 +83,7 @@ export function RowActions({
   onView, onEdit, onDelete, canDelete = true, deleteMessage,
 }: {
   onView?: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   canDelete?: boolean;
   deleteMessage?: string;
@@ -98,10 +98,12 @@ export function RowActions({
             <Eye size={14} />
           </button>
         )}
-        <button onClick={onEdit}
-          className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-colors" title="แก้ไข">
-          <Edit2 size={14} />
-        </button>
+        {onEdit && (
+          <button onClick={onEdit}
+            className="p-1.5 rounded-lg hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-colors" title="แก้ไข">
+            <Edit2 size={14} />
+          </button>
+        )}
         {onDelete && canDelete && (
           <button onClick={() => setShowConfirm(true)}
             className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="ลบ">
