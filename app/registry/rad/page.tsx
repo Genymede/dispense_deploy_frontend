@@ -5,7 +5,7 @@ import DataTable, { ColDef, StatusBadge } from '@/components/DataTable';
 import { CrudModal, FormGrid, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
-import RegistryDrawer from '@/components/RegistryDrawer';
+import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { radApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { fmtDate } from '@/lib/dateUtils';
@@ -251,36 +251,63 @@ export default function RadPage() {
         </FormGrid>
       </CrudModal>
 
-      <RegistryDrawer
-        open={!!row} onClose={() => setRow(null)} row={row}
-        title={r => `RAD: ${r.med_name}`}
-        subtitle={r => STATUS_MAP[r.status as keyof typeof STATUS_MAP]?.label ?? r.status}
-        onEdit={openEdit}
+      <DetailDrawer
+        open={!!row} onClose={() => setRow(null)}
+        title={row ? `RAD: ${row.med_name}` : ''}
+        subtitle={row ? STATUS_MAP[row.status as keyof typeof STATUS_MAP]?.label ?? row.status : ''}
         width="lg"
-        extraActions={r => r.status === 'pending' ? (
-          <div className="flex gap-2">
-            <Button onClick={() => { setRow(null); setConfirm({ type: 'approve', row: r }); }}>อนุมัติ</Button>
-            <Button variant="danger" onClick={() => { setRow(null); setConfirm({ type: 'reject', row: r }); }}>ปฏิเสธ</Button>
+        footer={row && (
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => { setRow(null); openEdit(row); }}>แก้ไข</Button>
+            {row.status === 'pending' && <>
+              <Button size="sm" onClick={() => { setRow(null); setConfirm({ type: 'approve', row }); }}>อนุมัติ</Button>
+              <Button size="sm" variant="danger" onClick={() => { setRow(null); setConfirm({ type: 'reject', row }); }}>ปฏิเสธ</Button>
+            </>}
           </div>
-        ) : null}
-        fields={[
-          { label: 'ยาปฏิชีวนะ',       key: '_drug',               type: 'drug',         span: true },
-          { label: 'จำนวน',             key: 'quantity',            type: 'template',     template: r => `${r.quantity} ${r.unit || ''}` },
-          { label: 'ผู้ป่วย',           key: 'patient_name' },
-          { label: 'Ward',              key: 'ward' },
-          { label: 'สถานะ',             key: 'status',              type: 'badge_status', statusMap: STATUS_MAP },
-          { label: 'วันที่ขอ',          key: 'request_time',        type: 'datetime' },
-          { label: 'การวินิจฉัย',       key: 'diagnosis',           span: true },
-          { label: 'ตำแหน่งติดเชื้อ',  key: 'infection_site' },
-          { label: 'ผล Culture',        key: 'culture_result',      type: 'template',     template: r => CULTURE_OPTIONS.find(o => o.value === r.culture_result)?.label ?? r.culture_result },
-          { label: 'ระยะเวลา (วัน)',    key: 'duration_days' },
-          { label: 'เหตุผลทางคลินิก',  key: 'clinical_indication', span: true },
-          { label: 'แพทย์ผู้สั่ง',      key: 'prescriber_name' },
-          { label: 'ผู้ขอ',             key: 'requested_by_name' },
-          { label: 'ผู้อนุมัติ',        key: 'approved_by_name' },
-          { label: 'หมายเหตุ',          key: 'note',                span: true },
-        ]}
-      />
+        )}
+      >
+        {row && (
+          <div className="flex gap-4">
+            {/* ซ้าย: ยา + ผู้ป่วย + บุคลากร */}
+            <div className="flex-1 flex flex-col gap-3 min-w-0">
+              <DrawerSection title="ยาปฏิชีวนะ">
+                <DrawerGrid items={[
+                  { label: 'ชื่อยา',    value: <><p className="font-semibold">{row.med_name}</p>{row.med_generic_name && <p className="text-xs text-slate-400 mt-0.5">{row.med_generic_name}</p>}</>, span: true },
+                  { label: 'จำนวน',     value: `${row.quantity} ${row.unit || ''}` },
+                  { label: 'ระยะเวลา',  value: row.duration_days ? `${row.duration_days} วัน` : '—' },
+                ]} />
+              </DrawerSection>
+              <DrawerSection title="ผู้ป่วย">
+                <DrawerGrid items={[
+                  { label: 'ผู้ป่วย',  value: row.patient_name || '—' },
+                  { label: 'Ward',     value: row.ward || '—' },
+                  { label: 'สถานะ',    value: <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${row.status === 'approved' ? 'bg-green-100 text-green-700' : row.status === 'rejected' ? 'bg-red-100 text-red-700' : row.status === 'dispensed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{STATUS_MAP[row.status as keyof typeof STATUS_MAP]?.label ?? row.status}</span> },
+                  { label: 'วันที่ขอ', value: row.request_time ? new Date(row.request_time).toLocaleDateString('th-TH') : '—' },
+                ]} />
+              </DrawerSection>
+              <DrawerSection title="บุคลากร">
+                <DrawerGrid items={[
+                  { label: 'แพทย์ผู้สั่ง', value: row.prescriber_name || '—' },
+                  { label: 'ผู้ขอ',         value: row.requested_by_name || '—' },
+                  { label: 'ผู้อนุมัติ',    value: row.approved_by_name || '—', span: true },
+                ]} />
+              </DrawerSection>
+            </div>
+            {/* ขวา: ทางคลินิก */}
+            <div className="flex-1 flex flex-col gap-3 min-w-0">
+              <DrawerSection title="ข้อมูลทางคลินิก">
+                <DrawerGrid items={[
+                  { label: 'การวินิจฉัย',      value: row.diagnosis || '—', span: true },
+                  { label: 'ตำแหน่งติดเชื้อ',  value: row.infection_site || '—' },
+                  { label: 'ผล Culture',        value: CULTURE_OPTIONS.find(o => o.value === row.culture_result)?.label ?? row.culture_result ?? '—' },
+                  { label: 'เหตุผลทางคลินิก',  value: row.clinical_indication || '—', span: true },
+                  ...(row.note ? [{ label: 'หมายเหตุ', value: row.note, span: true as const }] : []),
+                ]} />
+              </DrawerSection>
+            </div>
+          </div>
+        )}
+      </DetailDrawer>
       {/* Confirm Dialog */}
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
