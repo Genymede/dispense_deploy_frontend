@@ -7,6 +7,11 @@ import { AlertTriangle } from 'lucide-react';
 import { fmtDate } from '@/lib/dateUtils';
 
 const COLS: ColDef[] = [
+  { key:'patient_name', label:'ผู้ป่วย',
+    render: r => r.patient_name
+      ? <><p className="font-medium">{r.patient_name}</p><p className="text-xs text-slate-400">HN: {r.hn_number}</p></>
+      : <span className="text-slate-300">—</span>,
+    exportValue: r => r.patient_name ? `${r.patient_name} (${r.hn_number})` : '—' },
   { key:'med_name', label:'ชื่อยา',
     render: r => <p className="font-medium">{r.med_name||'-'}</p>,
     exportValue: r => r.med_name??'-' },
