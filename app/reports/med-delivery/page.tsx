@@ -59,14 +59,17 @@ const S: Record<string, React.CSSProperties> = {
     textAlign: 'left', borderBottom: '1px solid #e2e8f0',
   },
   subTd: { padding: '5px 8px', fontSize: '12px', borderBottom: '1px solid #f1f5f9' },
-  badge: (status: string): React.CSSProperties => ({
+};
+
+function badgeStyle(status: string): React.CSSProperties {
+  return {
     display: 'inline-block', padding: '2px 10px', borderRadius: '999px',
     fontSize: '11px', fontWeight: 600,
     color: STATUS_COLOR[status] ?? '#92400e',
     background: STATUS_BG[status] ?? '#fffbeb',
     border: `1px solid ${STATUS_COLOR[status] ?? '#d97706'}33`,
-  }),
-};
+  };
+}
 
 function DeliveryPrintLayout({ data }: { data: any[] }) {
   const now = new Date();
@@ -127,7 +130,7 @@ function DeliveryPrintLayout({ data }: { data: any[] }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '11px', color: '#6b7280' }}>{fmtDate(r.delivery_date)}</span>
-                <span style={S.badge(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</span>
+                <span style={badgeStyle(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</span>
               </div>
             </div>
 
