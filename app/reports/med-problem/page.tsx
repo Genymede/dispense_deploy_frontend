@@ -4,6 +4,7 @@ import DataTable, { ColDef } from '@/components/DataTable';
 import { Badge } from '@/components/ui';
 import { extraReportApi } from '@/lib/api';
 import { AlertTriangle } from 'lucide-react';
+import { fmtDate } from '@/lib/dateUtils';
 
 const COLS: ColDef[] = [
   { key:'med_name', label:'ชื่อยา',
@@ -15,6 +16,9 @@ const COLS: ColDef[] = [
   { key:'is_resolved', label:'สถานะ',
     render: r => <Badge variant={r.is_resolved?'success':'warning'}>{r.is_resolved?'แก้ไขแล้ว':'ยังไม่แก้ไข'}</Badge>,
     exportValue: r => r.is_resolved ? 'แก้ไขแล้ว' : 'ยังไม่แก้ไข' },
+  { key:'reported_at', label:'วันที่',
+    render: r => fmtDate(r.reported_at),
+    exportValue: r => fmtDate(r.reported_at) },
 ];
 
 export default function MedProblemPage() {
