@@ -202,7 +202,7 @@ export default function DashboardPage() {
                         {[3, 7, 14, 30].map(d => (
                           <button key={d} onClick={() => setChartDays(d)}
                             className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-colors ${chartDays === d ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                            {d}ว
+                            {d} วัน
                           </button>
                         ))}
                       </div>
