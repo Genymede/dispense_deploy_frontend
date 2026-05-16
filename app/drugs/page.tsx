@@ -23,7 +23,6 @@ const emptyForm = {
   location: '',
   med_showname: '',
   med_showname_eng: '',
-  drug_code: '',
   min_quantity: '',
   max_quantity: '',
 };
@@ -196,7 +195,6 @@ export default function DrugsPage() {
       location: d.location || '',
       med_showname: d.med_showname || '',
       med_showname_eng: d.med_showname_eng || '',
-      drug_code: d.drug_code || '',
       min_quantity: d.min_quantity != null ? String(d.min_quantity) : '',
       max_quantity: d.max_quantity != null ? String(d.max_quantity) : '',
     });
@@ -216,7 +214,6 @@ export default function DrugsPage() {
       const payload: any = {
         ...form,
         med_id: Number(form.med_id),
-        drug_code: form.drug_code || undefined,
         min_quantity: form.min_quantity !== '' ? Number(form.min_quantity) : undefined,
         max_quantity: form.max_quantity !== '' ? Number(form.max_quantity) : undefined,
       };
@@ -318,7 +315,7 @@ export default function DrugsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    {['รูป', 'รหัส', 'ชื่อยา', 'คงเหลือ', 'ขั้นต่ำ', 'หน่วย', 'รูปแบบบรรจุ', 'หมวดหมู่', 'สถานะ', 'จัดการ'].map((h) => (
+                    {['รูป', 'ชื่อยา', 'คงเหลือ', 'ขั้นต่ำ', 'หน่วย', 'รูปแบบบรรจุ', 'หมวดหมู่', 'สถานะ', 'จัดการ'].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap last:text-right">{h}</th>
                     ))}
                   </tr>
@@ -361,12 +358,6 @@ export default function DrugsPage() {
                             ? <img src={d.image_url} alt="" className="w-10 h-10 rounded-lg object-cover border border-slate-100" />
                             : <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300"><Package size={18} /></div>
                           }
-                        </td>
-                        {/* รหัส */}
-                        <td className="px-4 py-2.5">
-                          <span className="font-mono text-xs text-slate-500">
-                            {d.drug_code || `#${d.med_sid}`}
-                          </span>
                         </td>
                         {/* ชื่อยา */}
                         <td className="px-4 py-2.5">
@@ -493,9 +484,7 @@ export default function DrugsPage() {
             <Input label="ตำแหน่งที่เก็บ" placeholder="เช่น A-01"
               value={form.location} onChange={e => f('location', e.target.value)} />
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <Input label="รหัสยา" placeholder="เช่น DRG-001"
-              value={form.drug_code} onChange={e => f('drug_code', e.target.value)} />
+          <div className="grid grid-cols-2 gap-3">
             <Input label="สต็อกขั้นต่ำ" type="number" min="0" placeholder="0"
               value={form.min_quantity} onChange={e => f('min_quantity', e.target.value)} />
             <Input label="สต็อกสูงสุด" type="number" min="0" placeholder="0"
