@@ -529,6 +529,10 @@ export default function DrugsPage() {
         {viewDrug && (() => {
           const activeLots = viewLots.filter(l => l.quantity > 0);
           const totalQty   = activeLots.reduce((s, l) => s + l.quantity, 0);
+          const lotsWithPrice = activeLots.filter(l => l.unit_price != null);
+          const avgUnitPrice = lotsWithPrice.length > 0
+            ? lotsWithPrice.reduce((s, l) => s + Number(l.unit_price), 0) / lotsWithPrice.length
+            : null;
           const anyExpired = (viewDrug.expired_lot_count ?? 0) > 0;
           const validLots  = (viewDrug.lot_count ?? 0) > 0;
           const nearExp    = !!viewDrug.nearest_valid_lot_exp && new Date(viewDrug.nearest_valid_lot_exp) <= new Date(Date.now() + nearExpiryDays * 86400_000);
@@ -633,9 +637,9 @@ export default function DrugsPage() {
 
                   {/* Price */}
                   <div className="bg-slate-50 rounded-xl px-3 py-2.5">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาขาย/หน่วย</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">ราคาขาย/หน่วย (เฉลี่ย)</p>
                     <p className="text-sm font-semibold text-slate-700 tabular-nums">
-                      {viewDrug.unit_price != null ? `฿${Number(viewDrug.unit_price).toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
+                      {avgUnitPrice != null ? `฿${avgUnitPrice.toFixed(2)}` : <span className="text-slate-300 font-normal">—</span>}
                     </p>
                   </div>
                 </div>
