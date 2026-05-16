@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import DataTable, { ColDef } from '@/components/DataTable';
 import { CrudModal, FormSection, FormGrid, RowActions } from '@/components/CrudModal';
 import { Input, Select, Textarea, Badge, Button } from '@/components/ui';
 import SearchSelect from '@/components/SearchSelect';
-import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
+import DetailDrawer, { DrawerSection } from '@/components/DetailDrawer';
 import { registryApi, crudApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { ShieldAlert } from 'lucide-react';
@@ -61,6 +61,13 @@ export default function AllergyPage() {
   const [errors, setErrors] = useState<Record<string,string>>({});
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
   const clearErr = (k: string) => { if (errors[k]) setErrors(p => ({ ...p, [k]: '' })); };
+
+  const C = ({ label, value, span }: { label: string; value: React.ReactNode; span?: boolean }) => (
+    <div className={`bg-slate-50 rounded-xl px-3 py-2.5 ${span ? 'col-span-2' : ''}`}>
+      <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
+      <div className="text-sm font-medium text-slate-800 break-words">{value || <span className="text-slate-300">—</span>}</div>
+    </div>
+  );
 
   const openAdd = () => {
     setForm({ ...emptyForm, recorded_by_id: user?.id ?? null, recorded_by_label: user?.email ?? '' });
@@ -161,27 +168,47 @@ export default function AllergyPage() {
       </CrudModal>
 
       <DetailDrawer open={!!drawer} onClose={() => setDrawer(null)}
+        width="lg"
         title={drawer ? `แพ้ยา: ${drawer.med_name}` : ''}
-        subtitle={drawer ? `${drawer.patient_name} (HN: ${drawer.hn_number})` : ''}>
+        subtitle={drawer ? `${drawer.patient_name} · HN: ${drawer.hn_number}` : ''}
+        footer={drawer && (
+          <Button variant="secondary" onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
+        )}>
         {drawer && (
-          <DrawerSection title="รายละเอียดการแพ้ยา">
-            <DrawerGrid items={[
-              { label: 'ผู้ป่วย', value: <><p className="font-medium">{drawer.patient_name}</p><p className="text-xs text-slate-400">HN: {drawer.hn_number}</p></> },
-              { label: 'ระดับ', value: <Badge variant={(SEV[drawer.severity as keyof typeof SEV] ?? { variant: 'gray' }).variant}>{SEV[drawer.severity as keyof typeof SEV]?.label ?? drawer.severity}</Badge> },
-              { label: 'ยาที่แพ้', value: <><p className="font-medium">{drawer.med_name}</p><p className="text-xs text-slate-400">{drawer.med_generic_name}</p></>, span: true },
-              { label: 'หมวดยา', value: drawer.med_medical_category || '—' },
-              { label: 'อาการ', value: drawer.symptoms, span: true },
-              { label: 'รายละเอียด', value: drawer.description || '—', span: true },
-              { label: 'วันที่รายงาน', value: fmtDate(drawer.reported_at) },
-              { label: 'ผู้บันทึก', value: drawer.recorded_by_name || '—' },
-              { label: 'วันที่บันทึก', value: fmtDate(drawer.created_at, true), span: true },
-            ]} />
-          </DrawerSection>
-        )}
-        {drawer && (
-          <DrawerSection title="">
-            <Button variant="secondary" onClick={() => { setDrawer(null); openEdit(drawer); }}>แก้ไข</Button>
-          </DrawerSection>
+          <div className="flex gap-4">
+            {/* ซ้าย */}
+            <div className="w-[42%] flex flex-col gap-3">
+              <DrawerSection title="ยาที่แพ้">
+                <div className="flex flex-col gap-2">
+                  <C label="ชื่อยา" value={drawer.med_name} />
+                  <C label="ชื่อสามัญ" value={drawer.med_generic_name} />
+                </div>
+              </DrawerSection>
+              <DrawerSection title="ผู้ป่วย">
+                <div className="grid grid-cols-2 gap-2">
+                  <C label="ชื่อ-นามสกุล" value={drawer.patient_name} span />
+                  <C label="HN" value={drawer.hn_number} />
+                  <C label="ระดับ" value={
+                    <Badge variant={(SEV[drawer.severity as keyof typeof SEV] ?? { variant: 'gray' as const }).variant}>
+                      {SEV[drawer.severity as keyof typeof SEV]?.label ?? drawer.severity}
+                    </Badge>
+                  } />
+                  <C label="วันที่รายงาน" value={fmtDate(drawer.reported_at)} span />
+                  <C label="ผู้บันทึก" value={drawer.recorded_by_name} span />
+                  <C label="วันที่บันทึก" value={fmtDate(drawer.created_at, true)} span />
+                </div>
+              </DrawerSection>
+            </div>
+            {/* ขวา */}
+            <div className="flex-1 flex flex-col gap-3">
+              <DrawerSection title="รายละเอียดอาการ">
+                <div className="flex flex-col gap-2">
+                  <C label="อาการ" value={drawer.symptoms} />
+                  <C label="รายละเอียดเพิ่มเติม" value={drawer.description} />
+                </div>
+              </DrawerSection>
+            </div>
+          </div>
         )}
       </DetailDrawer>
     </MainLayout>
