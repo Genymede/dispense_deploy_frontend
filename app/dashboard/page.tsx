@@ -188,14 +188,13 @@ export default function DashboardPage() {
               {/* LEFT: charts stacked */}
               <div className="lg:col-span-2 flex flex-col gap-6">
                 <ChartCard
-                  title="กระแสยา 30 วัน"
+                  title="การรับ-จ่ายยา 30 วัน"
                   icon={BarChart3}
                   iconColor="text-blue-600"
                   toolbar={
                     <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                       <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
                       <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
-                      <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
                     </div>
                   }
                 >
@@ -393,14 +392,14 @@ export default function DashboardPage() {
 
             {/* ── Recent transactions ─────────────────────────────────────────── */}
             <ChartCard
-              title="ธุรกรรมล่าสุด"
+              title="การเคลื่อนไหวล่าสุด"
               icon={Activity}
               iconColor="text-slate-600"
               toolbar={<Link href="/drugs" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูคลัง</Link>}
             >
               {!stats.recent_transactions?.length ? (
                 <div className="flex items-center justify-center h-[120px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-                  ยังไม่มีธุรกรรม
+                  ยังไม่มีการเคลื่อนไหว
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
