@@ -99,6 +99,7 @@ interface DataTableProps {
   deleteConfirmText?: (row: any) => string;
   actionCol?: (row: any) => ReactNode;
   onRowClick?: (row: any) => void;
+  printTemplate?: (data: any[]) => ReactNode;
   // backward compat
   reportType?: string;
   exportParams?: Record<string, string | undefined>;
@@ -114,6 +115,7 @@ export default function DataTable({
   perPage = 20,
   emptyIcon, emptyText = 'ไม่พบรายการ', deps = [],
   onAdd, addLabel = 'เพิ่มรายการ', onDelete, deleteConfirmText, actionCol, onRowClick,
+  printTemplate,
   reportType, exportParams,
 }: DataTableProps) {
   const [rows, setRows]       = useState<any[]>([]);
@@ -221,18 +223,19 @@ export default function DataTable({
     const exportCols = cols.filter(c => !c.skipExport);
     const content = (
       <div className="print-only print-unbound bg-white text-black min-h-screen">
-        <ReportPrintTemplate
-          title={exportTitle ?? 'รายงาน'}
-          columns={exportCols.map(c => ({
-            label: c.label,
-            key: c.key,
-            render: c.exportValue ? (r: any) => c.exportValue!(r) : undefined
-          }))}
-          data={printData}
-        />
+        {printTemplate ? printTemplate(printData) : (
+          <ReportPrintTemplate
+            title={exportTitle ?? 'รายงาน'}
+            columns={exportCols.map(c => ({
+              label: c.label,
+              key: c.key,
+              render: c.exportValue ? (r: any) => c.exportValue!(r) : undefined
+            }))}
+            data={printData}
+          />
+        )}
       </div>
     );
-    // Render directly into body to escape MainLayout overflow-hidden bounds
     return createPortal(content, document.body);
   }
 
