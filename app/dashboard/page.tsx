@@ -8,9 +8,9 @@ import {
 } from '@/lib/api';
 import {
   Calendar, TrendingDown, Package,
-  ArrowDownToLine, ArrowUpFromLine, Activity, RefreshCw,
-  RotateCcw, ClipboardList, ClipboardCheck, Users,
-  Trash2, SlidersHorizontal, PackageMinus, CalendarClock, CalendarX, Bell, BarChart3,
+  ArrowDownToLine, RefreshCw,
+  ClipboardList, ClipboardCheck, Users,
+  PackageMinus, CalendarClock, CalendarX, Bell, BarChart3,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -28,13 +28,6 @@ const ALERT_CFG: Record<string, { icon: React.ReactNode; color: string; bg: stri
   incomplete_record: { icon: <ClipboardList size={13} />, color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100', label: 'ข้อมูลไม่ครบ', chartColor: '#8b5cf6' },
 };
 
-const TX_CFG: Record<string, { label: string; icon: React.ReactNode; iconBg: string; qtyColor: string }> = {
-  in: { label: 'รับเข้า', icon: <ArrowDownToLine size={13} />, iconBg: 'bg-blue-50 text-blue-600', qtyColor: 'text-blue-600' },
-  out: { label: 'จ่ายออก', icon: <ArrowUpFromLine size={13} />, iconBg: 'bg-green-50 text-green-600', qtyColor: 'text-green-600' },
-  return: { label: 'คืนยา', icon: <RotateCcw size={13} />, iconBg: 'bg-slate-100 text-slate-500', qtyColor: 'text-slate-500' },
-  adjust: { label: 'ปรับสต็อก', icon: <SlidersHorizontal size={13} />, iconBg: 'bg-purple-50 text-purple-600', qtyColor: 'text-purple-600' },
-  expired: { label: 'ตัดหมดอายุ', icon: <Trash2 size={13} />, iconBg: 'bg-red-50 text-red-500', qtyColor: 'text-red-500' },
-};
 
 function DashboardStatCard({ icon: Icon, label, value, sub, iconBg, valueClass = 'text-gray-900' }: {
   icon: any; label: string; value: number; sub?: string; iconBg: string; valueClass?: string;
@@ -122,12 +115,11 @@ export default function DashboardPage() {
     date: fmtDateLabel(r.date),
     รับเข้า: Number(r.stock_in),
     จ่ายออก: Number(r.stock_out),
-    คืนยา: Number(r.stock_return),
   }));
 
   const period = chart.reduce(
-    (a, r) => ({ in: a.in + Number(r.stock_in), out: a.out + Number(r.stock_out), rx: a.rx + Number(r.dispensed_count ?? 0) }),
-    { in: 0, out: 0, rx: 0 }
+    (a, r) => ({ in: a.in + Number(r.stock_in), out: a.out + Number(r.stock_out) }),
+    { in: 0, out: 0 }
   );
 
   // Alert distribution — use stats for primary 3 types (covers read+unread), alerts array for others
@@ -180,7 +172,6 @@ export default function DashboardPage() {
               <DashboardStatCard icon={ClipboardList} label="จ่ายยาวันนี้" value={stats.today_dispense_count} sub="ใบสั่งยา" iconBg="bg-blue-500" valueClass="text-blue-800" />
               <DashboardStatCard icon={ArrowDownToLine} label="รับยาเข้าวันนี้" value={stats.today_stock_in_count} sub="ครั้ง" iconBg="bg-emerald-500" valueClass="text-emerald-800" />
               <DashboardStatCard icon={ClipboardCheck} label="รอจ่ายยา" value={stats.pending_prescriptions} sub="ใบสั่งยา" iconBg="bg-amber-500" valueClass="text-amber-800" />
-              <DashboardStatCard icon={Users} label="Queue รอ" value={stats.queue_waiting} sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
             {/* ── Charts (left) | Queue+Alerts (right) ────────────────────── */}
@@ -189,14 +180,13 @@ export default function DashboardPage() {
               {/* LEFT: charts stacked */}
               <div className="lg:col-span-2 flex flex-col gap-6">
                 <ChartCard
-                  title="กระแสยา 30 วัน"
+                  title="การรับ-จ่ายยา 30 วัน"
                   icon={BarChart3}
                   iconColor="text-blue-600"
                   toolbar={
                     <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                       <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
                       <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
-                      <span>ใบสั่งยา <span className="font-bold text-slate-600">{period.rx.toLocaleString()}</span></span>
                     </div>
                   }
                 >
@@ -214,10 +204,6 @@ export default function DashboardPage() {
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
                           </linearGradient>
-                          <linearGradient id="gradRet" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
-                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
-                          </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
@@ -227,7 +213,6 @@ export default function DashboardPage() {
                         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
                         <Area type="monotone" dataKey="รับเข้า" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)" dot={false} activeDot={{ r: 4 }} />
                         <Area type="monotone" dataKey="จ่ายออก" stroke="#10b981" strokeWidth={2.5} fill="url(#gradOut)" dot={false} activeDot={{ r: 4 }} />
-                        <Area type="monotone" dataKey="คืนยา" stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
                       </AreaChart>
                     </ResponsiveContainer>
                   )}
@@ -356,7 +341,7 @@ export default function DashboardPage() {
 
               {/* RIGHT: Queue + Alerts */}
               <div className="flex flex-col gap-6 h-full">
-                <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
+                <ChartCard title="คิวรอรับยา" icon={Users} iconColor="text-indigo-500">
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
                       <p className="text-3xl font-black text-amber-600">{stats.queue_waiting}</p>
@@ -415,41 +400,6 @@ export default function DashboardPage() {
               </div>{/* end right column */}
             </div>{/* end outer grid */}
 
-            {/* ── Recent transactions ─────────────────────────────────────────── */}
-            <ChartCard
-              title="ธุรกรรมล่าสุด"
-              icon={Activity}
-              iconColor="text-slate-600"
-              toolbar={<Link href="/drugs" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูคลัง</Link>}
-            >
-              {!stats.recent_transactions?.length ? (
-                <div className="flex items-center justify-center h-[120px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-                  ยังไม่มีธุรกรรม
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {stats.recent_transactions.map((tx) => {
-                    const cfg = TX_CFG[tx.tx_type] ?? { label: tx.tx_type, icon: <Activity size={15} />, iconBg: 'bg-slate-100 text-slate-500', qtyColor: 'text-slate-500' };
-                    const isOut = ['out', 'expired'].includes(tx.tx_type);
-                    return (
-                      <div key={tx.tx_id} className="flex items-center gap-4 py-3 hover:bg-slate-50/50 transition-colors px-2 -mx-2 rounded-lg">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${cfg.iconBg}`}>
-                          {cfg.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-800 truncate">{tx.drug_name}</p>
-                          <p className="text-xs font-medium text-slate-500 mt-0.5">{cfg.label} · {fmtDate(tx.created_at, true)}</p>
-                        </div>
-                        <span className={`text-base font-black shrink-0 tabular-nums ${cfg.qtyColor}`}>
-                          {tx.tx_type === 'adjust' ? (tx.quantity >= 0 ? '+' : '') : (isOut ? '−' : '+')}
-                          {Math.abs(tx.quantity)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </ChartCard>
           </>
         ) : null}
       </div>
