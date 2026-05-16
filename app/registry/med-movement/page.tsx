@@ -18,16 +18,6 @@ const TX_CONFIG: Record<string, {
 };
 
 const cols: ColDef[] = [
-  { key: 'created_at', label: 'วันเวลา',
-    render: r => <span className="text-xs text-slate-500 whitespace-nowrap">{safeDate(r.created_at, true)}</span>,
-    exportValue: r => safeDate(r.created_at, true) },
-  { key: 'tx_type', label: 'ประเภท',
-    render: r => {
-      const tc = TX_CONFIG[r.tx_type];
-      if (!tc) return <span className="text-xs">{r.tx_type}</span>;
-      return <Badge variant={tc.variant} className="gap-1.5">{tc.icon}{tc.label}</Badge>;
-    },
-    exportValue: r => TX_CONFIG[r.tx_type]?.label ?? r.tx_type },
   { key: 'med_name', label: 'ชื่อยา',
     render: r => (
       <>
@@ -36,6 +26,13 @@ const cols: ColDef[] = [
       </>
     ),
     exportValue: r => r.med_showname || r.med_name },
+  { key: 'tx_type', label: 'ประเภท',
+    render: r => {
+      const tc = TX_CONFIG[r.tx_type];
+      if (!tc) return <span className="text-xs">{r.tx_type}</span>;
+      return <Badge variant={tc.variant} className="gap-1.5">{tc.icon}{tc.label}</Badge>;
+    },
+    exportValue: r => TX_CONFIG[r.tx_type]?.label ?? r.tx_type },
   { key: 'quantity', label: 'จำนวน',
     render: r => {
       const positive = r.tx_type === 'in' || r.tx_type === 'return';
@@ -58,6 +55,9 @@ const cols: ColDef[] = [
       </span>
     ),
     exportValue: r => `${r.balance_before} → ${r.balance_after}` },
+  { key: 'created_at', label: 'วันเวลา',
+    render: r => <span className="text-xs text-slate-500 whitespace-nowrap">{safeDate(r.created_at, true)}</span>,
+    exportValue: r => safeDate(r.created_at, true) },
   { key: 'note', label: 'หมายเหตุ',
     render: r => <span className="text-xs text-slate-400 max-w-[140px] truncate block">{r.note || '—'}</span> },
 ];
