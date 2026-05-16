@@ -103,7 +103,7 @@ export default function DashboardPage() {
         dashboardApi.getStats(),
         dashboardApi.getStockSummary(30),
         alertApi.getAll({ is_read: false }),
-        drugApi.getAll({ low_stock: '1', limit: 10 }),
+        drugApi.getAll({ low_stock: '1', limit: 8 }),
       ]);
       setStats(statsRes.data);
       setChart(chartRes.data);
@@ -145,8 +145,8 @@ export default function DashboardPage() {
   const totalAlerts = alertDonutData.reduce((s, d) => s + d.value, 0);
 
   // Horizontal bar: current vs minimum per low-stock drug
-  const stockBarData = lowStock.slice(0, 10).map(d => ({
-    name: (d.med_showname || d.med_name || '').slice(0, 18),
+  const stockBarData = lowStock.slice(0, 8).map(d => ({
+    name: (d.med_showname || d.med_name || '').slice(0, 14),
     current: d.current_stock ?? 0,
     minimum: d.min_quantity ?? 0,
   }));
@@ -183,54 +183,10 @@ export default function DashboardPage() {
               <DashboardStatCard icon={Users} label="Queue รอ" value={stats.queue_waiting} sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
-            {/* ── Stock health strip ───────────────────────────────────────── */}
-            {(() => {
-              const healthPct = Math.round(((stats.total_drugs - stats.low_stock_count) / Math.max(stats.total_drugs, 1)) * 100);
-              const criticalCount = stats.expired_count + stats.low_stock_count;
-              const healthColor = healthPct >= 80 ? 'text-emerald-600' : healthPct >= 60 ? 'text-amber-500' : 'text-red-500';
-              const barColor = healthPct >= 80 ? 'bg-emerald-500' : healthPct >= 60 ? 'bg-amber-400' : 'bg-red-500';
-              return (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">สุขภาพคลังยา</p>
-                    <div className="mt-1.5 flex items-end gap-2">
-                      <span className={`text-3xl font-extrabold tabular-nums ${healthColor}`}>{healthPct}%</span>
-                      <span className="text-xs text-slate-400 mb-1">อยู่เหนือขั้นต่ำ</span>
-                    </div>
-                    <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${healthPct}%` }} />
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">ต้องดำเนินการด่วน</p>
-                    <div className="mt-1.5 flex items-end gap-2">
-                      <span className="text-3xl font-extrabold tabular-nums text-red-500">{criticalCount}</span>
-                      <span className="text-xs text-slate-400 mb-1">รายการ</span>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400">หมดอายุ <span className="font-bold text-red-400">{stats.expired_count}</span> · สต็อกต่ำ <span className="font-bold text-amber-500">{stats.low_stock_count}</span></p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">กิจกรรมวันนี้</p>
-                    <div className="mt-1.5 flex gap-5">
-                      <div>
-                        <span className="text-3xl font-extrabold tabular-nums text-blue-600">{stats.today_stock_in_count}</span>
-                        <p className="text-xs text-slate-400 mt-0.5">รับเข้า</p>
-                      </div>
-                      <div className="w-px bg-slate-100 self-stretch" />
-                      <div>
-                        <span className="text-3xl font-extrabold tabular-nums text-emerald-600">{stats.today_dispense_count}</span>
-                        <p className="text-xs text-slate-400 mt-0.5">จ่ายออก</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* ── Charts (left 2/3) | Sidebar (right 1/3) ─────────────────── */}
+            {/* ── Charts (left) | Queue+Alerts (right) ────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-              {/* LEFT: area chart + stock comparison (full left-col width) */}
+              {/* LEFT: charts stacked */}
               <div className="lg:col-span-2 flex flex-col gap-6">
                 <ChartCard
                   title="กระแสยา 30 วัน"
@@ -277,129 +233,129 @@ export default function DashboardPage() {
                   )}
                 </ChartCard>
 
-                {/* Stock comparison — now spans full left column */}
-                <ChartCard
-                  title="สต็อกต่ำ — เปรียบเทียบสต็อกปัจจุบันกับขั้นต่ำ"
-                  icon={PackageMinus}
-                  iconColor="text-violet-600"
-                  toolbar={<Link href="/drugs?low_stock=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
-                >
-                  {stockBarData.length === 0 ? (
-                    <div className="flex items-center justify-center h-[200px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-                      สต็อกปกติทั้งหมด
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={Math.max(stockBarData.length * 42 + 32, 200)}>
-                      <BarChart layout="vertical" data={stockBarData}
-                        margin={{ top: 4, right: 32, left: 0, bottom: 4 }} barCategoryGap="30%">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#475569' }}
-                          axisLine={false} tickLine={false} width={116} />
-                        <Tooltip
-                          contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.08)' }}
-                          formatter={(v: any, key: string) => [v.toLocaleString(), key === 'current' ? 'สต็อกปัจจุบัน' : 'สต็อกขั้นต่ำ']}
-                        />
-                        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }}
-                          formatter={(v) => v === 'current' ? 'สต็อกปัจจุบัน' : 'สต็อกขั้นต่ำ'} />
-                        <Bar dataKey="minimum" name="minimum" fill="#e2e8f0" radius={[0, 4, 4, 0]} maxBarSize={14} />
-                        <Bar dataKey="current" name="current" radius={[0, 4, 4, 0]} maxBarSize={14}>
-                          {stockBarData.map((entry, i) => (
-                            <Cell key={i}
-                              fill={entry.current === 0 ? '#ef4444' : entry.current < entry.minimum / 2 ? '#f97316' : '#f59e0b'}
-                              fillOpacity={0.9} />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {/* Horizontal bar: current vs minimum */}
+                  <ChartCard
+                    title="เปรียบเทียบสต็อก — ยาสต็อกต่ำ"
+                    icon={PackageMinus}
+                    iconColor="text-violet-600"
+                    toolbar={<Link href="/drugs?low_stock=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
+                  >
+                    {stockBarData.length === 0 ? (
+                      <div className="flex items-center justify-center h-[220px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+                        สต็อกปกติทั้งหมด
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={Math.max(stockBarData.length * 38 + 24, 160)}>
+                        <BarChart layout="vertical" data={stockBarData}
+                          margin={{ top: 0, right: 24, left: 0, bottom: 0 }} barCategoryGap="28%">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                          <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                          <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }}
+                            axisLine={false} tickLine={false} width={96} />
+                          <Tooltip
+                            contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.08)' }}
+                            formatter={(v: any, key: string) => [v, key === 'current' ? 'สต็อกปัจจุบัน' : 'สต็อกขั้นต่ำ']}
+                          />
+                          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }}
+                            formatter={(v) => v === 'current' ? 'สต็อกปัจจุบัน' : 'สต็อกขั้นต่ำ'} />
+                          <Bar dataKey="minimum" name="minimum" fill="#e2e8f0" radius={[0, 3, 3, 0]} maxBarSize={12} />
+                          <Bar dataKey="current" name="current" radius={[0, 3, 3, 0]} maxBarSize={12}>
+                            {stockBarData.map((entry, i) => (
+                              <Cell key={i} fill={entry.current === 0 ? '#ef4444' : '#f59e0b'} fillOpacity={0.88} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </ChartCard>
+
+                  {/* Donut: alert type distribution */}
+                  <ChartCard title="สัดส่วนการแจ้งเตือน" icon={Bell} iconColor="text-rose-500">
+                    {alertDonutData.length === 0 ? (
+                      <div className="flex items-center justify-center h-[220px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+                        ไม่มีการแจ้งเตือน
+                      </div>
+                    ) : (
+                      <>
+                        <div className="relative h-[160px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie data={alertDonutData} cx="50%" cy="50%"
+                                innerRadius={50} outerRadius={72}
+                                dataKey="value" paddingAngle={3} startAngle={90} endAngle={-270}>
+                                {alertDonutData.map((entry, i) => (
+                                  <Cell key={i} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}
+                                formatter={(v: any, name: string) => [`${v} รายการ`, name]}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-2xl font-black text-slate-800">{totalAlerts}</span>
+                            <span className="text-[11px] text-slate-400 font-medium">รายการ</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 space-y-2.5">
+                          {alertDonutData.map(d => (
+                            <div key={d.name} className="flex items-center gap-3 text-xs">
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                              <span className="text-slate-600 flex-1">{d.name}</span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full transition-all"
+                                    style={{ width: `${Math.round((d.value / totalAlerts) * 100)}%`, background: d.color }} />
+                                </div>
+                                <span className="font-bold tabular-nums w-5 text-right" style={{ color: d.color }}>{d.value}</span>
+                              </div>
+                            </div>
                           ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </ChartCard>
+                        </div>
+                      </>
+                    )}
+                  </ChartCard>
+
+                  {/* Near expiry list */}
+                  <ChartCard
+                    title="ยาใกล้หมดอายุ"
+                    icon={CalendarClock}
+                    iconColor="text-orange-500"
+                    toolbar={<Link href="/drugs?near_expiry=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
+                  >
+                    {!stats.near_expiry_top?.length ? (
+                      <div className="flex items-center justify-center h-[220px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+                        ไม่มียาใกล้หมดอายุ
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {stats.near_expiry_top.map((d) => {
+                          const days = Number(d.days_left);
+                          const variant = days <= 7 ? 'danger' : days <= 14 ? 'warning' : 'gray';
+                          return (
+                            <div key={d.med_sid} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                              <div className="w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                <CalendarClock size={18} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-slate-800 truncate">{d.drug_name}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{fmtDate(d.exp_date)} · {d.med_quantity} หน่วย</p>
+                                {d.lot_details && <p className="text-[11px] text-slate-400 mt-0.5 truncate">ล็อต: {d.lot_details}</p>}
+                              </div>
+                              <Badge variant={variant}>{days <= 0 ? 'หมดแล้ว' : `${days} วัน`}</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
               </div>{/* end left column */}
 
-              {/* RIGHT: near expiry + donut + queue + alerts */}
-              <div className="flex flex-col gap-6">
-                {/* Near expiry list */}
-                <ChartCard
-                  title="ยาใกล้หมดอายุ"
-                  icon={CalendarClock}
-                  iconColor="text-orange-500"
-                  toolbar={<Link href="/drugs?near_expiry=1" className="text-[11px] font-bold text-blue-600 hover:text-blue-700">ดูทั้งหมด</Link>}
-                >
-                  {!stats.near_expiry_top?.length ? (
-                    <div className="flex items-center justify-center h-[140px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-                      ไม่มียาใกล้หมดอายุ
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {stats.near_expiry_top.map((d) => {
-                        const days = Number(d.days_left);
-                        const variant = days <= 7 ? 'danger' : days <= 14 ? 'warning' : 'gray';
-                        return (
-                          <div key={d.med_sid} className="flex items-center gap-2.5 bg-slate-50 px-3 py-2.5 rounded-xl border border-slate-100">
-                            <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
-                              <CalendarClock size={16} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-slate-800 truncate">{d.drug_name}</p>
-                              <p className="text-xs text-slate-500 mt-0.5">{fmtDate(d.exp_date)} · {d.med_quantity} หน่วย</p>
-                            </div>
-                            <Badge variant={variant}>{days <= 0 ? 'หมดแล้ว' : `${days}ว`}</Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ChartCard>
-
-                {/* Donut: alert type distribution */}
-                <ChartCard title="สัดส่วนการแจ้งเตือน" icon={Bell} iconColor="text-rose-500">
-                  {alertDonutData.length === 0 ? (
-                    <div className="flex items-center justify-center h-[120px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-                      ไม่มีการแจ้งเตือน
-                    </div>
-                  ) : (
-                    <>
-                      <div className="relative h-[150px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={alertDonutData} cx="50%" cy="50%"
-                              innerRadius={46} outerRadius={66}
-                              dataKey="value" paddingAngle={3} startAngle={90} endAngle={-270}>
-                              {alertDonutData.map((entry, i) => (
-                                <Cell key={i} fill={entry.color} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}
-                              formatter={(v: any, name: string) => [`${v} รายการ`, name]}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                          <span className="text-2xl font-black text-slate-800">{totalAlerts}</span>
-                          <span className="text-[11px] text-slate-400 font-medium">รายการ</span>
-                        </div>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {alertDonutData.map(d => (
-                          <div key={d.name} className="flex items-center gap-2.5 text-xs">
-                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                            <span className="text-slate-600 flex-1">{d.name}</span>
-                            <div className="flex items-center gap-2">
-                              <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className="h-full rounded-full transition-all"
-                                  style={{ width: `${Math.round((d.value / totalAlerts) * 100)}%`, background: d.color }} />
-                              </div>
-                              <span className="font-bold tabular-nums w-5 text-right" style={{ color: d.color }}>{d.value}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </ChartCard>
-
-                {/* Queue */}
+              {/* RIGHT: Queue + Alerts */}
+              <div className="flex flex-col gap-6 h-full">
                 <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
@@ -413,9 +369,9 @@ export default function DashboardPage() {
                   </div>
                   {stats.pending_prescriptions > 0 && (
                     <Link href="/dispense"
-                      className="mt-3 flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors shadow-sm">
+                      className="mt-4 flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors shadow-sm">
                       <div className="flex items-center gap-2">
-                        <ClipboardCheck size={16} className="text-amber-600" />
+                        <ClipboardCheck size={18} className="text-amber-600" />
                         <span className="text-sm font-bold text-amber-800">รอจ่ายยา</span>
                       </div>
                       <span className="text-lg font-black text-amber-600">{stats.pending_prescriptions} ใบ</span>
@@ -423,11 +379,11 @@ export default function DashboardPage() {
                   )}
                 </ChartCard>
 
-                {/* Alerts */}
                 <ChartCard
                   title="การแจ้งเตือน"
                   icon={Bell}
                   iconColor="text-rose-500"
+                  className="flex-1"
                   toolbar={
                     <div className="flex items-center gap-2">
                       {unread > 0 && (
@@ -438,7 +394,7 @@ export default function DashboardPage() {
                   }
                 >
                   {displayAlerts.length === 0 ? (
-                    <div className="flex items-center justify-center h-[100px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+                    <div className="flex items-center justify-center h-[120px] text-sm text-gray-400 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
                       ไม่มีการแจ้งเตือน
                     </div>
                   ) : (
@@ -449,7 +405,7 @@ export default function DashboardPage() {
                           <div key={a.id} className={`p-3 rounded-xl border text-sm ${cfg.bg}`}>
                             <div className={`flex items-center gap-2 font-bold mb-1 ${cfg.color}`}>{cfg.icon} {cfg.label}</div>
                             <p className="font-semibold text-slate-800 truncate">{a.drug_name}</p>
-                            <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">{a.message}</p>
+                            <p className="text-slate-500 text-xs mt-1 line-clamp-1">{a.message}</p>
                           </div>
                         );
                       })}
