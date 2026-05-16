@@ -14,10 +14,11 @@ import { fmtDate } from '@/lib/dateUtils';
 
 // ─── Requisition status config ────────────────────────────────────────────────
 const REQ_STATUS: Record<string, { label: string; badge: 'warning' | 'info' | 'success' | 'danger' | 'gray' }> = {
-  PENDING: { label: 'รออนุมัติ', badge: 'warning' },
-  APPROVED: { label: 'อนุมัติแล้ว', badge: 'info' },
-  REJECTED: { label: 'ปฏิเสธ', badge: 'danger' },
-  CANCELLED: { label: 'ยกเลิก', badge: 'gray' },
+  PENDING:   { label: 'รออนุมัติ',    badge: 'warning' },
+  APPROVED:  { label: 'อนุมัติแล้ว',  badge: 'info'    },
+  COMPLETED: { label: 'ส่งมอบแล้ว',   badge: 'success' },
+  REJECTED:  { label: 'ปฏิเสธ',       badge: 'danger'  },
+  CANCELLED: { label: 'ยกเลิก',       badge: 'gray'    },
 };
 
 // ─── Requisition expandable row ─────────────────────────────────────────────
@@ -208,7 +209,7 @@ export default function StockInPage() {
           {/* Filter Buttons */}
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
             <div className="flex items-center gap-2 flex-wrap">
-              {(['all', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'] as const).map(s => (
+              {(['all', 'PENDING', 'APPROVED', 'COMPLETED', 'REJECTED', 'CANCELLED'] as const).map(s => (
                 <button key={s}
                   onClick={() => { setReqStatus(s); setReqPage(1); }}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${reqStatus === s
