@@ -21,6 +21,24 @@ const COLS: ColDef[] = [
     render: r => r.receiver_name ?? <span className="text-slate-300">—</span>,
     exportValue: r => r.receiver_name??'-' },
   { key:'delivery_method', label:'วิธีส่ง', className:'text-xs' },
+  { key:'medicine_list', label:'รายการยา',
+    render: r => {
+      const list = Array.isArray(r.medicine_list) ? r.medicine_list : [];
+      if (!list.length) return <span className="text-slate-300">—</span>;
+      return (
+        <div>
+          <p className="text-xs font-medium text-slate-700">{list.length} รายการ</p>
+          <p className="text-xs text-slate-400 truncate max-w-[200px]">
+            {list.map((m:any) => m.med_showname||m.med_name).join(', ')}
+          </p>
+        </div>
+      );
+    },
+    exportValue: r => {
+      const list = Array.isArray(r.medicine_list) ? r.medicine_list : [];
+      return list.map((m:any) => `${m.med_showname||m.med_name} x${m.quantity}${m.unit||''}`).join(' | ');
+    }
+  },
   { key:'tracking_number', label:'เลขพัสดุ', className:'text-xs font-mono',
     render: r => r.tracking_number ?? <span className="text-slate-300">—</span>,
     exportValue: r => r.tracking_number??'-' },
