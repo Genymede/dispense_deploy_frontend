@@ -182,6 +182,7 @@ export default function AllergyPage() {
                 <div className="flex flex-col gap-2">
                   <C label="ชื่อยา" value={drawer.med_name} />
                   <C label="ชื่อสามัญ" value={drawer.med_generic_name} />
+                  <C label="หมวดยา" value={drawer.med_medical_category} />
                 </div>
               </DrawerSection>
               <DrawerSection title="ผู้ป่วย">
