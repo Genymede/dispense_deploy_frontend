@@ -5,12 +5,12 @@ import { Button, Input, Card, Badge, EmptyState, Spinner } from '@/components/ui
 import { stockApi, type StockTransaction } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import {
-  ArrowDownToLine, Search, Package, Clock, CheckCircle,
+  ArrowDownToLine, Search,
   ShieldCheck, X, ExternalLink, ChevronDown, ChevronRight,
   RefreshCw, ClipboardList,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { thaiToday, fmtDate } from '@/lib/dateUtils';
+import { fmtDate } from '@/lib/dateUtils';
 
 // ─── Requisition status config ────────────────────────────────────────────────
 const REQ_STATUS: Record<string, { label: string; badge: 'warning' | 'info' | 'success' | 'danger' | 'gray' }> = {
@@ -168,7 +168,6 @@ export default function StockInPage() {
     finally { setApproving(null); }
   };
 
-  const todayTxs = history.filter(h => h.created_at.startsWith(thaiToday()));
   const filteredHistory = searchTx
     ? history.filter(h =>
       (h.med_showname || h.med_name).includes(searchTx) ||
@@ -189,23 +188,6 @@ export default function StockInPage() {
       }>
 
       <div className="space-y-5">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'รับยาวันนี้', value: todayTxs.length, icon: <ArrowDownToLine size={18} />, color: 'text-primary-600 bg-primary-50' },
-            { label: 'หน่วยรับทั้งหมดวันนี้', value: todayTxs.reduce((s, h) => s + h.quantity, 0).toLocaleString(), icon: <Package size={18} />, color: 'text-green-600 bg-green-50' },
-            { label: 'ประวัติทั้งหมด', value: total.toLocaleString(), icon: <Clock size={18} />, color: 'text-slate-600 bg-slate-100' },
-          ].map(({ label, value, icon, color }) => (
-            <Card key={label} className="flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>{icon}</div>
-              <div>
-                <p className="text-xs text-slate-500">{label}</p>
-                <p className="text-2xl font-bold text-slate-800">{value}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
         {/* คำขอเบิกจากคลังหลัก */}
         <Card className="overflow-hidden p-0">
           <div className="flex items-center justify-between pb-4 border-b border-slate-100">
