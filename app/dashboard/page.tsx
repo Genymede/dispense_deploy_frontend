@@ -9,7 +9,7 @@ import {
 import {
   Calendar, TrendingDown, Package,
   ArrowDownToLine, ArrowUpFromLine, Activity, RefreshCw,
-  RotateCcw, ClipboardList, ClipboardCheck, Users,
+  RotateCcw, ClipboardList, ClipboardCheck,
   Trash2, SlidersHorizontal, PackageMinus, CalendarClock, CalendarX, Bell, BarChart3,
 } from 'lucide-react';
 import {
@@ -180,7 +180,6 @@ export default function DashboardPage() {
               <DashboardStatCard icon={ClipboardList} label="จ่ายยาวันนี้" value={stats.today_dispense_count} sub="ใบสั่งยา" iconBg="bg-blue-500" valueClass="text-blue-800" />
               <DashboardStatCard icon={ArrowDownToLine} label="รับยาเข้าวันนี้" value={stats.today_stock_in_count} sub="ครั้ง" iconBg="bg-emerald-500" valueClass="text-emerald-800" />
               <DashboardStatCard icon={ClipboardCheck} label="รอจ่ายยา" value={stats.pending_prescriptions} sub="ใบสั่งยา" iconBg="bg-amber-500" valueClass="text-amber-800" />
-              <DashboardStatCard icon={Users} label="Queue รอ" value={stats.queue_waiting} sub={`รับยาสำเร็จวันนี้ ${stats.queue_completed_today ?? 0} ราย`} iconBg="bg-indigo-500" valueClass="text-indigo-900" />
             </div>
 
             {/* ── Charts (left) | Queue+Alerts (right) ────────────────────── */}
@@ -356,30 +355,7 @@ export default function DashboardPage() {
 
               {/* RIGHT: Queue + Alerts */}
               <div className="flex flex-col gap-6 h-full">
-                <ChartCard title="Queue วันนี้" icon={Users} iconColor="text-indigo-500">
-                  <div className="grid grid-cols-2 gap-3 text-center">
-                    <div className="py-3 bg-amber-50 rounded-xl border border-amber-100 shadow-sm">
-                      <p className="text-3xl font-black text-amber-600">{stats.queue_waiting}</p>
-                      <p className="text-xs text-amber-700 font-semibold mt-1">รอ</p>
-                    </div>
-                    <div className="py-3 bg-emerald-50 rounded-xl border border-emerald-100 shadow-sm">
-                      <p className="text-3xl font-black text-emerald-600">{stats.queue_completed_today}</p>
-                      <p className="text-xs text-emerald-700 font-semibold mt-1">รับยาสำเร็จ</p>
-                    </div>
-                  </div>
-                  {stats.pending_prescriptions > 0 && (
-                    <Link href="/dispense"
-                      className="mt-4 flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <ClipboardCheck size={18} className="text-amber-600" />
-                        <span className="text-sm font-bold text-amber-800">รอจ่ายยา</span>
-                      </div>
-                      <span className="text-lg font-black text-amber-600">{stats.pending_prescriptions} ใบ</span>
-                    </Link>
-                  )}
-                </ChartCard>
-
-                <ChartCard
+<ChartCard
                   title="การแจ้งเตือน"
                   icon={Bell}
                   iconColor="text-rose-500"
