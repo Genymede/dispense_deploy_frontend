@@ -95,13 +95,15 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [chartDays, setChartDays] = useState(30);
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [statsRes, chartRes, alertsRes, lowRes] = await Promise.all([
         dashboardApi.getStats(),
-        dashboardApi.getStockSummary(30),
+        dashboardApi.getStockSummary(chartDays),
         alertApi.getAll({ is_read: false }),
         drugApi.getAll({ low_stock: '1', limit: 8 }),
       ]);
@@ -113,7 +115,7 @@ export default function DashboardPage() {
     } catch (err: any) {
       toast.error(err.message || 'โหลดข้อมูลล้มเหลว');
     } finally { setLoading(false); }
-  }, []);
+  }, [chartDays]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -122,12 +124,11 @@ export default function DashboardPage() {
     date: fmtDateLabel(r.date),
     รับเข้า: Number(r.stock_in),
     จ่ายออก: Number(r.stock_out),
-    คืนยา: Number(r.stock_return),
   }));
 
   const period = chart.reduce(
-    (a, r) => ({ in: a.in + Number(r.stock_in), out: a.out + Number(r.stock_out), rx: a.rx + Number(r.dispensed_count ?? 0) }),
-    { in: 0, out: 0, rx: 0 }
+    (a, r) => ({ in: a.in + Number(r.stock_in), out: a.out + Number(r.stock_out) }),
+    { in: 0, out: 0 }
   );
 
   // Alert distribution — use stats for primary 3 types (covers read+unread), alerts array for others
@@ -188,19 +189,37 @@ export default function DashboardPage() {
               {/* LEFT: charts stacked */}
               <div className="lg:col-span-2 flex flex-col gap-6">
                 <ChartCard
-                  title="การรับ-จ่ายยา 30 วัน"
+                  title={`การรับ-จ่ายยา ${chartDays} วัน`}
                   icon={BarChart3}
                   iconColor="text-blue-600"
                   toolbar={
-                    <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                      <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
-                      <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <div className="hidden sm:flex gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                        <span>รับเข้า <span className="font-bold text-blue-600">{period.in.toLocaleString()}</span></span>
+                        <span>จ่ายออก <span className="font-bold text-emerald-600">{period.out.toLocaleString()}</span></span>
+                      </div>
+                      <div className="flex gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                        {[3, 7, 14, 30].map(d => (
+                          <button key={d} onClick={() => setChartDays(d)}
+                            className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-colors ${chartDays === d ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            {d}ว
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                        {(['area', 'bar'] as const).map(t => (
+                          <button key={t} onClick={() => setChartType(t)}
+                            className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-colors ${chartType === t ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            {t === 'area' ? 'เส้น' : 'แท่ง'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   }
                 >
                   {chartData.length === 0 ? (
                     <div className="h-[280px] flex items-center justify-center text-gray-400 text-sm rounded-xl bg-gray-50 border border-dashed border-gray-200">ยังไม่มีข้อมูล</div>
-                  ) : (
+                  ) : chartType === 'area' ? (
                     <ResponsiveContainer width="100%" height={280}>
                       <AreaChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }}>
                         <defs>
@@ -212,10 +231,6 @@ export default function DashboardPage() {
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
                           </linearGradient>
-                          <linearGradient id="gradRet" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.12} />
-                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
-                          </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
@@ -225,8 +240,20 @@ export default function DashboardPage() {
                         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
                         <Area type="monotone" dataKey="รับเข้า" stroke="#3b82f6" strokeWidth={2.5} fill="url(#gradIn)" dot={false} activeDot={{ r: 4 }} />
                         <Area type="monotone" dataKey="จ่ายออก" stroke="#10b981" strokeWidth={2.5} fill="url(#gradOut)" dot={false} activeDot={{ r: 4 }} />
-                        <Area type="monotone" dataKey="คืนยา" stroke="#94a3b8" strokeWidth={1.5} fill="url(#gradRet)" dot={false} strokeDasharray="4 2" />
                       </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={chartData} margin={{ top: 6, right: 10, left: -20, bottom: 0 }} barCategoryGap="30%" barGap={3}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                        <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+                          interval={Math.floor(chartData.length / 8)} />
+                        <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.08)' }} />
+                        <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, paddingTop: '10px' }} />
+                        <Bar dataKey="รับเข้า" fill="#3b82f6" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={18} />
+                        <Bar dataKey="จ่ายออก" fill="#10b981" fillOpacity={0.85} radius={[3, 3, 0, 0]} maxBarSize={18} />
+                      </BarChart>
                     </ResponsiveContainer>
                   )}
                 </ChartCard>
