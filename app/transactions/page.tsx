@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Input, Select, Card, Badge, Button, EmptyState, Spinner } from '@/components/ui';
+import { DateRangeFilter } from '@/components/DataTable';
 import DetailDrawer, { DrawerSection, DrawerGrid } from '@/components/DetailDrawer';
 import { stockApi, type StockTransaction } from '@/lib/api';
 import ReportPrintTemplate from '@/components/ReportPrintTemplate';
@@ -142,20 +143,6 @@ export default function TransactionsPage() {
       title="ประวัติการเคลื่อนไหวยา"
       subtitle={`ทั้งหมด ${total} รายการ`}
     >
-      {/* Type filter cards */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        <button onClick={() => { setFilterType(''); setPage(1); }}
-          className={`card px-4 py-2.5 text-sm font-medium transition-all ${!filterType ? 'ring-2 ring-primary-400 border-primary-200' : 'hover:border-primary-200'}`}>
-          ทั้งหมด <span className="ml-1 text-xs text-slate-400">({total})</span>
-        </button>
-        {Object.entries(TX_CONFIG).map(([type, { label, variant }]) => (
-          <button key={type} onClick={() => { setFilterType(filterType === type ? '' : type); setPage(1); }}
-            className={`card px-4 py-2.5 transition-all ${filterType === type ? 'ring-2 ring-primary-400 border-primary-200' : 'hover:border-primary-200'}`}>
-            <Badge variant={variant}>{label}</Badge>
-          </button>
-        ))}
-      </div>
-
       {/* Filters */}
       <Card className="mb-5">
         <div className="flex gap-3 flex-wrap items-end">
@@ -163,9 +150,14 @@ export default function TransactionsPage() {
             <Input placeholder="ค้นหาชื่อยา, เลขอ้างอิง..." value={search}
               onChange={(e) => setSearch(e.target.value)} icon={<Search size={13} />} />
           </div>
-          <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
-          <span className="text-slate-400 text-sm self-center">–</span>
-          <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
+          <Select value={filterType} onChange={e => { setFilterType(e.target.value); setPage(1); }}
+            placeholder="ทุกประเภท"
+            options={Object.entries(TX_CONFIG).map(([v, { label }]) => ({ value: v, label }))} />
+          <DateRangeFilter
+            dateFrom={dateFrom} dateTo={dateTo}
+            onFromChange={v => { setDateFrom(v); setPage(1); }}
+            onToChange={v => { setDateTo(v); setPage(1); }}
+          />
           <Button variant="secondary" onClick={() => {
             setSearch(''); setFilterType('');
             setDateFrom(thaiDaysAgo(7));
