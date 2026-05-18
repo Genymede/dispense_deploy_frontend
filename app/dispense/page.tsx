@@ -1485,8 +1485,8 @@ export default function DispensePage() {
                         const lineTotal = unitPrice * qty;
                         const isExpired = it.is_expired || (it.exp_date && new Date(it.exp_date) < new Date());
                         const stockAvail = Math.max(0, Number(it.stock_available));
-                        const isLowStock = it.item_id !== undefined && stockAvail < qty;
-                        const isZeroStock = it.item_id !== undefined && stockAvail === 0;
+                        const isLowStock = it.stock_available !== undefined && stockAvail < qty;
+                        const isZeroStock = it.stock_available !== undefined && stockAvail === 0;
                         const overdueQty = Math.max(0, qty - stockAvail);
                         const isOverdue = isLowStock;
                         const checked = printSelected.has(i);
@@ -1506,6 +1506,9 @@ export default function DispensePage() {
                                   isZeroStock
                                     ? <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ หมดสต็อก · ค้างจ่าย {overdueQty}</span>
                                     : <span className="text-[9px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded-full font-medium">⚠ สต็อก {stockAvail}/{qty} · ค้างจ่าย {overdueQty}</span>
+                                )}
+                                {!isExpired && !isLowStock && it.stock_available !== undefined && (
+                                  <span className="text-[9px] bg-green-50 text-green-700 px-1 py-0.5 rounded-full font-medium">คลัง: {stockAvail}</span>
                                 )}
                                 {it.med_severity?.includes('เสพติด') && <span className="text-[9px] bg-purple-100 text-purple-700 px-1 py-0.5 rounded-full font-medium">เสพติด</span>}
                                 {it.med_pregnancy_category === 'X' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded-full font-medium">Preg X</span>}
