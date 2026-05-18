@@ -476,7 +476,7 @@ export default function DispensePage() {
     if (!safetyResult) return undefined;
     const lowStockMedNames = new Set(
       dispenseItems
-        .filter((it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity))
+        .filter((it: any) => it.stock_available !== undefined && Number(it.stock_available) < Number(it.quantity))
         .flatMap((it: any) => [it.med_name, it.med_showname].filter(Boolean))
     );
     return safetyResult.alerts.filter(a => {
@@ -500,17 +500,17 @@ export default function DispensePage() {
   const handleDispense = async () => {
     setDispensing(true);
     try {
-      // ── ตรวจสอบล็อตยา ──
+      // ── ตรวจสอบล็อตยา (ข้ามรายการที่สต็อกไม่พอ — จัดการด้วย confirm dialog ด้านล่าง) ──
       for (const it of dispenseItems) {
-        const isLowStock = it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity);
+        const isLowStock = it.stock_available !== undefined && Number(it.stock_available) < Number(it.quantity);
         if (isLowStock) continue;
         const { ok } = await validateDrugLots(it.med_sid, it.med_showname || it.med_name, it.quantity);
         if (!ok) { setDispensing(false); return; }
       }
 
-      // ── ถ้ามียาค้างจ่าย ถามยืนยันก่อน ──
+      // ── ถ้ามียาค้างจ่าย (ทั้งรายการเดิมและรายการที่เพิ่มใหม่) ถามยืนยันก่อน ──
       const lowStockItems = dispenseItems.filter(
-        (it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity)
+        (it: any) => it.stock_available !== undefined && Number(it.stock_available) < Number(it.quantity)
       );
       if (lowStockItems.length > 0) {
         const lines = lowStockItems.map((it: any) => {
@@ -534,9 +534,11 @@ export default function DispensePage() {
           doctor_id: dispenseDoctorId,
         });
       }
-      // บันทึกรายการยาที่แก้ไขก่อนจ่าย
+
+      // บันทึกรายการยาที่แก้ไขก่อนจ่าย — capture item_ids ใหม่สำหรับสร้าง overdue_items
+      let savedItems: any[] = [];
       if (dispenseItemsChanged) {
-        await api.put(`/dispense/${dispenseRx.prescription_id}/items`, {
+        const saveRes = await api.put(`/dispense/${dispenseRx.prescription_id}/items`, {
           items: dispenseItems.map((it: any) => ({
             med_sid: it.med_sid, quantity: it.quantity,
             dose: `${it.dose_qty ?? 1} ${it.dose_unit || ''}`.trim(),
@@ -544,13 +546,24 @@ export default function DispensePage() {
             meal_relation: it.meal_relation || null, meal_sessions: it.meal_sessions || null,
           })),
         });
+        savedItems = saveRes.data.items ?? [];
       }
+
+      // สร้าง overdue_items โดย match item_id จาก savedItems (ถ้ามีการ save) หรือใช้ item_id เดิม
       const overdue_items = dispenseItems
-        .filter((it: any) => it.item_id !== undefined && Number(it.stock_available) < Number(it.quantity))
-        .map((it: any) => ({
-          item_id: it.item_id,
-          overdue_qty: Math.max(0, Number(it.quantity) - Math.max(0, Number(it.stock_available))),
-        }));
+        .filter((it: any) => it.stock_available !== undefined && Number(it.stock_available) < Number(it.quantity))
+        .map((it: any) => {
+          const itemId = dispenseItemsChanged
+            ? savedItems.find((s: any) => s.med_sid === it.med_sid)?.item_id
+            : it.item_id;
+          if (!itemId) return null;
+          return {
+            item_id: itemId,
+            overdue_qty: Math.max(0, Number(it.quantity) - Math.max(0, Number(it.stock_available))),
+          };
+        })
+        .filter(Boolean);
+
       const res = await dispenseApi.dispense(dispenseRx.prescription_id, undefined, overdue_items);
       const qNum = res.data?.queue_number;
       const pName = dispenseRx.patient_name || 'ผู้ป่วย';
