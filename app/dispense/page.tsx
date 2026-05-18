@@ -562,7 +562,7 @@ export default function DispensePage() {
             overdue_qty: Math.max(0, Number(it.quantity) - Math.max(0, Number(it.stock_available))),
           };
         })
-        .filter(Boolean);
+        .filter((x): x is { item_id: number; overdue_qty: number } => x !== null);
 
       const res = await dispenseApi.dispense(dispenseRx.prescription_id, undefined, overdue_items);
       const qNum = res.data?.queue_number;
